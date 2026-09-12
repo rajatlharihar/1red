@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { motion, useInView, useScroll, useTransform, useMotionValue, useReducedMotion, AnimatePresence, type MotionValue } from 'motion/react';
 import { ArrowUpRight, ArrowRight } from 'lucide-react';
 import { Logo } from './Logo';
+import { process } from '../data/process';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const RED = '#EA3323';
@@ -58,13 +59,8 @@ const principles = [
   },
 ];
 
-const process = [
-  { number: '01', title: 'Discover', detail: 'Deep-dive into goals, audience, and competitive landscape.' },
-  { number: '02', title: 'Define', detail: 'Crystallise strategy, positioning, and the creative direction.' },
-  { number: '03', title: 'Design', detail: 'Bring the vision to life across every touchpoint and format.' },
-  { number: '04', title: 'Deliver', detail: 'Launch with precision and ensure everything performs at scale.' },
-  { number: '05', title: 'Refine', detail: 'Measure, learn, and iterate so results compound over time.' },
-];
+// Imported, not redeclared — /services renders this same array, so the two
+// pages can no longer describe different processes. See data/process.ts.
 
 /* ─── Utility: Reveal wrapper ────────────────────────────────────────────── */
 

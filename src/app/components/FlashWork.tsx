@@ -9,8 +9,10 @@ import {
   useReducedMotion,
   type MotionValue,
 } from 'motion/react';
+import { Link } from 'react-router';
 import { ArrowUpRight } from 'lucide-react';
 import { GLASS } from './GlassLayers';
+import projectsData from '../data/projects.json';
 
 /* ─── "Selected Work" — pinned scroll-through list + swapping visual ────────
  * Interaction reference: neutomni.com's own portfolio section (a pinned
@@ -45,13 +47,14 @@ const grainOverlayStyle: React.CSSProperties = {
   pointerEvents: 'none',
 };
 
-const projects = [
-  { number: '01', title: 'Apptile',     category: 'Branding',        tag: 'Brand System',   year: '2025', video: '/videos/apptile-logomotion.mp4' },
-  { number: '02', title: 'Terrabarn',   category: 'Social Media',    tag: 'Content',        year: '2025', video: '/videos/terrabarn-socials.mp4' },
-  { number: '03', title: 'Ground',      category: 'Motion Graphics', tag: 'Animation',      year: '2026', video: '/videos/ground-logo.mp4' },
-  { number: '04', title: 'Yui',         category: 'UI/UX Design',    tag: 'Product',        year: '2025', video: '/videos/reservation.mp4' },
-  { number: '05', title: 'Illusdoodle', category: 'Brand Strategy',  tag: 'Positioning',    year: '2025', video: null },
-];
+/* Single source of truth. This section previously carried its own local
+   array holding only title/category/year/video — which meant the site's
+   PROOF section displayed less about each project than any other part of
+   the site, while the real evidence (overview, deliverables, result) sat
+   unused in projects.json. Reading from the shared file instead lets each
+   project actually argue for itself, and gives every row a real case-study
+   destination via its `id`. */
+const projects = projectsData;
 const WORK_COUNT = projects.length;
 
 // Same pinned-scroll shape as Studio.tsx's Process/Principles sections: a
@@ -332,7 +335,12 @@ function StaticWorkList() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {projects.map((project) => (
-        <div key={project.number} style={{ padding: '18px 0', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+        <Link
+          key={project.number}
+          to={`/work/${project.id}`}
+          className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
+          style={{ display: 'block', padding: '18px 0', borderBottom: '1px solid rgba(0,0,0,0.08)', textDecoration: 'none', color: 'rgb(10,10,10)' }}
+        >
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
               <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, opacity: 0.4 }}>{project.number}.</span>
@@ -344,7 +352,13 @@ function StaticWorkList() {
               {project.category}
             </span>
           </div>
-        </div>
+          {/* On mobile the visual panel doesn't render, so the overview is
+              the only evidence available — show it rather than reducing
+              the proof chapter to a bare list of names. */}
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, lineHeight: 1.6, opacity: 0.55, margin: '10px 0 0' }}>
+            {project.overview}
+          </p>
+        </Link>
       ))}
     </div>
   );
@@ -616,6 +630,86 @@ export function FlashWork() {
                   />
                 ))}
               </div>
+
+              {/* Evidence — the reason this section can claim to be PROOF
+                  rather than a gallery. Shows the thinking and what was
+                  actually delivered, then hands off to the full case
+                  study. Right padding clears the badge's footprint so the
+                  two never collide. `result` metrics are intentionally
+                  absent until verified — see WorkDetailPage. */}
+              <motion.div
+                key={`evidence-${projects[activeIndex].id}`}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: EASE, delay: 0.12 }}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  padding: 'clamp(18px, 2.4vw, 30px)',
+                  paddingRight: 'clamp(150px, 16vw, 190px)',
+                  background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.72) 62%)',
+                  color: 'white',
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: 'clamp(13px, 1.15vw, 15px)',
+                    lineHeight: 1.6,
+                    margin: '0 0 14px',
+                    color: 'rgba(255,255,255,0.92)',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  } as React.CSSProperties}
+                >
+                  {projects[activeIndex].overview}
+                </p>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  {projects[activeIndex].deliverables.slice(0, 3).map((d) => (
+                    <span
+                      key={d}
+                      style={{
+                        fontFamily: 'var(--font-sans)',
+                        fontSize: 10,
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: 'rgba(255,255,255,0.75)',
+                        border: '1px solid rgba(255,255,255,0.3)',
+                        borderRadius: 3,
+                        padding: '4px 9px',
+                      }}
+                    >
+                      {d}
+                    </span>
+                  ))}
+                </div>
+
+                <Link
+                  to={`/work/${projects[activeIndex].id}`}
+                  className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 7,
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: '0.16em',
+                    textTransform: 'uppercase',
+                    textDecoration: 'none',
+                    color: 'white',
+                    borderBottom: '1px solid rgba(255,255,255,0.45)',
+                    paddingBottom: 3,
+                  }}
+                >
+                  View Case Study <ArrowUpRight size={13} strokeWidth={2} />
+                </Link>
+              </motion.div>
 
               <ExploreBadge x={badgeX} y={badgeY} hovered={badgeHovered} />
             </div>
