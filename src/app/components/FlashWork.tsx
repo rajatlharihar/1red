@@ -57,6 +57,13 @@ const grainOverlayStyle: React.CSSProperties = {
 const projects = projectsData;
 const WORK_COUNT = projects.length;
 
+/* Shared by the list rows and the visual, which lines up with the headline
+   (below the eyebrow) and the last row's underline (above its padding). */
+const ROW_PAD_Y = 'clamp(8px, 1.4vh, 20px)';
+const EYEBROW_LINE = 14;
+const HEADING_GAP = 14;
+const HEADLINE_OFFSET = EYEBROW_LINE + HEADING_GAP;
+
 // Same pinned-scroll shape as Studio.tsx's Process/Principles sections: a
 // tall wrapper, an opening/closing dwell to hold on the first/last project,
 // and a fixed scroll distance per transition in between.
@@ -112,7 +119,7 @@ function ProjectRow({
         textAlign: 'left',
         background: 'none',
         border: 'none',
-        padding: 'clamp(8px, 1.4vh, 20px) 0',
+        padding: `${ROW_PAD_Y} 0`,
         cursor: 'pointer',
       }}
     >
@@ -491,13 +498,13 @@ export function FlashWork() {
   }, [badgeXRaw, badgeYRaw]);
 
   const Heading = (
-    <div ref={headingRef} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 'clamp(1.25rem, 3vh, 3.5rem)' }}>
+    <div ref={headingRef} style={{ display: 'flex', flexDirection: 'column', gap: HEADING_GAP, marginBottom: 'clamp(1.25rem, 3vh, 3.5rem)' }}>
       <div className="overflow-hidden">
         <motion.p
           initial={{ y: '110%' }}
           animate={headingInView ? { y: 0 } : {}}
           transition={{ duration: 0.6, ease: EASE }}
-          style={{ fontFamily: 'var(--font-sans)', fontSize: 10, fontWeight: 600, letterSpacing: '0.28em', textTransform: 'uppercase', opacity: 0.4, margin: 0 }}
+          style={{ fontFamily: 'var(--font-sans)', fontSize: 10, lineHeight: `${EYEBROW_LINE}px`, fontWeight: 600, letterSpacing: '0.28em', textTransform: 'uppercase', opacity: 0.4, margin: 0 }}
         >
           Selected Work
         </motion.p>
@@ -536,10 +543,10 @@ export function FlashWork() {
     <section className="bg-white" style={{ position: 'relative' }}>
       {/* Heading, list and visual share one pinned viewport (Rajat: the
           separate heading block left too much white space above the list).
-          It used to be split out because content taller than 100vh got
-          clipped by the sticky overflow; the list + visual row now takes
-          only the height left under the heading (flex: 1, capped at 600px),
-          so nothing can overflow at any viewport height. */}
+          The left column is heading + list at their natural height (sizes
+          scale with viewport height so it fits 100vh); the visual stretches
+          to that same row, running from the headline to the last row's
+          underline, per Rajat. */}
       <div ref={wrapRef} style={{ height: `${WORK_TOTAL_VH}vh`, position: 'relative' }}>
         <div
           style={{
@@ -553,7 +560,6 @@ export function FlashWork() {
             padding: 'clamp(80px, 11vh, 128px) 0 clamp(20px, 4vh, 64px)',
           }}
         >
-          <div style={{ width: '100%', maxWidth: 1400, margin: '0 auto', padding: '0 clamp(1.5rem, 4vw, 5rem)' }}>{Heading}</div>
           <div
             className="grid grid-cols-1 lg:grid-cols-2"
             style={{
@@ -562,33 +568,28 @@ export function FlashWork() {
               margin: '0 auto',
               padding: '0 clamp(1.5rem, 4vw, 5rem)',
               gap: 'clamp(2.5rem, 5vw, 5rem)',
-              flex: '1 1 auto',
               minHeight: 0,
-              maxHeight: 600,
             }}
           >
-            {/* Left — the scroll-driven project list, vertically centered
-                in the space the panel occupies. `minHeight: 0` keeps this
-                grid item from expanding past the row's own set height. */}
-            <div style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              {Heading}
               {projects.map((project, i) => (
                 <ProjectRow key={project.number} project={project} index={i} activeValue={activeValue} onJump={jumpToIndex} />
               ))}
             </div>
 
             {/* Right — the swapping visual, framed as one of this site's own
-                floating glass objects (red-tinted border/shadow), not a
-                literal browser-mockup-on-a-photo like the reference. Height
-                100% (not aspect-ratio) so it always matches the list
-                column exactly. Tracks the cursor to pull the "Explore More"
-                badge toward it — the requested "moves when you hover"
-                interaction. */}
+                floating glass objects (red-tinted border/shadow). Top aligns
+                with the headline (below the eyebrow), bottom with the last
+                row's underline (above that row's bottom padding). Tracks the
+                cursor to pull the "Explore More" badge toward it. */}
             <div
               onMouseMove={handlePanelMouseMove}
               onMouseLeave={handlePanelMouseLeave}
               style={{
                 position: 'relative',
-                height: '100%',
+                marginTop: HEADLINE_OFFSET,
+                marginBottom: ROW_PAD_Y,
                 minHeight: 0,
                 borderRadius: 22,
                 overflow: 'hidden',
