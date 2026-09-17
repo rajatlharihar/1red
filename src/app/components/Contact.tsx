@@ -226,7 +226,7 @@ function SelectPill({ label, selected, onToggle }: { label: string; selected: bo
       type="button"
       onClick={onToggle}
       aria-pressed={selected}
-      className={focusRing}
+      className={`${focusRing} btn-corners`}
       animate={{
         backgroundColor: selected ? RED : 'rgba(255,255,255,0.55)',
         borderColor: selected ? RED : 'rgba(0,0,0,0.14)',
@@ -239,7 +239,6 @@ function SelectPill({ label, selected, onToggle }: { label: string; selected: bo
         alignItems: 'center',
         gap: 6,
         padding: '10px 18px',
-        borderRadius: 10,
         border: '1px solid',
         fontSize: 13,
         fontWeight: 500,
@@ -301,13 +300,12 @@ function SubmitButton({ status }: { status: 'idle' | 'submitting' | 'success' | 
       onMouseMove={handleMouseMove}
       animate={{ x: pos.x, y: pos.y, scale: hovered && !disabled ? 1.03 : 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.8 }}
-      className={focusRing}
+      className={`${focusRing} btn-corners`}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         gap: 10,
         padding: '18px 38px',
-        borderRadius: 3,
         border: 'none',
         background: disabled ? 'rgba(234,51,35,0.6)' : RED,
         color: 'white',

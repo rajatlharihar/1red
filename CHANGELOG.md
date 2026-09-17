@@ -6,6 +6,46 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-17
+
+- **Fallen stand removed** from the studio: `Studio_Setup_Tripod_6` (the tripod lying on the floor, bottom right) is cut from the scene at load in `StudioEnvironment.tsx`.
+- **Section 2 redesigned (no text yet)**: `ProblemCube` is now a pinned 320vh cube assembly. 27 red metal cubes appear scattered across the viewport, drift in core-first, square up before landing and lock into one 3×3×3 box while it turns, settling at a three-face angle. One InstancedMesh (`cube/CubeAssembly.tsx`); the old 8-block `CubeObject.tsx`, the problem/response text overlay and its scroll maths were removed. The copy is kept in `problemStates.ts` for when the text layout is decided.
+- **Hero into section 2 is continuous**: no more white hand-off screen. `ProblemCube` is pulled up over the end of the hero (`marginTop: -(100vh + overlap)`, overlap from `HANDOFF_P = 0.945` in `StudioEntrance.tsx`) and pins while the zoom through the "e" is still running; its backdrop is see-through until the hero has gone white. Cubes rush out of the centre of the gap, then spread. Section 2 is now 360vh.
+- **Hero and cubes glide in lockstep**: new `components/scrollGlide.ts` eases `window.scrollY` once (same rate-5 exponential the hero camera used) and both the hero and section 2 derive progress from it. Before, the hero eased its own progress and the cubes used raw scroll, so a fast scroll put cubes over the "e" before the zoom got there. Hero wrapper gains a 100vh pinned tail (`TAIL_VH`) and section 2's backdrop forces opaque once the hero really unpins, so a flick never shows the hero sliding away.
+- **Selected Work heading moved into the pinned viewport**: heading, list and visual share one sticky screen (Rajat: too much white space between the heading and the list). The list + visual row takes the height left under the heading (`flex: 1`, max 600px); heading, row titles and row padding also scale with viewport height, so it fits at 1280x720 without clipping.
+- **Cubes never collide**: the box builds centre, faces, edges, corners; each cube flies to a staging point outside the box on its slot's axis, squares up and slides straight in. Flying cubes separate from each other and stay outside the staging sphere. Verified with an OBB overlap test on all 27 cubes across 201 scroll positions at 1440x900 and 390x844: zero overlaps (a 5%-inflated control run does flag the touching cubes, so the test is live).
+- **Buttons use the nav pill's corner**: new `.btn-corners` class (smooth `corner-shape: superellipse(1.4)` at 14px, 10px fallback) on the nav indicator, mobile menu trigger and items, Contact option pills and submit, every Start a Project / Let's Talk / Visit Project CTA, the Privacy mail CTA and the footer service chips. Inline 3px/10px/12px radii removed from those.
+- **Yui video replaced**: `public/videos/reservation.mp4` is now Rajat's `yuireservation-f_v1 (1080p).mp4` (1080p, 28.8 s, audio stripped, faststart; was a 4K 44 s cut). Same path, so the home work section, `/work`, the Yui case study and the UI/UX Design service card all pick it up.
+- **Illusdoodle thumbnail**: new `public/images/illusdoodle-cover.jpg` (Rajat's logo artwork), set as `image` on the project in `projects.json` and `Work.tsx`. Projects with no video now show their `image` in FlashWork, `/work` and the case-study page; the red title block remains the fallback when neither exists.
+
+## 2026-09-16
+
+- **Hero line art** — edge lines rebuilt as constant-pixel-width ink lines sitting exactly on the geometry's corners (depth-biased along the view ray instead of being offset in world space, which had left every line visibly off its corner).
+- **Hero door** — now a 3-section garage door on a high-lift track: panels roll up, tip back ~60° under the header (shading to brand ink as they turn) and stow above the studio. Jambs, sill, header and a fixed transom above stay put, so the opening is always drawn.
+- **Hero camera** — starts closer, holds ~4 m off the door while it rolls, glides on one sine curve with damped scroll input; hero lengthened to 600vh.
+- **Wall thickness** (door reveal) is solid brand ink `#0a0a0a`; all scene ink switched to the brand ink.
+- **Frames removed** from the facade (the empty wall is being ideated separately).
+- **Studio interior** restyled to the pencil palette (curtains/stands/lamps in ink, backdrop with hatch, floor), scaled 1.15×; all scene lights removed (everything is unlit).
+- **Lights-on moment** — the room is pitch dark through the door and on entry, then snaps to pure white with a white flash at p = 0.715.
+- **Door panels vanish at the header line**: panels now rise straight up and are clipped (a world clipping plane on the panel, rail and outline materials) at the lower edge of the header beam. The high-lift track and tip-back shading were removed, since that motion is never seen now.
+- **Lag fix for the 5K iMac** (Radeon R9 M390, 2 GB): the canvas now uses a pixel budget (~3.2M px) instead of up to 2x DPR, renders on demand (frameloop `demand`, invalidated on scroll and while the glide catches up), and Studio.glb is simplified from 536k to 140k triangles (2.8 MB to 1.2 MB). Measured at 2560x1340 @2x, 3 runs: 301/0, 301/0, 298/2 slow frames; load long tasks under 0.3 s (was 1.3 to 11 s). Rebuild recipe committed as `scripts/rebuild-studio-glb.mjs`.
+- **Zoom is one move**: the camera no longer squares up on the "e" gap before zooming. The gap glides to centre during the first part of the zoom, via `aim = 1 - gapDrift / zoom`, so its on-screen offset shrinks smoothly while the mark grows.
+- **Thinner strokes everywhere**: ink lines 2 to 1.2 px, lamp sketch lines 1.4 to 0.9 px, lamp silhouette shell 1.6 to 0.9 px.
+- **Lamp beams turned OFF** at Rajat's request (`LAMP_BEAMS = false`; code kept so they can be switched back on).
+- **Lamp beams** (`src/app/components/hero/lampBeams.ts`): soft additive light cones from each lamp's emitting face, parented to the head so they swing with it. Spot beams are stronger and softbox beams faint; all fade out with `(1 - lights)^3`. **Undo switch:** `LAMP_BEAMS = false`.
+- **Lamp rest aim** is now 30% of the way from the camera toward the mark ("a little towards inside") before the turn.
+- **Lamps aim at the viewer, then the mark**: each head has a real forward vector (mount to emitting face). Through the door the heads track the live camera (full aim, not just yaw), then slerp onto the mark while the camera pushes in (p 0.47 to 0.72).
+- **Lag fix**: the lamp edge-line threshold was raised from 28° to 60°. Measured before: 11 s load freeze and a 30 s scroll stall. After: 1.5 s load task and 302 frames with 0 slow. The silhouette shell was already cheap; the low-threshold edge lines on the ~300k-triangle lamp kit were the cost.
+- **Lamps fully outlined + glowing**: a constant-pixel silhouette shell (back-face hull pushed along normals) now outlines round parts like poles, umbrellas and barrels, which edge lines alone missed. Edge threshold lowered to 28°. The emitting faces (softbox diffusers, spot emitters, lens glass) are a new `glow` role rendered pure white. Studio.glb rebuilt again with per-surface roles.
+- **Lights-on flash removed**; the switch is now a quick ramp with no hard click (p 0.706 to 0.726).
+- **Lamps sketched in pencil**: every tripod and lamp head carries its own edge outline (cream in the dark room, ink once lit) and swings with the head.
+- **Logo red at full intensity** (`#FF0000` face, `#C40000` sides). The bottom-right block of the "e" is one shape (two touching shapes in the supplied SVG, merged in `public/1red-logo.svg`, so no seam line).
+- **All blacks identical**: floor, ground, reveal, jambs, rails and ink lines are the same un-tone-mapped `#0A0A0A` (verified by sampling rendered pixels).
+- **Real logo + favicon** — the 3D mark now uses Rajat's vector `public/1red-logo.svg` and zooms through the gap in the "e". The favicon is the "1" glyph, white in dark browsers. favicon.svg had never been the logo; docs corrected.
+- **Floor all black**; room glows before the lights snap on (p 0.56 → 0.706).
+- **Lamp heads turn** from the viewer to the mark (p 0.66–0.82). Studio.glb rebuilt so each tripod and lamp head is individually controllable.
+- *(superseded same day)* **3D mark** — extruded from `public/favicon.svg` (verified against the SVG render), red with ink edges; turns once, then scales through the counter of the "r" (red tunnel) into white, handing off to the next section. Replaces the flat raster logo plane.
+
 ## 2026-08-31
 
 - **`/services` 3D environment** — reverted a red particle field and "pedestal leg" wireframe support geometry that had been added to the floating service-card modules; both were explicitly rejected as looking bad. The environment now shows plain wireframe box modules only (the earlier label-spacing and glass-surface polish was kept).

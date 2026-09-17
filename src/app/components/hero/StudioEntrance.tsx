@@ -4,6 +4,7 @@ import { motion, useMotionValue, useTransform, useReducedMotion } from 'motion/r
 import { ChevronDown } from 'lucide-react';
 import { Logo } from '../Logo';
 import { StudioScene } from './StudioScene';
+import { glide, subscribeGlide } from '../scrollGlide';
 
 /* ─── ENTER 1RED — the studio's front door ─────────────────────────────────
  * Replaces the previous opening (a static logo with an idle bob and a
@@ -22,7 +23,25 @@ import { StudioScene } from './StudioScene';
  * ────────────────────────────────────────────────────────────────────────── */
 
 const RED = '#EA3323';
-const SCROLL_VH = 420;
+export const SCROLL_VH = 600;
+/** Hero progress where section 2 takes over the screen: the "e" gap has
+ *  swallowed most of the frame and the red is splitting past the edges. */
+export const HANDOFF_P = 0.945;
+/* Extra pinned scroll after the sequence ends. Section 2 sits on top by
+   then; this keeps the hero from visibly sliding away under it when a fast
+   scroll gets ahead of the glide. */
+export const TAIL_VH = 100;
+
+/* A pixel budget for the canvas rather than a fixed pixel ratio. On a 5K
+   Retina iMac a full-window canvas at 2x is ~14.7M pixels per frame (plus
+   MSAA buffers), which overwhelms a 2 GB laptop-class GPU and caused
+   multi-second stalls. ~3.2M pixels keeps lines crisp at normal sizes and
+   drops to ~1x only on very large windows. */
+const PIXEL_BUDGET = 3.2e6;
+function budgetDpr(max: number) {
+  const px = window.innerWidth * window.innerHeight;
+  return Math.max(0.75, Math.min(max, window.devicePixelRatio || 1, Math.sqrt(PIXEL_BUDGET / px)));
+}
 
 function detectWebGL(): boolean {
   try {
@@ -44,19 +63,36 @@ function EntranceFallback() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(180deg, #E4DFD8 0%, #F2EEE8 100%)',
+        background: 'linear-gradient(180deg, #F6F3EE 0%, #FFFFFF 66%, #121110 66%, #121110 100%)',
         overflow: 'hidden',
       }}
     >
-      {/* Doorway proportion matches the real one built in the scene (2.2 × 2.4 m) */}
-      <div style={{ position: 'relative', width: 'min(46vw, 300px)', aspectRatio: '2.2 / 2.4', display: 'flex' }}>
-        <div style={{ position: 'absolute', inset: 0, background: RED, boxShadow: `0 0 90px ${RED}55` }} />
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Logo width={150} />
+      {/* The triangular doorway, proportioned like the real one — wide at the
+          floor, tapering to a point well above head height — with the mark
+          visible inside it. */}
+      <div
+        style={{
+          position: 'relative',
+          width: 'min(46vw, 300px)',
+          height: '66%',
+          clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)',
+          background: RED,
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            clipPath: 'polygon(50% 7%, 93% 96%, 7% 96%)',
+            background: '#F2EEE8',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            paddingBottom: '9%',
+          }}
+        >
+          <Logo width={96} />
         </div>
-        {/* Two panels, parted — the doorway, held open */}
-        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '30%', background: '#2A2724' }} />
-        <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '30%', background: '#2A2724' }} />
       </div>
     </div>
   );
@@ -65,15 +101,24 @@ function EntranceFallback() {
 export function StudioEntrance() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
+  // Filled by the scene: requests a frame. The canvas only draws on demand.
+  const invalidateRef = useRef<(() => void) | null>(null);
   const mv = useMotionValue(0);
 
   const reduceMotion = useReducedMotion() ?? false;
   const [webgl] = useState(detectWebGL);
   const [simplified, setSimplified] = useState(false);
   const [inView, setInView] = useState(true);
-  // Studio.glb is 18 MB. It streams in behind the closed doors, so the wait
-  // is hidden — but the invitation to scroll is held back until the room is
-  // actually there to walk into.
+  const [dpr, setDpr] = useState(() => budgetDpr(2));
+  useEffect(() => {
+    const onResize = () => setDpr(budgetDpr(simplified ? 1.5 : 2));
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [simplified]);
+  // The model streams in behind the closed doors, so the wait is hidden —
+  // but the invitation to scroll is held back until the room is actually
+  // there to walk into.
   const [ready, setReady] = useState(false);
   const handleReady = useCallback(() => setReady(true), []);
 
@@ -104,37 +149,27 @@ export function StudioEntrance() {
       mv.set(1);
       return;
     }
-    let rafId = 0;
-    const update = () => {
+    return subscribeGlide(() => {
       const el = wrapRef.current;
       if (!el) return;
-      const scrollable = el.offsetHeight - window.innerHeight;
-      const p = scrollable <= 0 ? 0 : Math.max(0, Math.min(1, -el.getBoundingClientRect().top / scrollable));
+      const top = el.getBoundingClientRect().top + glide.raw;
+      const scrollable = (SCROLL_VH / 100 - 1) * window.innerHeight;
+      const p = scrollable <= 0 ? 0 : Math.max(0, Math.min(1, (glide.y - top) / scrollable));
       progressRef.current = p;
       mv.set(p);
-    };
-    const onScroll = () => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(update);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll, { passive: true });
-    update();
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-      cancelAnimationFrame(rafId);
-    };
+      invalidateRef.current?.();
+    });
   }, [mv, reduceMotion]);
 
   const copyOpacity = useTransform(mv, [0.02, 0.16], [1, 0]);
   const copyY = useTransform(mv, [0.02, 0.16], [0, 14]);
   // Light floods the frame as the threshold is crossed, carrying straight
   // into the page background so the hand-off has no visible seam.
-  const veilOpacity = useTransform(mv, [0.9, 1], [0, 1]);
+  const veilOpacity = useTransform(mv, [0.965, 1], [0, 1]);
+
 
   return (
-    <div ref={wrapRef} style={{ height: reduceMotion ? '100vh' : `${SCROLL_VH}vh`, position: 'relative' }}>
+    <div ref={wrapRef} style={{ height: reduceMotion ? '100vh' : `${SCROLL_VH + TAIL_VH}vh`, position: 'relative' }}>
       <div
         style={{
           position: 'sticky',
@@ -146,8 +181,10 @@ export function StudioEntrance() {
       >
         {webgl ? (
           <Canvas
-            frameloop={inView ? 'always' : 'never'}
-            dpr={[1, simplified ? 1.5 : 2]}
+            // Draw only when something moves: on scroll, and while the camera
+            // is still gliding to catch up. Idle, the GPU does nothing.
+            frameloop={inView ? 'demand' : 'never'}
+            dpr={dpr}
             gl={{ antialias: !simplified, powerPreference: 'high-performance' }}
             // Metric, matching Studio.glb's real scale: 1.7 m eye height,
             // 9 m back from the facade. `far` only needs to clear the model's
@@ -158,6 +195,7 @@ export function StudioEntrance() {
             <Suspense fallback={null}>
               <StudioScene
                 progressRef={progressRef}
+                invalidateRef={invalidateRef}
                 reduceMotion={reduceMotion}
                 simplified={simplified}
                 onReady={handleReady}
@@ -215,7 +253,7 @@ export function StudioEntrance() {
           style={{
             position: 'absolute',
             inset: 0,
-            background: '#FDFBF8',
+            background: '#FFFFFF',
             opacity: veilOpacity,
             pointerEvents: 'none',
           }}

@@ -7,7 +7,7 @@ There is **no shared token file**. Every component that needs these colors redec
 | Token | Value | Where it's used | Notes |
 |---|---|---|---|
 | `RED` | `#EA3323` | UI accents everywhere — buttons, active states, borders, hover indicators | The site's "brand red" for interface chrome |
-| Logo red | `#ff0000` (literal `red` in SVG) | Only the actual "1red" logo mark (`Logo.tsx`, `favicon.svg`) | Verified via pixel-sampling to be a **different, more saturated red** than `RED` — this is intentional, not a bug. Never "fix" this by matching them. |
+| Logo red | `#ff0000` (literal `red` in SVG) | Only the actual "1red" logo mark (`Logo.tsx`, `public/1red-logo.svg`, favicon) | Verified via pixel-sampling to be a **different, more saturated red** than `RED` — this is intentional, not a bug. Never "fix" this by matching them. |
 | `INK` | `#0a0a0a` | Primary text, wireframe lines, dark UI elements | |
 | `LINE` | `rgba(0,0,0,0.1)` | Hairline borders/dividers | |
 | Cream/warm-white tints | e.g. `#F5F2EC`, `rgba(255,253,251,0.74)` | Glass surfaces, atmospheric gradients | Introduced later in the project specifically to keep glass "warm" rather than clinically neutral white |
@@ -26,6 +26,8 @@ There is **no shared token file**. Every component that needs these colors redec
 The base convention across the original build is **`borderRadius: 3`** — sharp, "engineered" corners, explicitly established as the site's core "1Red box" identity early in the project (superseding an earlier, rejected pill/rounded-button look).
 
 **This has since evolved, intentionally, for glass-card treatments.** Later redesigns (the homepage "Work That Moves Brands Forward" grid, the floating Navigation islands, the `/work` process story cards, the `/services` labels) use a noticeably larger radius — typically **14–22px** — because a literal 3px radius read as "flat rectangle," not "floating glass object/panel," once translucency and depth were introduced. **Both conventions currently coexist on purpose**: sharp `3px` for flush/edge-to-edge structural grids, larger radii for individually-floating glass surfaces. When starting new work, check which pattern the specific section already uses rather than assuming one universal radius.
+
+**Buttons and CTAs (2026-09-17, Rajat):** every button, CTA and clickable chip uses the nav's active-pill corner via the shared `.btn-corners` class (`src/styles/theme.css`): a smooth iOS-style curve, `border-radius: 14px; corner-shape: superellipse(1.4)` where `corner-shape` is supported, plain `10px` elsewhere. Never set an inline `borderRadius` on a button (inline wins over the class). This replaces the old 3px CTA corner; cards, tags and structural grids keep their own radii.
 
 Do not introduce fully rounded/pill shapes (`border-radius: 9999px` or similar) except where explicitly requested — pill shapes have been explicitly rejected multiple times as "too generic SaaS."
 
@@ -52,7 +54,7 @@ Key rules learned from real mistakes made and corrected in this project:
 
 Two logo-related assets exist and must not be confused:
 - **`Logo.tsx`** (used in `Navigation.tsx` and `Footer.tsx`) — a raster PNG screenshot (`src/imports/Screenshot_2026-07-03_at_1.17.51_PM.png`) run through an SVG `feColorMatrix` filter that extracts "redness" as alpha, producing a transparent-background logo image. This is the actively-used, correct component. Takes a `width` prop (plain px number, not responsive via CSS).
-- **`public/favicon.svg`** — the real vector source, verified pixel-identical to the raster logo (same shape, same color `#ff0000`). Currently used only as the browser favicon (`<link rel="icon">`), not imported into any React component. This is the asset to reach for if a future task genuinely needs to split/animate the logo's actual geometry — but per the hard rule above, only attempt this again if explicitly asked, and reuse the SVG's own subpath grouping (don't split subpaths that share a `<path>` element for fill-rule reasons — see the incident above).
+- **`public/1red-logo.svg`** — the real vector of the full "1red" mark (18 blocks, 285 × 174), supplied by Rajat 2026-09-16; used by the hero's 3D mark. **`public/favicon.svg`** is only the "1" glyph (red; white under `prefers-color-scheme: dark`). The old claim that favicon.svg held the verified full mark was wrong — it contained a different, outdated "1RED" drawing. This is the asset to reach for if a future task genuinely needs to split/animate the logo's actual geometry — but per the hard rule above, only attempt this again if explicitly asked, and reuse the SVG's own subpath grouping (don't split subpaths that share a `<path>` element for fill-rule reasons — see the incident above).
 
 ## Interaction & motion conventions
 

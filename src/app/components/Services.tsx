@@ -116,7 +116,7 @@ export function Services() {
           <motion.button
             whileHover={{ opacity: 1 }}
             initial={{ opacity: 0.55 }}
-            className="group flex items-center gap-3 text-sm tracking-widest uppercase border border-black/20 rounded-[3px] px-6 py-3 hover:border-black/60 transition-all duration-500"
+            className="group flex items-center gap-3 text-sm tracking-widest uppercase border border-black/20 btn-corners px-6 py-3 hover:border-black/60 transition-all duration-500"
           >
             <span>Start a project</span>
             <motion.span

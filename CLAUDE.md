@@ -34,5 +34,5 @@ When the user says **"SAVE MEMORY"**:
 
 ## The two hardest rules in this project
 
-- **The OneRed logo geometry is never redesigned, redrawn, or approximated.** If a task touches the logo, use the real vector source (`public/favicon.svg` — verified pixel-identical to the raster logo used elsewhere) or the existing `Logo.tsx` component. See `.claude/design-system.md` for the full story.
+- **The OneRed logo geometry is never redesigned, redrawn, or approximated.** If a task touches the logo, use the real vector source (`public/1red-logo.svg` — supplied directly by Rajat, 2026-09-16) or the existing `Logo.tsx` component. `public/favicon.svg` is NOT the logo: it is only the "1" glyph used as the browser icon (red, white in dark mode). An older doc claim that favicon.svg was the full mark was wrong — it held a different, outdated "1RED" drawing. See `.claude/design-system.md` for the full story.
 - **Every past redesign in this project explicitly preserved unrelated sections.** When asked to redesign one section, do not touch, "improve," or refactor anything else unless the user asks. This has been a hard requirement in essentially every design task on this project.

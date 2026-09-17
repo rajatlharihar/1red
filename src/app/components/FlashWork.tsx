@@ -112,7 +112,7 @@ function ProjectRow({
         textAlign: 'left',
         background: 'none',
         border: 'none',
-        padding: 'clamp(12px, 1.8vh, 20px) 0',
+        padding: 'clamp(8px, 1.4vh, 20px) 0',
         cursor: 'pointer',
       }}
     >
@@ -133,7 +133,7 @@ function ProjectRow({
           <motion.span
             style={{
               fontFamily: 'var(--font-sans)',
-              fontSize: 'clamp(24px, 3vw, 42px)',
+              fontSize: 'clamp(22px, min(3vw, 5vh), 42px)',
               fontWeight: 800,
               letterSpacing: '-0.02em',
               lineHeight: 1.1,
@@ -164,7 +164,7 @@ function ProjectRow({
         style={{
           height: 2,
           background: RED,
-          marginTop: 10,
+          marginTop: 'clamp(6px, 1vh, 10px)',
           transformOrigin: 'left',
           scaleX: underlineScale,
           opacity: underlineOpacity,
@@ -296,6 +296,12 @@ function VisualPanel({ project }: { project: (typeof projects)[0] }) {
           autoPlay
           playsInline
           preload="auto"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      ) : project.image ? (
+        <img
+          src={project.image}
+          alt={project.title}
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
         />
       ) : (
@@ -485,7 +491,7 @@ export function FlashWork() {
   }, [badgeXRaw, badgeYRaw]);
 
   const Heading = (
-    <div ref={headingRef} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 'clamp(2rem, 4vh, 3.5rem)' }}>
+    <div ref={headingRef} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 'clamp(1.25rem, 3vh, 3.5rem)' }}>
       <div className="overflow-hidden">
         <motion.p
           initial={{ y: '110%' }}
@@ -501,7 +507,7 @@ export function FlashWork() {
           initial={{ y: '110%' }}
           animate={headingInView ? { y: 0 } : {}}
           transition={{ duration: 0.78, ease: EASE, delay: 0.05 }}
-          style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(36px, 5.4vw, 68px)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.02, margin: 0, color: 'rgb(10,10,10)' }}
+          style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(32px, min(5.4vw, 8vh), 68px)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.02, margin: 0, color: 'rgb(10,10,10)' }}
         >
           Work That Moves<br />Brands Forward
         </motion.h2>
@@ -528,18 +534,26 @@ export function FlashWork() {
 
   return (
     <section className="bg-white" style={{ position: 'relative' }}>
-      {/* Heading scrolls normally, fully visible BEFORE the pin engages —
-          matching the same convention used everywhere else in this project
-          a pinned scroll sequence exists (see Studio.tsx's Process/
-          Principles sections). Trying to fit heading + 5 rows + the visual
-          panel into one 100vh sticky viewport is what caused the card and
-          heading to read as "cut off" — content taller than the viewport
-          got clipped by the sticky element's own overflow:hidden. Only the
-          list + visual need to fit one viewport now, which comfortably do. */}
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '7rem clamp(1.5rem, 4vw, 5rem) 0' }}>{Heading}</div>
-
+      {/* Heading, list and visual share one pinned viewport (Rajat: the
+          separate heading block left too much white space above the list).
+          It used to be split out because content taller than 100vh got
+          clipped by the sticky overflow; the list + visual row now takes
+          only the height left under the heading (flex: 1, capped at 600px),
+          so nothing can overflow at any viewport height. */}
       <div ref={wrapRef} style={{ height: `${WORK_TOTAL_VH}vh`, position: 'relative' }}>
-        <div style={{ position: 'sticky', top: 0, height: '100vh', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            height: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            padding: 'clamp(80px, 11vh, 128px) 0 clamp(20px, 4vh, 64px)',
+          }}
+        >
+          <div style={{ width: '100%', maxWidth: 1400, margin: '0 auto', padding: '0 clamp(1.5rem, 4vw, 5rem)' }}>{Heading}</div>
           <div
             className="grid grid-cols-1 lg:grid-cols-2"
             style={{
@@ -548,7 +562,9 @@ export function FlashWork() {
               margin: '0 auto',
               padding: '0 clamp(1.5rem, 4vw, 5rem)',
               gap: 'clamp(2.5rem, 5vw, 5rem)',
-              height: 'min(64vh, 600px)',
+              flex: '1 1 auto',
+              minHeight: 0,
+              maxHeight: 600,
             }}
           >
             {/* Left — the scroll-driven project list, vertically centered

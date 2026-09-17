@@ -959,9 +959,10 @@ function MagneticCTA({ children, primary }: { children: React.ReactNode; primary
       onMouseMove={onMove}
       animate={{ x: pos.x, y: pos.y, scale: hovered ? 1.04 : 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+      className="btn-corners"
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 10,
-        padding: '18px 36px', borderRadius: 3, cursor: 'pointer',
+        padding: '18px 36px', cursor: 'pointer',
         fontSize: 12, fontWeight: 600, letterSpacing: '0.09em', textTransform: 'uppercase',
         border: primary ? 'none' : '1px solid rgba(0,0,0,0.2)',
         background: primary ? (hovered ? '#f0f0f0' : '#ffffff') : (hovered ? '#0a0a0a' : 'transparent'),
@@ -1359,9 +1360,10 @@ export function Studio() {
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 transition={{ duration: 0.25 }}
+                className="btn-corners"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 10,
-                  padding: '18px 36px', borderRadius: 3, cursor: 'pointer',
+                  padding: '18px 36px', cursor: 'pointer',
                   fontSize: 12, fontWeight: 600, letterSpacing: '0.09em', textTransform: 'uppercase',
                   border: '1px solid rgba(255,255,255,0.2)',
                   background: 'transparent', color: 'white',

@@ -1,22 +1,28 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { useFrame, useLoader, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import logoSrc from '@/imports/Screenshot_2026-07-03_at_1.17.51_PM.png';
-import { createPosterTexture, type PosterSpec } from './posterTextures';
-import { StudioEnvironment } from './StudioEnvironment';
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
+import { createHatchTexture } from './surfaceTextures';
+import { StudioEnvironment, type RoomMaterials } from './StudioEnvironment';
 import {
   sampleSequence,
   RESTING_STATE,
-  BACKDROP_Z,
-  DOORWAY_H,
-  DOORWAY_W,
+  DOOR_APEX_Y,
+  DOOR_BASE_W,
+  DOOR_HEADER_Y,
+  DOOR_SECTION_FOOT,
+  DOOR_SECTION_TOPS,
   FACADE_H,
   FACADE_W,
   FACADE_Z,
-  LOGO_PLANE_W,
-  LOGO_PLANE_H,
-  LOGO_OFFSET_X,
-  LOGO_OFFSET_Y,
+  LOGO_DEPTH,
+  LOGO_K,
+  LOGO_PIVOT,
+  LOGO_SVG_BOX,
+  LOGO_SVG_URL,
   LOGO_Y,
   LOGO_Z,
 } from './studioSequence';
@@ -24,256 +30,474 @@ import {
 /* ─── The entrance to Studio.glb ───────────────────────────────────────────
  * The supplied model IS the studio. Everything built here is only what the
  * threshold needs in order to exist: a facade with a doorway cut into it,
- * two door panels, and ground under the approach — because the model's own
- * floor stops at z = 6.59 and the camera starts at z = 9.
- *
- * The procedural room that used to live here (floor, ceiling, back wall,
- * side walls, plus a mock camera rig / desk / key lights) has been removed
- * outright. Keeping it would have meant a second, fake studio sitting
- * inside the real one.
+ * the door in that doorway, and ground under the approach — because the
+ * model's own floor stops at z = 6.59 and the camera starts well beyond it.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const RED = '#EA3323';
-const FACADE_COL = '#FFFFFF';   // exterior walls — white, as requested
-const VOID_COL = '#F1EEE9';     // sky/void behind, so the white wall still reads as an edge
-const GROUND_COL = '#DAD4CC';
-const CHARCOAL = '#2A2724';
-const FACADE_T = 0.25;
-const DOOR_T = 0.09;
+const RED = '#FF0000'; // full-intensity red; room and mark skip tone mapping
 
-/* The mark, reconstructed exactly as Logo.tsx does it.
- *
- * Logo.tsx renders the raster brand asset through an SVG feColorMatrix that
- * derives alpha from "redness": A = 3R − 3G − 3B, isolating the red
- * letterforms and dropping the cream background. This shader performs the
- * identical operation on the identical source file, so the mark is never
- * redrawn, traced or approximated — it is the same pixels, masked the same
- * way, at its true 1.66:1 proportion. */
-const LOGO_VERT = `
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+/* ── Cream and line art ───────────────────────────────────────────────────
+ * Flat paper-coloured planes; ink edges where two surfaces meet do the
+ * describing. The lines are the edges of the real geometry, so they move,
+ * foreshorten and cross correctly as the camera travels. */
+const CREAM = '#E7E1CE';
+const CREAM_DOOR = '#E2DCC7';
+const INK = '#0A0A0A'; // brand ink (design-system.md)
+
+const FACADE_COL = CREAM;
+const VOID_COL = '#EDE8D9';
+
+/* The room behind the door. Pitch dark until the lights slam on, then the
+   cream goes all the way to white; ink stays ink. */
+const ROOM_LIT = '#FFFFFF';
+/* Every black that sits on the floor plane or frames the door is the SAME
+   brand ink, un-tone-mapped: tone mapping crushed some surfaces to pure black
+   and left others a warm charcoal, so blacks meeting at a seam never matched. */
+const ROOM_DARK = { paper: '#161513', floor: INK, backing: '#0E0D0C' };
+const LOGO_SIDE = '#C40000';
+const LOGO_DARK = '#140504';
+const SKETCH_DARK = '#CFC7B0';
+
+/* Ink edges are screen-space quads with a constant pixel width (WebGL
+ * ignores `linewidth` on plain lines). They sit EXACTLY on the geometry's
+ * corners; the fills are pushed back in depth with polygonOffset instead of
+ * the lines being nudged off their corners in world space. */
+const LINE_PX = 1.2;
+const FILL_OFFSET = { polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 4 } as const;
+
+const FACADE_T = 1.8;
+
+const REVEAL_FRONT = '#0A0A0A';
+const REVEAL_BACK = '#0A0A0A';
+
+const WALL_TAPER_BOTTOM = 0.7;
+const WALL_TAPER_TOP = 1.55;
+
+
+/** The ground plane sits this far above y = 0 (see the ground mesh), so the
+ *  wall/floor seam line is drawn just above it rather than buried under it. */
+const GROUND_Y = 0.006;
+const SEAM_Y = 0.014;
+
+/* ── The door, in door-local depth (0 = centre of the wall) ──────────────
+ * Back to front, all inside the wall's own thickness (≥ 0.63 either side):
+ *   sections  −0.15 … 0.15   roll back into the room, so never come forward
+ *   transom    0.25 … 0.45   fixed, above the header; sections pass behind it
+ *   frame      0.23 … 0.47   jambs, sill, header — ink, never moves  */
+const SECTION_T = 0.3;
+const TRANSOM_Z = 0.33;
+const TRANSOM_T = 0.16;
+const FRAME_Z = 0.36;
+const FRAME_D = 0.16;
+const JAMB_W = 0.12; // half of it shows inside the opening
+const HEADER_H = 0.14;
+const SILL_H = 0.12;
+const RAIL_H = 0.12;
+/** Panels and transom run this far past the opening's edge on each side, so
+ *  their ends are always buried in the wall. */
+const OVERSIZE = 0.34;
+
+/** World-space clip at the header beam's lower edge: door panels (and their
+ *  rails and outlines) vanish as they rise past it. The door group sits at
+ *  y = 0, so door-local heights are world heights. */
+const HEADER_CLIP = new THREE.Plane(new THREE.Vector3(0, -1, 0), DOOR_HEADER_Y - HEADER_H / 2);
+
+/** Half-width of the opening at height y. */
+function openingHalfW(y: number) {
+  return (DOOR_BASE_W / 2) * (1 - y / DOOR_APEX_Y);
+}
+
+const SECTIONS = DOOR_SECTION_TOPS.map((top, i) => {
+  const bottom = i === 0 ? DOOR_SECTION_FOOT : DOOR_SECTION_TOPS[i - 1];
+  return { bottom, top, h: top - bottom };
+});
+
+
+/* A line on a corner shares depth with the faces meeting there and breaks
+   into dashes where one of them is seen edge-on. Pulling each endpoint 0.4%
+   of its distance toward the camera — along its own view ray, so its screen
+   position is unchanged — wins that tie at every range without ever
+   bringing a genuinely hidden edge through a surface. */
+function createInkLineMaterial(color = INK, width = LINE_PX) {
+  const m = new LineMaterial({ color: new THREE.Color(color).getHex(), linewidth: width });
+  m.toneMapped = false;
+  m.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader.replace(
+      'vec4 end = modelViewMatrix * vec4( instanceEnd, 1.0 );',
+      'vec4 end = modelViewMatrix * vec4( instanceEnd, 1.0 );\n\t\t\tstart.xyz *= 0.996;\n\t\t\tend.xyz *= 0.996;'
+    );
+  };
+  return m;
+}
+
+function inkEdges(geo: THREE.BufferGeometry, mat: LineMaterial, liftFloorTo?: number) {
+  const edges = new THREE.EdgesGeometry(geo, 25);
+  if (liftFloorTo !== undefined) {
+    const pos = edges.attributes.position;
+    for (let i = 0; i < pos.count; i++) if (Math.abs(pos.getY(i)) < 1e-4) pos.setY(i, liftFloorTo);
   }
-`;
-const LOGO_FRAG = `
-  uniform sampler2D uMap;
-  uniform vec3 uColor;
-  uniform float uOpacity;
-  varying vec2 vUv;
-  void main() {
-    vec4 t = texture2D(uMap, vUv);
-    float a = clamp(3.0 * t.r - 3.0 * t.g - 3.0 * t.b, 0.0, 1.0);
-    if (a < 0.02) discard;
-    gl_FragColor = vec4(uColor, a * uOpacity);
-  }
-`;
+  const lines = new LineSegments2(new LineSegmentsGeometry().fromEdgesGeometry(edges), mat);
+  edges.dispose();
+  return lines;
+}
+
+function trapezoid(yb: number, yt: number, hwb: number, hwt: number, depth: number, z: number) {
+  const s = new THREE.Shape();
+  s.moveTo(-hwb, yb);
+  s.lineTo(hwb, yb);
+  s.lineTo(hwt, yt);
+  s.lineTo(-hwt, yt);
+  s.closePath();
+  const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: false });
+  g.translate(0, 0, z - depth / 2);
+  return g;
+}
+
 
 export function StudioScene({
   progressRef,
+  invalidateRef,
   reduceMotion,
   simplified,
   onReady,
 }: {
   progressRef: React.MutableRefObject<number>;
+  invalidateRef: React.MutableRefObject<(() => void) | null>;
   reduceMotion: boolean;
   simplified: boolean;
   onReady?: () => void;
 }) {
   const camera = useThree((s) => s.camera);
+  const size = useThree((s) => s.size);
+  const invalidate = useThree((s) => s.invalidate);
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    gl.localClippingEnabled = true;
+  }, [gl]);
+  useEffect(() => {
+    invalidateRef.current = invalidate;
+    return () => {
+      invalidateRef.current = null;
+    };
+  }, [invalidate, invalidateRef]);
 
-  const leftDoor = useRef<THREE.Mesh>(null);
-  const rightDoor = useRef<THREE.Mesh>(null);
-  const keyLight = useRef<THREE.PointLight>(null);
-  const fillLight = useRef<THREE.PointLight>(null);
-  const logoLight = useRef<THREE.SpotLight>(null);
-  const logoMesh = useRef<THREE.Mesh>(null);
+  const sectionRefs = useRef<Array<THREE.Group | null>>([]);
+  const logoZoom = useRef<THREE.Group>(null);
+  const logoSpin = useRef<THREE.Group>(null);
 
-  const logoTexture = useLoader(THREE.TextureLoader, logoSrc);
-
-  const logoMaterial = useMemo(() => {
-    // No colour-space decode — the feColorMatrix maths assumes the stored
-    // sRGB values, so the texture must pass through untouched.
-    logoTexture.colorSpace = THREE.LinearSRGBColorSpace;
-    logoTexture.minFilter = THREE.LinearFilter;
-    logoTexture.magFilter = THREE.LinearFilter;
-    logoTexture.generateMipmaps = false;
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        uMap: { value: logoTexture },
-        uColor: { value: new THREE.Color(RED).convertSRGBToLinear() },
-        uOpacity: { value: 0 },
-      },
-      vertexShader: LOGO_VERT,
-      fragmentShader: LOGO_FRAG,
-      transparent: true,
-      depthWrite: false,
-    });
-  }, [logoTexture]);
+  const hatch = useMemo(() => {
+    const t = createHatchTexture();
+    t.repeat.set(1 / 2.4, 1 / 2.4);
+    return t;
+  }, []);
+  // The backdrop's UVs span 0–1 across the whole cyclorama, not metres, so
+  // it needs its own tiling to land at the same stroke size as the wall.
+  const roomHatch = useMemo(() => {
+    const t = createHatchTexture();
+    t.repeat.set(2.2, 2.2);
+    return t;
+  }, []);
+  useEffect(
+    () => () => {
+      hatch.dispose();
+      roomHatch.dispose();
+    },
+    [hatch, roomHatch]
+  );
 
   const mats = useMemo(
     () => ({
-      /* Setting the colour to white alone was not enough: R3F applies ACES
-         filmic tone mapping by default, which rolls a lit white surface off
-         to roughly mid-grey — which is exactly what was rendering. Raising
-         the scene lights would fix the wall but would also wash out
-         Studio.glb, whose supplied look should not change. So the facade
-         carries its own emissive instead: only this surface is lifted, and
-         it reads as genuinely white while keeping a little shading. */
-      facade: new THREE.MeshStandardMaterial({
-        color: FACADE_COL,
-        roughness: 0.95,
-        metalness: 0,
-        emissive: new THREE.Color('#FFFFFF'),
-        emissiveIntensity: 0.85,
-      }),
-      ground: new THREE.MeshStandardMaterial({ color: GROUND_COL, roughness: 0.9, metalness: 0 }),
-      door: new THREE.MeshStandardMaterial({ color: CHARCOAL, roughness: 0.65, metalness: 0.12 }),
-      frame: new THREE.MeshStandardMaterial({ color: '#CFC8BE', roughness: 0.9, metalness: 0 }),
+      facade: new THREE.MeshBasicMaterial({ color: FACADE_COL, map: hatch, ...FILL_OFFSET }),
+      reveal: new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false, ...FILL_OFFSET }),
+      // Same black as the dark room floor, so outside and inside read as one
+      // surface. No polygonOffset: it must win over the model's floor beneath it.
+      ground: new THREE.MeshBasicMaterial({ color: ROOM_DARK.floor, toneMapped: false }),
+      transom: new THREE.MeshBasicMaterial({ color: CREAM_DOOR, ...FILL_OFFSET }),
+      sections: SECTIONS.map(
+        () => new THREE.MeshBasicMaterial({ color: CREAM_DOOR, clippingPlanes: [HEADER_CLIP], ...FILL_OFFSET })
+      ),
+      // The door panels' own rails and outlines, clipped at the header like the panels.
+      railInk: new THREE.MeshBasicMaterial({ color: INK, toneMapped: false, clippingPlanes: [HEADER_CLIP] }),
+      sectionLine: (() => {
+        const m = createInkLineMaterial();
+        m.clippingPlanes = [HEADER_CLIP];
+        return m;
+      })(),
+      ink: new THREE.MeshBasicMaterial({ color: INK, toneMapped: false }),
+      // Room and mark skip tone mapping: lit white must be true white, and the
+      // mark true brand red, not the renderer's filmic roll-off of them.
+      roomPaper: new THREE.MeshBasicMaterial({ color: ROOM_DARK.paper, map: roomHatch, toneMapped: false }),
+      roomFloor: new THREE.MeshBasicMaterial({ color: ROOM_DARK.floor, toneMapped: false }),
+      roomBacking: new THREE.MeshBasicMaterial({ color: ROOM_DARK.backing, toneMapped: false }),
+      logoFace: new THREE.MeshBasicMaterial({ color: LOGO_DARK, toneMapped: false }),
+      logoSide: new THREE.MeshBasicMaterial({ color: LOGO_DARK, toneMapped: false }),
+      line: createInkLineMaterial(),
+      // Pencil outlines on the lamps: cream strokes in the dark room, ink once lit.
+      sketch: createInkLineMaterial(SKETCH_DARK, 0.9),
+      // The lamps' emitting faces: full white from the start, dark room or lit.
+      glow: new THREE.MeshBasicMaterial({ color: '#FFFFFF', toneMapped: false }),
+    }),
+    [hatch, roomHatch]
+  );
+  const roomMats = useMemo<RoomMaterials>(
+    () => ({ paper: mats.roomPaper, floor: mats.roomFloor, ink: mats.ink, glow: mats.glow, sketch: mats.sketch }),
+    [mats]
+  );
+  const palette = useMemo(
+    () => ({
+      lit: new THREE.Color(ROOM_LIT),
+      paper: new THREE.Color(ROOM_DARK.paper),
+      floor: new THREE.Color(ROOM_DARK.floor),
+      backing: new THREE.Color(ROOM_DARK.backing),
+      logoDark: new THREE.Color(LOGO_DARK),
+      logoFace: new THREE.Color(RED),
+      logoSide: new THREE.Color(LOGO_SIDE),
+      sketchDark: new THREE.Color(SKETCH_DARK),
+      ink: new THREE.Color(INK),
     }),
     []
   );
 
-  /* Facade posters, sized as real sheets (~0.62 × 0.86 m) now that the scene
-     is metric. Placement is bounded by what the OPENING shot can see: at
-     camera z = 9 the facade sits 5 m away, giving ±2.76 of visible width on
-     a 4:3 window — the narrowest realistic desktop — so nothing here exceeds
-     that, and everything clears the 2.2 m doorway. */
-  const posters = useMemo(() => {
-    const layout: Array<{ spec: PosterSpec; x: number; y: number; w: number; h: number; portrait: boolean }> = [
-      { spec: { design: 'clarity' }, x: -1.55, y: 1.5, w: 0.62, h: 0.86, portrait: true },
-      { spec: { design: 'strategy' }, x: -2.3, y: 1.5, w: 0.62, h: 0.86, portrait: true },
-      { spec: { design: 'details' }, x: 1.55, y: 1.5, w: 0.62, h: 0.86, portrait: true },
-      { spec: { design: 'longevity' }, x: 2.3, y: 1.5, w: 0.62, h: 0.86, portrait: true },
-      { spec: { design: 'process' }, x: -1.15, y: 2.72, w: 1.5, h: 0.42, portrait: false },
-      { spec: { design: 'services' }, x: 1.15, y: 2.72, w: 1.5, h: 0.42, portrait: false },
-    ];
-    return layout.map((l) => ({ ...l, texture: createPosterTexture(l.spec, l.portrait) }));
+  /* The mark in 3D, extruded from the traced brand mark (see studioSequence). Each
+     SVG path is turned into shapes whole — createShapes resolves a path's
+     own subpaths into outlines and holes together, so the counters stay
+     holes and nothing is split apart. Flipped to y-up (with z, so the
+     winding stays outward) and centred on the mark's own bounds. */
+  const svg = useLoader(SVGLoader, LOGO_SVG_URL);
+  const logo = useMemo(() => {
+    const shapes = svg.paths.flatMap((path) => SVGLoader.createShapes(path));
+    const depth = LOGO_DEPTH / LOGO_K;
+    const geo = new THREE.ExtrudeGeometry(shapes, { depth, bevelEnabled: false, curveSegments: 10 });
+    geo.translate(
+      -(LOGO_SVG_BOX.x0 + LOGO_SVG_BOX.x1) / 2,
+      -(LOGO_SVG_BOX.y0 + LOGO_SVG_BOX.y1) / 2,
+      -depth / 2
+    );
+    geo.scale(LOGO_K, -LOGO_K, -LOGO_K);
+    return { geo, lines: inkEdges(geo, mats.line) };
+  }, [svg, mats]);
+  useEffect(() => {
+    mats.line.resolution.set(size.width, size.height);
+    mats.sketch.resolution.set(size.width, size.height);
+    mats.sectionLine.resolution.set(size.width, size.height);
+  }, [mats, size]);
+
+  /* The facade: one traced outline with the triangular notch, extruded, then
+     shaded by depth (reveal gradient) and tapered by height — colours are
+     read before the taper so the gradient isn't squeezed with it. */
+  const facadeGeo = useMemo(() => {
+    const hw = FACADE_W / 2;
+    const hb = DOOR_BASE_W / 2;
+    const s = new THREE.Shape();
+    s.moveTo(-hw, 0);
+    s.lineTo(-hb, 0);
+    s.lineTo(0, DOOR_APEX_Y);
+    s.lineTo(hb, 0);
+    s.lineTo(hw, 0);
+    s.lineTo(hw, FACADE_H);
+    s.lineTo(-hw, FACADE_H);
+    s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: FACADE_T, bevelEnabled: false });
+    g.translate(0, 0, -FACADE_T / 2);
+
+    const pos = g.attributes.position;
+    const colors = new Float32Array(pos.count * 3);
+    const back = new THREE.Color(REVEAL_BACK);
+    const front = new THREE.Color(REVEAL_FRONT);
+    const c = new THREE.Color();
+    for (let i = 0; i < pos.count; i++) {
+      const d = (pos.getZ(i) + FACADE_T / 2) / FACADE_T;
+      c.copy(back).lerp(front, d < 0 ? 0 : d > 1 ? 1 : d);
+      colors[i * 3] = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
+
+      const h0 = pos.getY(i) / FACADE_H;
+      const h = h0 < 0 ? 0 : h0 > 1 ? 1 : h0;
+      pos.setZ(i, pos.getZ(i) * (WALL_TAPER_BOTTOM + (WALL_TAPER_TOP - WALL_TAPER_BOTTOM) * h));
+    }
+    pos.needsUpdate = true;
+    g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    return g;
+  }, []);
+  const facadeLines = useMemo(() => inkEdges(facadeGeo, mats.line, SEAM_Y), [facadeGeo, mats]);
+
+  /* Each section is cut to the opening's width at its own closed height (plus
+     the buried overlap), built with its hinge — its bottom edge — at the
+     local origin so the track can place and tip it. */
+  const sectionParts = useMemo(
+    () =>
+      SECTIONS.map(({ bottom, top, h }) => {
+        const geo = trapezoid(
+          0,
+          h,
+          openingHalfW(bottom) + OVERSIZE,
+          openingHalfW(top) + OVERSIZE,
+          SECTION_T,
+          0
+        );
+        return { geo, lines: inkEdges(geo, mats.sectionLine), railW: openingHalfW(top) * 2 + 0.2 };
+      }),
+    [mats]
+  );
+
+  const transomGeo = useMemo(() => {
+    const yb = DOOR_HEADER_Y - HEADER_H / 2;
+    const s = new THREE.Shape();
+    s.moveTo(-(openingHalfW(yb) + OVERSIZE), yb);
+    s.lineTo(openingHalfW(yb) + OVERSIZE, yb);
+    s.lineTo(0, DOOR_APEX_Y + OVERSIZE * 2);
+    s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: TRANSOM_T, bevelEnabled: false });
+    g.translate(0, 0, TRANSOM_Z - TRANSOM_T / 2);
+    return g;
+  }, []);
+  const transomLines = useMemo(() => inkEdges(transomGeo, mats.line), [transomGeo, mats]);
+
+  /* The jambs run along each slope of the opening, centred on its edge so
+     half their width shows inside the hole and half is buried in the wall. */
+  const jamb = useMemo(() => {
+    const hwFoot = openingHalfW(DOOR_SECTION_FOOT);
+    const rise = DOOR_APEX_Y - DOOR_SECTION_FOOT;
+    return {
+      len: Math.hypot(hwFoot, rise),
+      angle: Math.atan2(hwFoot, rise),
+      x: hwFoot / 2,
+      y: (DOOR_APEX_Y + DOOR_SECTION_FOOT) / 2,
+    };
   }, []);
 
   useEffect(() => {
-    return () => posters.forEach((p) => p.texture.dispose());
-  }, [posters]);
+    return () => {
+      facadeGeo.dispose();
+      transomGeo.dispose();
+      facadeLines.geometry.dispose();
+      transomLines.geometry.dispose();
+      sectionParts.forEach((p) => {
+        p.geo.dispose();
+        p.lines.geometry.dispose();
+      });
+      logo.geo.dispose();
+      logo.lines.geometry.dispose();
+    };
+  }, [facadeGeo, transomGeo, facadeLines, transomLines, sectionParts, logo]);
+
+
+  const lampTurn = useRef(0);
+  const lightsLevel = useRef(0);
+  const aim = useMemo(
+    () => ({ mark: new THREE.Vector3(0, LOGO_Y, LOGO_Z) }),
+    []
+  );
 
   useFrame(() => {
+    // Progress is already glided (scrollGlide), which also requests each frame.
     const s = reduceMotion ? RESTING_STATE : sampleSequence(progressRef.current);
 
-    camera.position.set(0, s.camY, s.camZ);
-    camera.lookAt(0, s.lookY, BACKDROP_Z);
+    camera.position.set(s.camX, s.camY, s.camZ);
+    camera.lookAt(s.lookX, s.lookY, s.lookZ);
+    camera.rotateZ(s.camRoll);
 
-    if (leftDoor.current) leftDoor.current.position.x = -DOORWAY_W / 4 - s.doorOffset;
-    if (rightDoor.current) rightDoor.current.position.x = DOORWAY_W / 4 + s.doorOffset;
+    // The garage door: all panels rise together and vanish into the header.
+    for (let i = 0; i < SECTIONS.length; i++) {
+      const g = sectionRefs.current[i];
+      if (g) g.position.y = SECTIONS[i].bottom + s.doorOffset;
+    }
 
-    // Light builds inside the room as the doors part, so the interior is
-    // revealed by illumination as much as by geometry.
-    if (keyLight.current) keyLight.current.intensity = 1.5 + s.interior * 14;
-    if (fillLight.current) fillLight.current.intensity = 0.6 + s.interior * 5;
-    if (logoLight.current) logoLight.current.intensity = s.logo * 9;
+    lampTurn.current = s.lampTurn;
+    lightsLevel.current = s.lights;
+    const L = s.lights;
+    mats.roomPaper.color.copy(palette.paper).lerp(palette.lit, L);
+    mats.roomFloor.color.copy(palette.floor).lerp(palette.lit, L);
+    mats.roomBacking.color.copy(palette.backing).lerp(palette.lit, L);
+    mats.logoFace.color.copy(palette.logoDark).lerp(palette.logoFace, L);
+    mats.logoSide.color.copy(palette.logoDark).lerp(palette.logoSide, L);
+    mats.sketch.color.copy(palette.sketchDark).lerp(palette.ink, L);
 
-    logoMaterial.uniforms.uOpacity.value = s.logo;
-    if (logoMesh.current) logoMesh.current.position.z = LOGO_Z + s.logoZ;
+    /* One turn, then scale through the counter of the "r". The zoom group's
+       origin IS that hole on the mark's front face, so the face never moves
+       toward the camera — the hole just opens around the lens. Depth grows
+       far slower than width: enough to read as a short red tunnel. */
+    if (logoSpin.current) logoSpin.current.rotation.y = s.logoSpin;
+    if (logoZoom.current) {
+      const z = s.logoZoom;
+      logoZoom.current.scale.set(z, z, 1 + (z - 1) * 0.01);
+    }
+
   });
-
-  const sideW = FACADE_W / 2 - DOORWAY_W / 2;
 
   return (
     <>
-      {/* Background and fog match the facade so an ultrawide viewport never
-          reveals a black void past the building edge. */}
       <color attach="background" args={[VOID_COL]} />
-      <fog attach="fog" args={[VOID_COL, 14, 46]} />
+      <fog attach="fog" args={[VOID_COL, 26, 95]} />
 
-      {/* ── Light ────────────────────────────────────────────────────────
-          Studio.glb ships no lights of its own (confirmed: no cameras, no
-          lights, no animations in the file), so the room is lit here.
-          Deliberately unequal — the exterior stays flat and cool while the
-          brightness lives inside, pulling the eye through the doorway. */}
-      <ambientLight intensity={reduceMotion ? 0.55 : 0.4} />
-      <directionalLight position={[6, 9, 14]} intensity={0.5} color="#FFF6EC" />
-      <pointLight ref={keyLight} position={[0, 2.6, -0.2]} color="#FFF4E8" intensity={1.5} distance={14} decay={1.5} />
-      {/* Fill is dropped on low-power devices — one less light evaluated per
-          fragment across a 536k-triangle model is a real saving there. */}
-      {!simplified && (
-        <pointLight ref={fillLight} position={[2.2, 2.2, 1.4]} color="#F2F4FF" intensity={0.6} distance={10} decay={1.6} />
-      )}
-      {/* A practical aimed at the backdrop — the mark reads as lit, not glowing */}
-      <spotLight
-        ref={logoLight}
-        position={[0, 2.85, 0.9]}
-        target-position={[0, LOGO_Y, BACKDROP_Z]}
-        angle={0.55}
-        penumbra={0.85}
-        color="#FFFFFF"
-        intensity={0}
-        distance={9}
-        decay={1.5}
-      />
-
-      {/* ── Studio.glb: the real interior ────────────────────────────────*/}
       <Suspense fallback={null}>
-        <StudioEnvironment onReady={onReady} />
+        <StudioEnvironment mats={roomMats} aim={aim} turnRef={lampTurn} lightsRef={lightsLevel} onReady={onReady} />
       </Suspense>
 
-      {/* ── Approach ground. The model's own floor ends at z = 6.59 and the
-             camera starts at z = 9, so without this the opening shot looks
-             out over nothing. ─────────────────────────────────────────── */}
-      <mesh position={[0, -0.005, 9]} rotation={[-Math.PI / 2, 0, 0]} material={mats.ground}>
-        <planeGeometry args={[46, 26]} />
+      {/* Depth behind the room, so the space above the studio's ceiling
+          reads as depth rather than as a hole. */}
+      <mesh position={[0, 10, -6]} material={mats.roomBacking}>
+        <planeGeometry args={[80, 40]} />
       </mesh>
 
-      {/* ── Facade with a doorway cut into it ────────────────────────────*/}
-      <mesh position={[-DOORWAY_W / 2 - sideW / 2, FACADE_H / 2, FACADE_Z]} material={mats.facade}>
-        <boxGeometry args={[sideW, FACADE_H, FACADE_T]} />
-      </mesh>
-      <mesh position={[DOORWAY_W / 2 + sideW / 2, FACADE_H / 2, FACADE_Z]} material={mats.facade}>
-        <boxGeometry args={[sideW, FACADE_H, FACADE_T]} />
-      </mesh>
-      <mesh position={[0, DOORWAY_H + (FACADE_H - DOORWAY_H) / 2, FACADE_Z]} material={mats.facade}>
-        <boxGeometry args={[DOORWAY_W, FACADE_H - DOORWAY_H, FACADE_T]} />
+      {/* Approach ground. The 6 mm clearance above the model's floor must not
+          be shaved: closer, the two overlapping floors z-fight and cost ~20
+          dropped frames per 3 s of scrolling. */}
+      <mesh position={[0, GROUND_Y, FACADE_Z + 60]} rotation={[-Math.PI / 2, 0, 0]} material={mats.ground}>
+        <planeGeometry args={[200, 120]} />
       </mesh>
 
-      {/* ── Studio work, mounted beside the door ─────────────────────────*/}
-      {posters.map((p, i) => (
-        <group key={i} position={[p.x, p.y, FACADE_Z + FACADE_T / 2]}>
-          <mesh position={[0, 0, 0.005]} material={mats.frame}>
-            <boxGeometry args={[p.w + 0.05, p.h + 0.05, 0.02]} />
-          </mesh>
-          <mesh position={[0, 0, 0.018]}>
-            <planeGeometry args={[p.w, p.h]} />
-            <meshStandardMaterial
-              map={p.texture}
-              emissiveMap={p.texture}
-              emissive="#ffffff"
-              emissiveIntensity={0.4}
-              roughness={0.85}
-              metalness={0}
-            />
-          </mesh>
+      <group position={[0, 0, FACADE_Z]}>
+        <mesh geometry={facadeGeo} material={[mats.facade, mats.reveal]} />
+        <primitive object={facadeLines} />
+      </group>
+
+      <group position={[0, 0, FACADE_Z]}>
+        {sectionParts.map((part, i) => (
+          <group
+            key={i}
+            ref={(el) => {
+              sectionRefs.current[i] = el;
+            }}
+          >
+            <mesh geometry={part.geo} material={mats.sections[i]} />
+            <primitive object={part.lines} />
+            {i < SECTIONS.length - 1 && (
+              <mesh position={[0, SECTIONS[i].h - RAIL_H / 2, 0]} material={mats.railInk}>
+                <boxGeometry args={[part.railW, RAIL_H, SECTION_T + 0.04]} />
+              </mesh>
+            )}
+          </group>
+        ))}
+
+        <mesh geometry={transomGeo} material={mats.transom} />
+        <primitive object={transomLines} />
+
+        {/* The frame: jambs, sill and header. Static, so the opening stays
+            drawn while the door rolls away behind it. */}
+        <mesh position={[-jamb.x, jamb.y, FRAME_Z]} rotation={[0, 0, -jamb.angle]} material={mats.ink}>
+          <boxGeometry args={[JAMB_W, jamb.len, FRAME_D]} />
+        </mesh>
+        <mesh position={[jamb.x, jamb.y, FRAME_Z]} rotation={[0, 0, jamb.angle]} material={mats.ink}>
+          <boxGeometry args={[JAMB_W, jamb.len, FRAME_D]} />
+        </mesh>
+        <mesh position={[0, SILL_H / 2, FRAME_Z]} material={mats.ink}>
+          <boxGeometry args={[openingHalfW(0) * 2 + 0.2, SILL_H, FRAME_D]} />
+        </mesh>
+        <mesh position={[0, DOOR_HEADER_Y, FRAME_Z]} material={mats.ink}>
+          <boxGeometry args={[openingHalfW(DOOR_HEADER_Y) * 2 + 0.2, HEADER_H, FRAME_D]} />
+        </mesh>
+      </group>
+
+      <group ref={logoZoom} position={[LOGO_PIVOT.x, LOGO_Y + LOGO_PIVOT.y, LOGO_Z + LOGO_DEPTH / 2]}>
+        <group position={[-LOGO_PIVOT.x, -LOGO_PIVOT.y, -LOGO_DEPTH / 2]}>
+          <group ref={logoSpin}>
+            <mesh geometry={logo.geo} material={[mats.logoFace, mats.logoSide]} />
+            <primitive object={logo.lines} />
+          </group>
         </group>
-      ))}
-
-      {/* ── Doors: two panels parting from the centre, finishing their
-             travel before the camera reaches the threshold ────────────── */}
-      <mesh ref={leftDoor} position={[-DOORWAY_W / 4, DOORWAY_H / 2, FACADE_Z - 0.08]} material={mats.door}>
-        <boxGeometry args={[DOORWAY_W / 2, DOORWAY_H, DOOR_T]} />
-      </mesh>
-      <mesh ref={rightDoor} position={[DOORWAY_W / 4, DOORWAY_H / 2, FACADE_Z - 0.08]} material={mats.door}>
-        <boxGeometry args={[DOORWAY_W / 2, DOORWAY_H, DOOR_T]} />
-      </mesh>
-
-      {/* ── The mark, on the studio's own backdrop ───────────────────────
-             Not floated in mid-air: the cyclorama at z = −1.40 is the
-             surface this room exists to put things in front of, so that is
-             where it hangs. Kept inside the backdrop's 3.8 m width at a
-             restrained 1.2 m. ──────────────────────────────────────────*/}
-      <mesh
-        ref={logoMesh}
-        position={[LOGO_OFFSET_X, LOGO_Y + LOGO_OFFSET_Y, LOGO_Z]}
-        material={logoMaterial}
-      >
-        <planeGeometry args={[LOGO_PLANE_W, LOGO_PLANE_H]} />
-      </mesh>
-
+      </group>
     </>
   );
 }

@@ -67,3 +67,157 @@ Chronological, most recent last. Each entry: date (where known — this project 
 **DECISION:** This memory vault system (`CLAUDE.md` + `.claude/*.md`) was created as a persistence layer for future Claude Code sessions on this project.
 **REASON:** The project has been developed across one very long conversation with many specific decisions not otherwise recorded anywhere (no git history). The project owner wants any new session to be able to continue accurately without re-explaining context.
 **DO NOT:** Let this vault go stale — update `current-state.md` and this file whenever the project owner says "SAVE MEMORY," and always verify actual code over documentation if they disagree.
+
+---
+
+**DECISION (2026-09-16):** Hero ink lines are `LineSegments2`/`LineMaterial` fat lines on real geometry edges, with a 0.4% view-ray depth bias patched into the line shader. Fills use polygonOffset.
+**REASON:** Shifting 1px lines in world space to beat z-fighting put every line visibly off its corner ("the lines are a bit off").
+**DO NOT:** Offset line geometry in world space to fix stipple.
+
+---
+
+**DECISION (2026-09-16):** The hero door is a sectional garage door on a HIGH-LIFT track (vertical → bend below header → steep incline), with a static frame (jambs/sill/header) and fixed transom.
+**REASON:** Rajat asked for real garage-door physics and a "story"; the rims previously lifted with the door and the sides went bare. A level track stored the panels across the room ceiling, in frame during the push.
+**DO NOT:** Attach the jambs/rims to the moving door, or store the door on a level track.
+
+---
+
+**DECISION (2026-09-16):** Track housings behind the jambs were tried and removed (read as black steps/blocks). The pale wedges at the tipping panel were solved by making the whole reveal solid brand ink — chosen by Rajat over a cream-to-black gradient via a side-by-side render.
+**DO NOT:** Reintroduce housing blocks; don't bring the cream reveal gradient back.
+
+---
+
+**DECISION (2026-09-16):** Studio.glb materials are all replaced with the pencil palette (Rajat explicitly lifted the earlier "floor material only" rule). Room is unlit; darkness/brightness is done by recolouring materials (`toneMapped: false` so lit = true white and the mark = true brand red).
+**REASON:** "extremely dark, then suddenly bright as f— where even the cream is white".
+
+---
+
+**DECISION (2026-09-16):** The 3D mark is `SVGLoader.createShapes` per SVG path → `ExtrudeGeometry` from `public/1red-logo.svg` (superseded same day: first built from favicon.svg, which turned out to be an outdated "1RED" drawing, not the logo). Zoom pivots on the plus-shaped gap between the "e" blocks at the front face (face never moves toward camera; depth scales 1% as fast as width).
+**DO NOT:** Split SVG paths into subpaths manually (fill-rule bug history), or use the raster logo plane for the hero again.
+
+---
+
+**DECISION (2026-09-16):** Scroll-driven camera motion uses one shared easeInOutSine curve per beat plus exponential damping of scroll input in `useFrame` (k = 5).
+**REASON:** Rajat's explicit, emphatic approval ("too smooth, beautiful").
+
+---
+
+**DECISION (2026-09-16):** The real logo is `public/1red-logo.svg` (Rajat's vector). The favicon is only the "1" glyph, red, white in dark mode.
+**REASON:** favicon.svg had been documented as the verified logo but held a different "1RED" mark. A sub-pixel trace of the raster (IoU 0.9996) was used as a stopgap for minutes before Rajat supplied the vector. The trace was deleted.
+**DO NOT:** Use favicon.svg as the logo; trace rasters when a vector can be requested.
+
+---
+
+**DECISION (2026-09-16):** Studio.glb was rebuilt from `Studio.glb.orig-backup` with @gltf-transform. Each tripod and lamp head ("Handle_n") is its own mesh, pivoted at its mount. Textures were dropped and materials collapsed to three roles named `paper`/`floor`/`ink`, matched by name at runtime. 39 meshes, meshopt, ~2.8 MB.
+**REASON:** Rajat wanted the lamps to face the viewer and then turn to the mark, which needs individual control. The previous optimize had merged everything into 7 meshes.
+**HOW:** The yaw per head is the angle from facing the settled camera to facing the mark, applied in world space through the FBX parent frame, driven by `lampTurn` (p 0.66–0.82). The rebuild script lived in the session scratchpad; the recipe is in StudioEnvironment.tsx's header.
+
+---
+
+**DECISION (2026-09-16):** The whole floor is black: the approach ground uses the dark room floor colour, with no polygonOffset so it wins over the model floor underneath. The room glows up to 38% from p 0.56 before the lights switch fully on at p 0.706.
+**REASON:** A lighter ground next to the model's dark floor looked patchy, and Rajat wanted the room already brightening as the camera arrives.
+
+---
+
+**DECISION (2026-09-16):** No white flash at lights-on (Rajat: not needed). The switch ramps over p 0.706 to 0.726.
+
+---
+
+**DECISION (2026-09-16):** Hero blacks are ONE value: brand ink `#0A0A0A` with `toneMapped: false` on ink meshes, the reveal, the ground/dark floor and all LineMaterials.
+**REASON:** Tone mapping rendered the tone-mapped ink as pure black next to the un-tone-mapped floor's charcoal, so the seams showed. Rajat flagged it twice.
+**DO NOT:** Add a black surface to the hero without `toneMapped: false`.
+
+---
+
+**DECISION (2026-09-16):** Lamps and stands get pencil edge outlines (`EdgesGeometry` at 40° to `LineSegments2`, parented per mesh so they rotate with the heads), cream `#CFC7B0` in the dark and ink once lit. Rajat loved this look ("tooooo cool").
+
+---
+
+**DECISION (2026-09-16):** In `public/1red-logo.svg` the two touching shapes forming the bottom-right block of the "e" are merged into one path (identical outline).
+**REASON:** Rajat: "they are supposed to be one box." Two shapes meant an ink seam across the block.
+
+---
+
+**NOTE (2026-09-16):** Perf runs are noisy on the iMac when other GPU work is running: identical builds measured 301/0 and 7/4 back to back. Repeat runs before attributing a regression.
+
+---
+
+**DECISION (2026-09-16):** Lamp sketch = EdgesGeometry lines (28°) PLUS a silhouette hull (BackSide ShaderMaterial, vertices pushed out by `uWidth` px in view space), both coloured like the sketch line material. The glb has a 4th role, `glow` (original Mtl_2 softbox diffusers, Mtl_11 spot emitters, Mtl_16 lens glass), rendered `#FFFFFF` unlit at all times.
+**REASON:** Rajat: umbrella lights were "not understood" because only hard edges got outlined, and "where they give out light from can be completely bright light".
+**NOTE:** Roles are assigned per primitive from the ORIGINAL material name in the rebuild, not per node, since one lamp head mixes body and emitter.
+
+---
+
+**DECISION (2026-09-16):** Lamp aim is a full look-at, not a yaw. forward = pivot to the centre of the head's `glow` surfaces, or to the centre of its body if it has none. Before the turn the target is the LIVE camera; `lampTurn` (p 0.47 to 0.72) slerps to the mark. Heads with pivot y < 0.4 (the fallen stand) are skipped.
+**REASON:** Rajat wanted the lamps "tilted more towards me, opposite of the screen" from the door-open frame, then looking at the mark as the camera zooms in.
+
+---
+
+**DECISION (2026-09-16):** The lamp EdgesGeometry threshold stays at 60°. Do not lower it.
+**REASON:** A/B measured: edges only gave 22 slow frames; hull only gave 0; both at 28° gave an 11 s load freeze and a 30 s stall. At 60° the result is 1.5 s load and 0 slow. The silhouette shell covers the outline the lower threshold used to add.
+
+---
+
+**DECISION (2026-09-16):** Lamp beams live in their own file (`lampBeams.ts`) behind `LAMP_BEAMS`. All integration lines in StudioEnvironment.tsx are marked `// beams`. Rajat explicitly asked for an undo option for the beams only.
+**TUNING:** strength spot 0.28 / softbox 0.09; rim falloff pow 2.6 (lower showed a ring at the cone mouth); fade `(1 - lights)^3` so no haze over the mark; 24 radial segments.
+
+---
+
+**DECISION (2026-09-16):** Before the turn, lamps rest at slerp(camera-aim, mark-aim, 0.3), i.e. `REST_BIAS`.
+**REASON:** Rajat: full camera-aim was "facing too much towards me, just a little towards inside".
+
+---
+
+**NOTE (2026-09-16):** Perf measured during this step was unreliable: a stuck `npm exec ccstatusline-usage` process at ~107% CPU, Spotlight indexing, and a Brave renderer. With beams OFF it was equally slow (91 frames / 86 slow), so the beams were not the cause. Re-measure on a quiet machine.
+
+---
+
+**DECISION (2026-09-16):** Lamp beams switched OFF (`LAMP_BEAMS = false`) after Rajat reviewed them: "nah undo it". The code is kept dormant. Don't turn them back on unless he asks.
+
+---
+
+**DECISION (2026-09-16):** Stroke widths: `LINE_PX` 1.2 (facade, door, mark), lamp sketch 0.9, hull `uWidth` 0.9. Rajat asked for all strokes thinner. Checked: still continuous with no dashes.
+
+---
+
+**DECISION (2026-09-16):** No separate aim beat before the zoom. The gap's screen offset = (1 - aim) x zoom x pivot offset. `gapDrift` = 1 - sine(zoomT over 0 to 0.3) and aim = 1 - gapDrift / zoom, so the gap glides to centre inside the zoom.
+**REASON:** Rajat wanted the slide from the mark's centre to the "e" gap to happen only while zooming, seamlessly.
+
+---
+
+**DECISION (2026-09-16):** Hero performance baseline for Rajat's iMac (Retina 5K, AMD Radeon R9 M390, 2 GB VRAM):
+- Canvas DPR = min(device DPR, max, sqrt(3.2M / window pixels)), floor 0.75.
+- `frameloop="demand"`: StudioEntrance's scroll handler invalidates; StudioScene keeps invalidating while |progress - eased| > 1e-5.
+- Studio.glb meshopt-simplified (ratio 0.2, error 0.002).
+**REASON:** "tooooo laggy". Render resolution alone did not fix it and A/B runs were noisy (Rajat's Brave tab shares the GPU). The combination was verified consistently at the real screen size.
+**DO NOT:** Go back to `frameloop="always"` or an uncapped 2x DPR. Measure perf at 2560x1340 deviceScaleFactor 2, not 1600x800 @1x, which hid the problem.
+
+---
+
+**DECISION (2026-09-16):** Door panels rise straight up and are clipped at y = DOOR_HEADER_Y - HEADER_H/2 (`HEADER_CLIP`; `gl.localClippingEnabled = true`). They use their own clipped materials (`sections`, `railInk`, `sectionLine`), so the jambs, header and sill are not clipped.
+**REASON:** Rajat wanted the panels to "disappear once they cross that line" instead of showing a black tipping slab under the beam.
+**SUPERSEDES:** the high-lift track and tip-back shading decisions above. `trackPoint`/`TRACK_*` were deleted.
+
+---
+
+**DECISION (2026-09-17):** Section 2 is a many-cubes-into-one-box assembly, not the 8-block cube beside a problem/response text column.
+**REASON:** Rajat's direction: after the zoom through the "e", lots of cubes appear across the section, and by the end of the scroll they rotate at the centre and form one bigger box. He asked for the layout to change entirely and for the text to be placed later.
+**DO NOT:** Re-add the old left-column text overlay or the state ticks on your own. The copy stays in `problemStates.ts` until Rajat decides where the text goes.
+
+---
+
+**DECISION (2026-09-17):** The fallen stand (`Studio_Setup_Tripod_6`) is removed from the hero studio.
+**REASON:** Rajat didn't want the knocked-over tripod in the shot (it also picked up the floor's lit colour).
+**DO NOT:** Bring it back when rebuilding Studio.glb; if the glb is rebuilt, keep the runtime removal or drop the node in the rebuild script.
+
+---
+
+**DECISION (2026-09-17):** "Selected Work" heading lives inside FlashWork's pinned viewport again, above the list and visual.
+**REASON:** Rajat asked for it: the separately scrolling heading left too much white space before the list. The old clipping problem (content taller than 100vh) is avoided by letting the list + visual row flex into whatever height is left and scaling heading/row sizes with viewport height.
+**DO NOT:** Give the list/visual row a fixed height again, or move the heading back out, without Rajat asking.
+
+---
+
+**DECISION (2026-09-17):** Scroll-scrubbed scenes that hand off to each other read progress from the shared `scrollGlide` (one eased scrollY), not from their own clamped progress.
+**REASON:** Two scenes easing separately drift apart on fast scrolls (cubes appeared over the "e" before the zoom passed it).
+**DO NOT:** Add per-scene easing on top of `scrollGlide`, or feed raw scroll to a scene that overlaps another.

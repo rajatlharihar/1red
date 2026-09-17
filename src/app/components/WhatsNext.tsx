@@ -77,6 +77,7 @@ function MagneticButton({
       onMouseMove={handleMouseMove}
       animate={{ x: pos.x, y: pos.y, scale: hovered ? 1.04 : 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.8 }}
+      className="btn-corners"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -85,7 +86,6 @@ function MagneticButton({
         paddingRight: 36,
         paddingTop: 18,
         paddingBottom: 18,
-        borderRadius: 3,
         fontSize: 12,
         fontWeight: 600,
         letterSpacing: '0.09em',

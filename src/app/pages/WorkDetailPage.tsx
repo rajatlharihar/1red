@@ -144,7 +144,7 @@ export function WorkDetailPage() {
       </div>
 
       {/* ── The work itself ── */}
-      {project.video && (
+      {(project.video || project.image) && (
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -165,16 +165,24 @@ export function WorkDetailPage() {
               boxShadow: '0 30px 64px rgba(234,51,35,0.12), 0 6px 20px rgba(0,0,0,0.07)',
             }}
           >
-            <video
-              ref={videoRef}
-              src={project.video}
-              muted
-              loop
-              autoPlay
-              playsInline
-              preload="metadata"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            />
+            {project.video ? (
+              <video
+                ref={videoRef}
+                src={project.video}
+                muted
+                loop
+                autoPlay
+                playsInline
+                preload="metadata"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            ) : (
+              <img
+                src={project.image}
+                alt={project.title}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            )}
           </div>
         </motion.div>
       )}

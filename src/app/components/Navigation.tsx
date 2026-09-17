@@ -101,10 +101,10 @@ function NavSegment({
         <motion.span
           layoutId="nav-indicator"
           transition={SPRING}
+          className="btn-corners"
           style={{
             position: 'absolute',
             inset: 4,
-            borderRadius: 10,
             background: active ? 'rgba(234,51,35,0.08)' : 'rgba(0,0,0,0.045)',
             border: active ? '1px solid rgba(234,51,35,0.16)' : '1px solid transparent',
             zIndex: 0,
@@ -276,7 +276,7 @@ export function Navigation() {
           aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
-          className={focusRing}
+          className={`${focusRing} btn-corners`}
           style={{
             width: 48,
             height: 48,
@@ -286,7 +286,7 @@ export function Navigation() {
             cursor: 'pointer',
             transition: 'background 260ms ease-out, border-color 260ms ease-out',
             ...glassStyle,
-            borderRadius: 12,
+            borderRadius: undefined,
             background: open ? RED : glassStyle.background,
             border: open ? '1px solid transparent' : glassStyle.border,
           }}
@@ -350,7 +350,7 @@ export function Navigation() {
                       onClick={() => setOpen(false)}
                       aria-label={item.label}
                       aria-current={isActive ? 'page' : undefined}
-                      className={focusRing}
+                      className={`${focusRing} btn-corners`}
                       style={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -358,7 +358,6 @@ export function Navigation() {
                         justifyContent: 'center',
                         gap: 6,
                         height: 58,
-                        borderRadius: 10,
                         border: isActive ? '1px solid rgba(234,51,35,0.25)' : '1px solid transparent',
                         background: isActive ? 'rgba(234,51,35,0.06)' : 'transparent',
                       }}

@@ -74,6 +74,7 @@ const projects = [
     year: '2025',
     color: '#EDE8F2',
     video: null,
+    image: '/images/illusdoodle-cover.jpg',
     behanceId: null,
     overview: 'Positioning framework and creative direction that gave a fast-growing creative studio a voice worth listening to — and a brand worth remembering.',
     deliverables: ['Positioning Framework', 'Tone of Voice', 'Creative Direction', 'Brand Playbook', 'Campaign Strategy'],
@@ -218,6 +219,12 @@ function CursorPreview({ active }: { active: number | null }) {
                 loop
                 autoPlay
                 playsInline
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            ) : project.image ? (
+              <img
+                src={project.image}
+                alt={project.title}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
             ) : (
@@ -685,13 +692,13 @@ function CaseStudyDrawer({
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.25, ease: EASE }}
+                  className="btn-corners"
                   style={{
                     marginTop: 32,
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 8,
                     padding: '14px 28px',
-                    borderRadius: 3,
                     border: '1px solid rgba(0,0,0,0.14)',
                     background: 'rgba(0,0,0,0.03)',
                     fontSize: 12,

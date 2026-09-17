@@ -345,12 +345,12 @@ export function Privacy() {
               href="mailto:hello@yourdomain.com"
               whileHover={{ scale: 1.04 }}
               transition={{ duration: 0.25, ease: EASE }}
+              className="btn-corners"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 10,
                 padding: '18px 36px',
-                borderRadius: 3,
                 background: 'white',
                 color: 'rgb(10,10,10)',
                 fontSize: 12,

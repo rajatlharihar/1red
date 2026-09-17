@@ -1,7 +1,47 @@
 # Current State
 
 ## Last Updated
-2026-08-31
+2026-09-16
+
+## Session Log: 2026-09-17 (morning)
+
+- Fallen stand (`Studio_Setup_Tripod_6`) removed from the hero studio at load.
+- Section 2 (`src/app/components/cube/`) rebuilt as a text-free cube assembly: `ProblemCube.tsx` pins 320vh and feeds scroll progress to `CubeAssembly.tsx` (27 instanced cubes). Timeline: appear 0 to 0.1, gather 0.1 to 0.8 (centre cube first, corners last), group spin settles to the rest angle over 0.66 to 0.94. Reduced motion shows the finished box unpinned.
+- **Open:** where the section's text goes. The copy (`PROBLEM_STATES`, `RESOLUTION`) is still in `problemStates.ts`, currently unrendered. Rajat will decide the text layout next.
+- Verified with Playwright + system Chrome at 1440x900 and 390x844 across the scroll; no console errors; `vite build` clean.
+- Dev server is currently run with `--host` (LAN URL `http://192.168.0.185:5173/`) because the only claude-in-chrome browser connected is a Windows machine on the LAN.
+
+## End of session: 2026-09-16 (night)
+
+Hero state at shutdown, in scroll order:
+1. Angled establishing shot.
+2. Sectional door: panels rise and vanish at the header line.
+3. Dark studio with pencil-outlined lamps aimed a little into the room; emitters glow white.
+4. Push in; lamps swing to the mark; room glows, then the lights ramp on to white.
+5. The 3D "1red" mark (public/1red-logo.svg) turns once.
+6. Seamless zoom through the "e" gap into white, then ProblemCube.
+
+Perf fixed for the 5K iMac (pixel budget, on-demand rendering, simplified glb). Beams exist but are OFF (`LAMP_BEAMS`). Build clean. Nothing committed to git this session.
+
+**Resume tomorrow morning.** Open items:
+- What fills the empty facade wall right of the door: Rajat is ideating with friends.
+- Keep or remove the pencil hatch texture and plane: Rajat is undecided.
+- Nothing mid-flight.
+
+## Session Log — 2026-09-16
+
+- The ONLY working copy is this folder; `../1Red-Website` and `../1Red-Website-New` were deleted (~2026-09-14, confirmed by Rajat). The open question below about porting the door-video hero is moot.
+- Hero (`src/app/components/hero/`) is now: cream hatched facade + triangular doorway with solid-ink reveal → sectional garage door (high-lift) → camera pushes into a pitch-dark pencil-styled Studio.glb → lights snap on at p 0.706 (white flash) → 3D mark (from 1red-logo.svg) turns once (0.73–0.86) → squares up (0.85–0.89) → scales through the "r" counter into white (0.89–0.995) → white veil hands off to ProblemCube. `SCROLL_VH = 600`. All timings live in `studioSequence.ts`.
+- Verified via Playwright + system Chrome screenshots at each beat; full-hero scroll 301 frames / 0 slow; `npm run build` clean.
+- Later 2026-09-16 (after a power cut): 3D mark switched to Rajat's real vector `public/1red-logo.svg` (zoom through the "e" gap). Favicon replaced with the "1" glyph (dark-mode white). Whole floor black. Room glows from p 0.56, full lights at 0.706. Studio.glb rebuilt with per-rig control; lamp heads turn from the viewer to the mark over p 0.66–0.82. Build clean; full-hero scroll 301/0 slow.
+- Frames removed from the facade. **Open:** what fills the empty wall to the right of the door — Rajat is ideating with friends; don't build anything there unprompted.
+
+## Session Log — 2026-09-14
+
+- This folder (`1Red-Website-Live`) is a **fresh clone** of `origin/main` (commit `9429398`, "Rebuild homepage narrative: studio entrance, problem cube, proof section"), made because the previously-used local copy (`../1Red-Website-New/`) had diverged: it holds an unpushed commit (`15aac5f`, the scroll-scrubbed door-sequence hero rebuild, see that folder's own `.claude/decisions.md`) that never reached GitHub, while GitHub moved on with different homepage work in the meantime. `1Red-Website-New` was left untouched — nothing deleted. **Open question for Rajat: does the door-sequence hero need porting into this version, or is GitHub's current homepage the new source of truth?**
+- Everything below this point in the file (pre-2026-08-31 notes) describes an **older commit** than what's actually checked out here (that snapshot predates the homepage narrative rebuild) — treat the code itself as authoritative over this doc until it's re-audited.
+- Confirmed running locally: `npm install` + `npm run dev` → Vite on `http://localhost:5173/` (HTTP 200 verified).
+- Security pass: `npm audit` found 1 high-severity vuln (react-router — vendored turbo-stream RCE + several XSS/DoS advisories). Fixed via `npm audit fix --force` (react-router → 7.18.3, vite → 6.4.3, outside stated ranges but no route/behavior regressions observed on reload). `npm audit` now clean (0 vulnerabilities). No secrets/API keys/tokens found in source; no `.env` files present; `.gitignore` already correctly excludes `.env*` and business-sensitive `project-files/`.
 
 ## Completed
 
@@ -43,7 +83,8 @@ None currently flagged as open.
 
 ## Important Assets
 
-- `public/favicon.svg` — verified pixel-perfect vector logo source (see `design-system.md`).
+- `public/1red-logo.svg` — real vector logo (Rajat, 2026-09-16). `public/favicon.svg` — "1" glyph browser icon only.
+- `Studio.glb.orig-backup` — the unoptimized source model; Studio.glb is rebuilt from it (see decisions.md).
 - `src/imports/Screenshot_2026-07-03_at_1.17.51_PM.png` — the raster source `Logo.tsx` actually renders (via a `feColorMatrix` alpha-extraction filter). This is the **actively used** logo asset, not the SVG.
 - `src/app/data/projects.json` — 5 projects, used by the homepage cube + `ProjectHUD` only.
 - `public/videos/*.mp4` — real project preview footage, non-uniform aspect ratios (see `project-memory.md`).

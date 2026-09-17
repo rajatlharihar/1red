@@ -73,6 +73,7 @@ function MagneticCTA() {
           : '0 4px 16px rgba(0,0,0,0.04)',
       }}
       transition={{ duration: 0.4, ease: EASE }}
+      className="btn-corners"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -81,7 +82,6 @@ function MagneticCTA() {
         paddingRight: 36,
         paddingTop: 18,
         paddingBottom: 18,
-        borderRadius: 3,
         border: '1px solid rgba(0,0,0,0.14)',
         background: 'rgba(255,255,255,0.68)',
         backdropFilter: 'blur(16px)',
@@ -175,10 +175,10 @@ function Tag({ label, delay }: { label: string; delay: number }) {
           y: hovered ? -2 : 0,
         }}
         transition={{ duration: 0.3, ease: EASE }}
+        className="btn-corners"
         style={{
           display: 'inline-block',
           padding: '8px 18px',
-          borderRadius: 3,
           border: '1px solid rgba(0,0,0,0.12)',
           fontSize: 11,
           letterSpacing: '0.12em',

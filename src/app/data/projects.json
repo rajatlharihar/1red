@@ -71,6 +71,7 @@
     "year": "2025",
     "color": "#EDE8F2",
     "video": null,
+    "image": "/images/illusdoodle-cover.jpg",
     "cubeface": "py",
     "targetRotY": 0,
     "targetRotX": 1.5707963,

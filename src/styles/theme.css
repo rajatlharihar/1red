@@ -185,3 +185,16 @@
     cursor: none !important;
   }
 }
+
+/* Button and CTA corners: the nav's active pill. A continuous (iOS-style)
+   curve where corner-shape is supported; a plain 10px radius elsewhere.
+   14px on the superellipse reads the same size as the 10px circular arc. */
+.btn-corners {
+  border-radius: 10px;
+}
+@supports (corner-shape: squircle) {
+  .btn-corners {
+    border-radius: 14px;
+    corner-shape: superellipse(1.4);
+  }
+}

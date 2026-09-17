@@ -39,7 +39,8 @@ src/
   styles/                  — fonts.css, globals.css, index.css, tailwind.css, theme.css
   imports/                 — raw exported assets from the original Figma Make export (raster logo screenshot, etc.)
 public/
-  favicon.svg              — vector logo source (see design-system.md)
+  1red-logo.svg            — real vector of the full logo mark (see design-system.md)
+  favicon.svg              — the "1" glyph only, browser icon
   models/OneRed_3DCube.glb — provided cube asset, currently unused in code
   videos/                  — real project preview videos, varying native aspect ratios
 ```
