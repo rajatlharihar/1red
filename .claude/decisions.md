@@ -251,3 +251,13 @@ Chronological, most recent last. Each entry: date (where known — this project 
 - Flatten the blocks with metalness 0. A dielectric still has specular, which lifts the whole block to `#F4342E`. Metalness 1 with a black base has neither diffuse nor specular (a metal's reflectance is its base colour), so the emissive is all that shows.
 - Trust a colour check whose filter could exclude the answer. An emissive of 18 was measured as a match by a red-dominance filter that the cream blocks failed, and the blocks were rendering nearly white. Measure by hiding the hero's canvas and reading the tunnel's own pixels.
 
+---
+
+**DECISION (2026-09-17, later):** Section 2 clips itself to the gap in the "e" while the mark is on screen, so the tunnel is behind the mark and revealed by the gap opening.
+**REASON:** Rajat: "its overlaping e it should not over lap it it should be behind e only also the way how they will appear should be smoother". Section 2 sits on top of the hero in the stacking order, so cubes at the corners painted straight over the mark's blocks, whatever their size and colour. One mechanism fixes both halves of the note: clipped to the gap, the mark occludes the tunnel, and the reveal is a wipe driven by the hero's own zoom rather than an appearance of its own.
+**DO NOT:**
+- Reintroduce a visibility gate at the pin. The reveal has to be continuous from before it, which is what the `camera.setViewOffset` shift and the clip's viewport-centred cross are for. A gate makes the tunnel switch on.
+- Clip the backdrop along with the canvas. Only the 3D layer is clipped; the white backdrop still has to cover the whole frame once the hero goes white.
+- Take `gapHalfFraction` as the whole gap. It measures the square hole at the centre of the mark, and the slots running out of it are about 5% wider, which is what the clip has to follow. `GAP_SCALE` carries that, verified against the rendered hero rather than assumed: the cubes now stop 2px from the red at two separate points in the hand-off.
+- Let the clip lift on a different schedule from the mark leaving the frame. It lifts when the cross covers the frame, which is the same moment the mark's blocks clear it. Lift earlier and cubes cross onto the red; lift later and the cubes show straight cut edges against white.
+

@@ -271,14 +271,15 @@ const _m = new THREE.Matrix4();
 
 export function CubeAssembly({
   progressRef,
-  rawRef,
+  offsetRef,
   pointerRef,
 }: {
   progressRef: React.MutableRefObject<number>;
-  /** Unclamped section progress. Before the section pins, its canvas is not
-   *  yet aligned with the viewport, so anything drawn in it sits low of the
-   *  gap. Nothing is drawn until it is aligned. */
-  rawRef: React.MutableRefObject<number>;
+  /** Pixels this canvas still sits below the top of the viewport, before the
+   *  section pins. The frame is shifted up by it, so the tunnel stays on the
+   *  gap in the "e" even while the canvas is only partly in view and the
+   *  reveal can begin before the pin rather than switching on at it. */
+  offsetRef: React.MutableRefObject<number>;
   pointerRef: React.MutableRefObject<{ x: number; y: number }>;
 }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
@@ -371,7 +372,11 @@ export function CubeAssembly({
        thing that moves the mouth is the turn, which draws it back in. */
     const aperture = lerp(1, AV_AP_TURN, rotT);
     const avSize = avSizeFor(aspect);
-    const gate = rawRef.current >= 0 ? 1 : 0;
+    /* Shift the whole frame up by however far the canvas sits below the
+       viewport. Same full-frame size, so nothing is rescaled. */
+    const off = offsetRef.current;
+    if (off > 0.5) cam.setViewOffset(state.size.width, state.size.height, 0, off, state.size.width, state.size.height);
+    else if (cam.view?.enabled) cam.clearViewOffset();
 
     /* Hand-off skin: the rings arrive as the mark's own flat red and turn
        into red metal once the hero is gone. Emissive does the flattening, so
@@ -421,7 +426,7 @@ export function CubeAssembly({
       _b.copy(_av).lerp(_a, cloudT);
       /* A ring only fades in over the deepest part of the cycle, where it is
          far too small to see the fade, so a wrap never pops. */
-      const appear = gate * Math.max(smoothstep(1, 0.9, phase / AV_CYCLE), cloudT);
+      const appear = Math.max(smoothstep(1, 0.9, phase / AV_CYCLE), cloudT);
 
       /* Square in the ring; tumbling once the rings break up. */
       const tumble = _q.setFromAxisAngle(piece.axis, piece.angle + time * piece.speed + p * 3);

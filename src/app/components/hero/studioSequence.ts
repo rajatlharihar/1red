@@ -61,6 +61,8 @@ export const FLOOR_COL = '#DFD8C3';
 export const LOGO_SVG_URL = '/1red-logo.svg';
 export const LOGO_SVG_BOX = { x0: 0, x1: 284.956, y0: 0, y1: 173.344 };
 const LOGO_HOLE_SVG = { x: (172.578 + 174.609) / 2, y: (103.251 + 105.282) / 2 };
+/** Width of that gap in the mark's own units. The gap is square. */
+const LOGO_HOLE_W = 174.609 - 172.578;
 export const LOGO_MARK_W = 1.3;
 export const LOGO_K = LOGO_MARK_W / (LOGO_SVG_BOX.x1 - LOGO_SVG_BOX.x0);
 export const LOGO_DEPTH = 0.16;
@@ -87,6 +89,9 @@ const DOOR_OPEN_TO = 0.496;
 const PUSH_FROM = 0.504;
 const PUSH_TO = 0.704;
 export const LIGHTS_ON = 0.706;
+/** The hero camera's vertical field of view. Exported because the hand-off
+ *  has to work out how big the gap in the "e" is on screen. */
+export const HERO_FOV = 45;
 const GLOW_FROM = 0.56;
 const GLOW_LEVEL = 0.38;
 
@@ -178,6 +183,28 @@ export function sampleSequence(p: number): SequenceState {
   const lampTurn = easeInOutSine(track(t, 0.47, 0.72));
 
   return { camX, camY, camZ, camRoll, lookX, lookY, lookZ, doorOffset, lights, logoSpin, logoZoom, lampTurn };
+}
+
+/** Half-thickness of the white cross in the "e", as a fraction of the
+ *  viewport's half-height, at hero progress `p`.
+ *
+ * Section 2 sits on top of the hero at the hand-off, so without this its
+ * cubes paint over the mark instead of sitting behind it. The section clips
+ * itself to this cross, which puts the tunnel behind the "e": the mark
+ * occludes it, the gap reveals it, and it opens out as the blocks part. The
+ * reveal is then driven by the hero's own zoom rather than by a fade of its
+ * own, which is what makes the two read as one move.
+ *
+ * The gap is square and the projection is uniform, so the same fraction of
+ * the half-height gives both arms' half-thickness in pixels. Verified
+ * against the rendered hero at the hand-off: 0.29 here, 0.27 measured off
+ * the frame, the remainder being the blocks' own shaded edges.
+ */
+export function gapHalfFraction(p: number): number {
+  const { camZ, logoZoom } = sampleSequence(p);
+  const halfWorld = (LOGO_HOLE_W / 2) * LOGO_K * logoZoom;
+  const frameHalf = (camZ - LOGO_Z) * Math.tan((HERO_FOV / 2) * (Math.PI / 180));
+  return halfWorld / frameHalf;
 }
 
 /** Composed resting shot for prefers-reduced-motion: inside, lights on, the

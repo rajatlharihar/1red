@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { useReducedMotion } from 'motion/react';
 import { CubeAssembly, CubeLighting, CAM_Z, FOV } from './CubeAssembly';
 import { SCROLL_VH as HERO_VH, HANDOFF_P, TAIL_VH } from '../hero/StudioEntrance';
+import { gapHalfFraction } from '../hero/studioSequence';
 import { glide, subscribeGlide } from '../scrollGlide';
 
 /* ─── Section 2: down an avenue, then many cubes become one ────────────────
@@ -27,12 +28,30 @@ const HERO_UNPIN = (OVERLAP_VH + TAIL_VH) / (SECTION_VH - 100);
    time the hero is fully white and starts to scroll away underneath. */
 const BACKDROP_FROM = OVERLAP_VH * 0.3 / (SECTION_VH - 100);
 const BACKDROP_TO = OVERLAP_VH * 0.9 / (SECTION_VH - 100);
+/** Section progress per unit of the hero's own progress, for reading the
+ *  hero's state at the hand-off. The hero animates over `HERO_VH - 100`. */
+const HERO_PER_SECTION = (SECTION_VH - 100) / (HERO_VH - 100);
+/* `gapHalfFraction` measures the square hole at the centre of the "e", but
+   the slots running out of it are about 5% wider than that hole, which is
+   what the clip actually has to follow (measured off the rendered hero at
+   two points in the hand-off: 185px against 177px, then 251px against
+   239px). A touch under that ratio, so the cubes never cross onto the red
+   even if the model drifts. */
+const GAP_SCALE = 1.03;
 
 export function ProblemCube() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
+  const clipRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
   const rawRef = useRef(0);
+  /* How far the section's own canvas still sits below the viewport's top.
+     Before the section pins it is not aligned with the viewport, so the
+     tunnel would be drawn low of the gap; the camera and the clip are both
+     shifted up by this, which lets the reveal start well before the pin
+     instead of switching on at it. Driven by real scroll, not the glide,
+     because it tracks where the DOM actually is. */
+  const offsetRef = useRef(0);
   const pointerRef = useRef({ x: 0, y: 0 });
   const reduceMotion = useReducedMotion() ?? false;
   const [inView, setInView] = useState(false);
@@ -50,6 +69,7 @@ export function ProblemCube() {
     if (reduceMotion) {
       progressRef.current = 1;
       rawRef.current = 1;
+      offsetRef.current = 0;
       return;
     }
     return subscribeGlide(() => {
@@ -62,11 +82,38 @@ export function ProblemCube() {
       const p = Math.max(0, Math.min(1, raw));
       rawRef.current = raw;
       progressRef.current = p;
+      const domOffset = Math.max(0, top - glide.raw);
+      offsetRef.current = domOffset;
       if (backdropRef.current) {
         const fade = (p - BACKDROP_FROM) / (BACKDROP_TO - BACKDROP_FROM);
         // Once the hero has really started scrolling away, never let it show.
         const heroMoving = (glide.raw - top) / scrollable >= HERO_UNPIN;
         backdropRef.current.style.opacity = String(heroMoving ? 1 : Math.max(0, Math.min(1, fade)));
+      }
+      /* Behind the "e", not over it: while the mark is still on screen the
+         cubes are clipped to the gap between its blocks, so the mark occludes
+         them and the widening gap reveals them. The gap outgrows the frame
+         well before the mark does, so the clip lifts on its own and there is
+         never a straight edge visible against white. */
+      if (clipRef.current) {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const arm = gapHalfFraction(HANDOFF_P + raw * HERO_PER_SECTION) * (h / 2) * GAP_SCALE;
+        if (arm >= Math.max(w, h) / 2 + domOffset) {
+          clipRef.current.style.clipPath = '';
+        } else {
+          // The cross is centred on the viewport, which is `domOffset` above
+          // this element's own top until the section pins.
+          const cy = h / 2 - domOffset;
+          const x0 = (w / 2 - arm).toFixed(1);
+          const x1 = (w / 2 + arm).toFixed(1);
+          const y0 = (cy - arm).toFixed(1);
+          const y1 = (cy + arm).toFixed(1);
+          clipRef.current.style.clipPath =
+            `polygon(${x0}px 0, ${x1}px 0, ${x1}px ${y0}px, ${w}px ${y0}px, ${w}px ${y1}px, ` +
+            `${x1}px ${y1}px, ${x1}px ${h}px, ${x0}px ${h}px, ${x0}px ${y1}px, 0 ${y1}px, ` +
+            `0 ${y0}px, ${x0}px ${y0}px)`;
+        }
       }
     });
   }, [reduceMotion]);
@@ -102,15 +149,19 @@ export function ProblemCube() {
             ref={backdropRef}
             style={{ position: 'absolute', inset: 0, background: BG, opacity: reduceMotion ? 1 : 0 }}
           />
-          <Canvas
-            frameloop={inView ? 'always' : 'never'}
-            dpr={[1, 1.75]}
-            gl={{ antialias: true, powerPreference: 'high-performance' }}
-            camera={{ position: [0, 0, CAM_Z], fov: FOV }}
-          >
-            <CubeLighting />
-            <CubeAssembly progressRef={progressRef} rawRef={rawRef} pointerRef={pointerRef} />
-          </Canvas>
+          {/* Only the 3D layer is clipped to the gap. The backdrop above has
+              to cover the whole frame once the hero goes white. */}
+          <div ref={clipRef} style={{ position: 'absolute', inset: 0 }}>
+            <Canvas
+              frameloop={inView ? 'always' : 'never'}
+              dpr={[1, 1.75]}
+              gl={{ antialias: true, powerPreference: 'high-performance' }}
+              camera={{ position: [0, 0, CAM_Z], fov: FOV }}
+            >
+              <CubeLighting />
+              <CubeAssembly progressRef={progressRef} offsetRef={offsetRef} pointerRef={pointerRef} />
+            </Canvas>
+          </div>
         </div>
       </div>
     </section>

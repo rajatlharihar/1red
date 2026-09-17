@@ -5,6 +5,7 @@ import { ChevronDown } from 'lucide-react';
 import { Logo } from '../Logo';
 import { StudioScene } from './StudioScene';
 import { glide, subscribeGlide } from '../scrollGlide';
+import { HERO_FOV } from './studioSequence';
 
 /* ─── ENTER 1RED — the studio's front door ─────────────────────────────────
  * Replaces the previous opening (a static logo with an idle bob and a
@@ -189,7 +190,7 @@ export function StudioEntrance() {
             // Metric, matching Studio.glb's real scale: 1.7 m eye height,
             // 9 m back from the facade. `far` only needs to clear the model's
             // 10 m depth plus the approach.
-            camera={{ position: [0, 1.7, 9], fov: 45, near: 0.05, far: 60 }}
+            camera={{ position: [0, 1.7, 9], fov: HERO_FOV, near: 0.05, far: 60 }}
             style={{ position: 'absolute', inset: 0 }}
           >
             <Suspense fallback={null}>
