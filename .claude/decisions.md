@@ -239,3 +239,15 @@ Chronological, most recent last. Each entry: date (where known — this project 
 - Let the tunnel run before the mouth is open (`AV_HOLD`), or start the mouth wide (`AV_AP0`). Until the backdrop is opaque the whole tunnel has to fit inside the white cross.
 - Freeze the run and then start the turn. The tunnel visibly halts and waits. The run eases to a stop (`1 - (1 - t) ^ 2.2`) while the turn is already underway, and `AV_TRAVEL` is chosen so no ring is inside its fade band when the run stops.
 - Size the tunnel blocks off `unit` alone. A block of a given height covers far more of a narrow frame's width, so on a phone the corner blocks swallow the tunnel they frame. `avSizeFor(aspect)` trims them; the box being built still uses `unit`.
+
+---
+
+**DECISION (2026-09-17, later):** The tunnel's first ring arrives at the on-screen size of the "e" blocks, wearing the mark's own flat red, and turns into red metal afterwards.
+**REASON:** Rajat, on the version whose mouth opened from a point: "let those boxes start almost the same size of the e boxes like as if we are continuing". A tunnel that grows into the frame reads as a new thing starting, however well centred it is. The blocks have to enter at the scale, and in the colour, of the blocks the zoom just parted.
+**DO NOT:**
+- Reintroduce a mouth that opens from small (`AV_AP0`). Full width from the first frame is the point. `AV_PHASE0` is what puts the nearest ring on the corner-crossing depth at the hand-off, and `AV_HOLD` waits out the fade-in so that ring is actually seen instead of having already swept past.
+- Set `AV_R` and `AV_SIZE` independently. `AV_SIZE * 0.85 / 2 / AV_R` is the fraction of the frame's height a block covers as its ring crosses the corners, which is the whole game: 30% reads as specks next to the mark, 50% reads as the same blocks.
+- Chase `#FF0000` with a brighter emissive. This canvas tone-maps (ACES), and three.js's pass mixes channels through an input and an output matrix, so a stronger red goes cream: 0.89 lands on `#F40013`, 1.5 is already `#FF3F2A`, 18 is nearly white. 0.89 is the solved optimum. The mark itself only gets `#FF0000` because its material sets `toneMapped: false`, which this material cannot do without changing the metal the box ends as.
+- Flatten the blocks with metalness 0. A dielectric still has specular, which lifts the whole block to `#F4342E`. Metalness 1 with a black base has neither diffuse nor specular (a metal's reflectance is its base colour), so the emissive is all that shows.
+- Trust a colour check whose filter could exclude the answer. An emissive of 18 was measured as a match by a red-dominance filter that the cream blocks failed, and the blocks were rendering nearly white. Measure by hiding the hero's canvas and reading the tunnel's own pixels.
+

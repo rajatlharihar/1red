@@ -26,11 +26,32 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
  * ─────────────────────────────────────────────────────────────────────────── */
 
 const RED = '#EA3323';
+/** The mark's own face colour (`StudioScene`), which the first rings have to
+ *  match: the blocks the zoom parts are flat, unlit logo red, not metal. */
+const LOGO_RED = '#FF0000';
+/** Emissive red that lands as close to the mark's #FF0000 as this canvas can
+ *  reach. The mark's own material skips tone mapping; this one cannot, or the
+ *  metal the box ends as would change too, and three.js's ACES pass mixes
+ *  channels, so brighter reds do not get redder, they go cream (solved
+ *  numerically: 0.89 lands on #F40018, 1.5 is already #FF3F2A). The hero's
+ *  own extruded sides are #C40000, so the frame carries a range of reds
+ *  anyway and this sits inside it. */
+const LOGO_EMISSIVE = 0.89;
+/** The skin changes over from logo red to red metal across this stretch of
+ *  the section: flat through the hand-off, metal by the time the white has
+ *  taken the hero away. Set `SKIN_TO` to 0 to keep metal throughout. */
+const SKIN_FROM = 0.02;
+const SKIN_TO = 0.12;
 export const CAM_Z = 9.4;
 export const FOV = 42;
 
 const N = 3;
 const COUNT = N * N * N;
+
+/** Half the vertical frame at unit depth: the frame's own half-height at a
+ *  depth d is `d * TAN_HALF`, which is how the tunnel is placed by apparent
+ *  size rather than by guessing depths. */
+const TAN_HALF = Math.tan((FOV / 2) * (Math.PI / 180));
 
 /* Timeline, as fractions of the pinned scroll. */
 const APPROACH_END = 0.42;
@@ -57,26 +78,38 @@ const AV_RANKS = 7;
 /** Depth between rings. */
 const AV_SPACING = 10;
 const AV_CYCLE = AV_RANKS * AV_SPACING;
-/** Where a ring wraps back to the far end: past the frame's corners. */
-const AV_Z_EXIT = 4;
+/** Where a ring wraps back to the far end. It has to be past the depth where
+ *  a block's inner edge clears the frame, or a ring would vanish while still
+ *  half on screen. */
+const AV_Z_EXIT = 7.4;
 /** Ring radius at the vertical edge of the frame. The x offset is scaled by
- *  the aspect, so a block sits in the corner and not out to the side. */
-const AV_R = 3;
-/** The mouth at scroll 0: small enough that the whole tunnel sits inside the
- *  white gap in the "e" while the logo's red is still on screen. It opens
- *  with the gap, so the hand-off is one continuous move and not a cut. */
-const AV_AP0 = 0.045;
-const AV_OPEN_END = 0.11;
+ *  the aspect, so a block sits in the corner and not out to the side. Kept
+ *  tight against `AV_SIZE`: a block covers `AV_SIZE * 0.85 / 2 / AV_R` of the
+ *  frame's height as its ring crosses the corners, and that ratio is what
+ *  decides whether the first ring arrives at the size of the "e" blocks or
+ *  as a handful of specks. */
+const AV_R = 2.2;
+/** Depth at which a ring's blocks straddle the corners of the frame: their
+ *  biggest on-screen moment. */
+const AV_CORNER_Z = CAM_Z - AV_R / TAN_HALF;
+/** Phase offset that puts the nearest ring exactly on `AV_CORNER_Z` at the
+ *  hand-off, so the first blocks the eye meets are the size of the "e"
+ *  blocks the zoom just parted, and read as the same blocks carrying on
+ *  rather than a new, smaller thing starting. */
+const AV_PHASE0 = AV_Z_EXIT - AV_CORNER_Z;
 /** The mouth closes back to this as the array turns, so the rings that have
  *  already swept out past the corners come back in the way they left, and
  *  the frame is never briefly empty between the tunnel and the jumble. */
 const AV_AP_TURN = 0.5;
-/** The tunnel only starts running once the mouth is open. */
-const AV_HOLD = 0.06;
+/** The run waits out the fade-in (`gate`) and no longer. Any longer and
+ *  blocks sit still while the "e" blocks are still rushing outwards, which
+ *  breaks the move. Any shorter and the first ring has already swept past
+ *  the corners before it is drawn, so its one big moment is never seen. */
+const AV_HOLD = 0.006;
 /** Depth covered during the approach: about a cycle and a half of rings
  *  streaming past. It stops clear of the wrap band, so no ring is mid-fade
  *  when the turn freezes it. */
-const AV_TRAVEL = 97.5;
+const AV_TRAVEL = 102;
 /** The array turns about this depth, roughly the middle of what is on screen. */
 const AV_PIVOT_Z = -13;
 const AV_SWING = 1.35;
@@ -85,7 +118,7 @@ const AV_TILT = 0.38;
 const AV_SQUASH = 0.17;
 /** Blocks in the tunnel are far chunkier than the cubes in the finished box.
  *  They shrink back as the rings break up. */
-const AV_SIZE = 2.1;
+const AV_SIZE = 2.6;
 /** A block of a given height covers far more of a narrow frame's width than
  *  of a wide one's, so on a phone the corner blocks would swallow the tunnel
  *  they are supposed to frame. This trims them back by the aspect. Only the
@@ -270,6 +303,10 @@ export function CubeAssembly({
     () => new THREE.MeshStandardMaterial({ color: RED, roughness: 0.31, metalness: 0.92, envMapIntensity: 0.8 }),
     []
   );
+  const skinCols = useMemo(
+    () => ({ logo: new THREE.Color(LOGO_RED), cube: new THREE.Color(RED), black: new THREE.Color('#000000') }),
+    []
+  );
   useEffect(
     () => () => {
       geo.dispose();
@@ -329,13 +366,30 @@ export function CubeAssembly({
     /* The turn leads; the break-up into the jumble follows it. */
     const rotT = easeInOutCubic(clamp01(swing / 0.62));
     const cloudT = easeInOutCubic(smoothstep(0.32, 1, swing));
-    /* The mouth opens with the gap in the "e", which is what makes the
-       hand-off continuous: the tunnel is inside the gap until the gap is
-       gone, and never appears from somewhere else in the frame. */
-    const aperture =
-      lerp(AV_AP0, 1, smoothstep(0, AV_OPEN_END, p)) * lerp(1, AV_AP_TURN, rotT);
+    /* The tunnel is at full width from the first frame: its blocks have to
+       match the size of the parting "e" blocks, not grow into them. The only
+       thing that moves the mouth is the turn, which draws it back in. */
+    const aperture = lerp(1, AV_AP_TURN, rotT);
     const avSize = avSizeFor(aspect);
-    const gate = clamp01(rawRef.current / 0.006);
+    const gate = rawRef.current >= 0 ? 1 : 0;
+
+    /* Hand-off skin: the rings arrive as the mark's own flat red and turn
+       into red metal once the hero is gone. Emissive does the flattening, so
+       no material recompile and no change to the metal the box ends as. */
+    const skin = SKIN_TO > 0 ? smoothstep(SKIN_FROM, SKIN_TO, p) : 1;
+    /* Flat while it is the mark: the base colour goes to black so only the
+       emissive shows and every face reads the same, the way an unlit
+       material does. Then the emissive drops out and the metal comes up. */
+    mat.color.lerpColors(skinCols.black, skinCols.cube, skin);
+    mat.emissive.copy(skinCols.logo);
+    mat.emissiveIntensity = LOGO_EMISSIVE * (1 - skin);
+    /* Metal with a black base has no diffuse and no specular (a metal's
+       reflectance IS its base colour), so while it is flat the emissive is
+       all there is. At metalness 0 the dielectric specular lifts the whole
+       block to #F4342E instead of #F40018. */
+    mat.metalness = lerp(1, 0.92, skin);
+    mat.roughness = lerp(1, 0.31, skin);
+    mat.envMapIntensity = 0.8 * skin;
     const depth = lerp(1, AV_SQUASH, rotT);
     _euler.set(AV_TILT * rotT, AV_SWING * rotT, 0);
     _qAv.setFromEuler(_euler);
@@ -352,7 +406,7 @@ export function CubeAssembly({
       /* Its ring's place in the cycle. `phase` is depth behind the exit, so
          it counts down as the tunnel runs and wraps a ring that has gone
          past the corners back out to the far end. */
-      const phase = (((piece.rank * AV_SPACING - travel) % AV_CYCLE) + AV_CYCLE) % AV_CYCLE;
+      const phase = (((piece.rank * AV_SPACING + AV_PHASE0 - travel) % AV_CYCLE) + AV_CYCLE) % AV_CYCLE;
       const r = (AV_R + piece.jr) * aperture;
       _av
         .set(piece.cx * r * aspect, piece.cy * r, (AV_Z_EXIT - phase + piece.jz - AV_PIVOT_Z) * depth)
