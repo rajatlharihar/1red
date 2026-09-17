@@ -1,7 +1,17 @@
 # Current State
 
 ## Last Updated
-2026-09-16
+2026-09-17
+
+## Session Log: 2026-09-17 (later)
+
+- Hero and section 2 now read one eased scroll position (`src/app/components/scrollGlide.ts`); hero has a 100vh pinned tail (`TAIL_VH`). Section 2 overlaps the hero from `HANDOFF_P` 0.945, so cubes come out of the "e" with no white screen. Cube build is collision-free (OBB sweep: zero overlaps).
+- Every button/CTA uses `.btn-corners` (nav pill corner, smooth superellipse).
+- Selected Work: heading in the left column with the list; visual spans headline top to last-row underline.
+- Yui video replaced; Illusdoodle cover image added; favicon renamed to `public/1red-favicon.svg` (red light / white dark).
+- **Deployed:** pushed to `main` (latest `ce5cc8d`), live at https://1red.vercel.app. Push with `git -c http.postBuffer=524288000 push` (plain push gets HTTP 400). Never commit `pnpm-lock.yaml`, the placeholder `pnpm-workspace.yaml` edit or `Studio.glb.orig-backup`.
+- **Open:** section 2 text placement (copy parked in `problemStates.ts`); Rajat's custom letters (`../Assets/1red-custom-letters.svg`) to become the site's display type later; the Illusdoodle vs Illusdoodles name question.
+- Verification now uses Playwright driving Brave (`/Applications/Brave Browser.app/...`), not Google Chrome, per Rajat.
 
 ## Session Log: 2026-09-17 (morning)
 

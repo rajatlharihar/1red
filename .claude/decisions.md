@@ -213,11 +213,17 @@ Chronological, most recent last. Each entry: date (where known — this project 
 ---
 
 **DECISION (2026-09-17):** "Selected Work" heading lives inside FlashWork's pinned viewport again, above the list and visual.
-**REASON:** Rajat asked for it: the separately scrolling heading left too much white space before the list. The old clipping problem (content taller than 100vh) is avoided by letting the list + visual row flex into whatever height is left and scaling heading/row sizes with viewport height.
-**DO NOT:** Give the list/visual row a fixed height again, or move the heading back out, without Rajat asking.
+**REASON:** Rajat asked for it: the separately scrolling heading left too much white space before the list. Later the same day he asked for the visual to run from the headline down to the last project, so the heading now sits in the left column with the list, and the visual stretches to that column: its top lines up with the headline (below the eyebrow, `HEADLINE_OFFSET`) and its bottom with the last row's underline (`ROW_PAD_Y`). Heading and row sizes scale with viewport height so it fits 100vh.
+**DO NOT:** Give the visual a fixed height or aspect ratio, or move the heading out of the left column, without Rajat asking.
 
 ---
 
 **DECISION (2026-09-17):** Scroll-scrubbed scenes that hand off to each other read progress from the shared `scrollGlide` (one eased scrollY), not from their own clamped progress.
 **REASON:** Two scenes easing separately drift apart on fast scrolls (cubes appeared over the "e" before the zoom passed it).
 **DO NOT:** Add per-scene easing on top of `scrollGlide`, or feed raw scroll to a scene that overlaps another.
+
+---
+
+**DECISION (2026-09-17):** The favicon file is `public/1red-favicon.svg`, not `favicon.svg`.
+**REASON:** Browsers cached the old icon under `/favicon.svg` even after the new glyph deployed. It stays the logo-red "1", white under `prefers-color-scheme: dark`.
+**DO NOT:** When the icon changes again, overwrite it in place; give it a new file name so browsers refetch it.
