@@ -3,12 +3,13 @@
 ## Last Updated
 2026-09-17
 
-## Session Log: 2026-09-17 (avenue)
+## Session Log: 2026-09-17 (tunnel)
 
-- **Section 2's opening is now a flythrough, not a scale-up.** 27 cubes are planted as two rows flanking the camera's path (`AV_*` constants in `cube/CubeAssembly.tsx`), receding to a vanishing point in the hero's "e" gap. Timeline over the pinned scroll: hold `0 → 0.04` (corridor stays a point inside the gap while the hero's red is on screen), approach `0.04 → 0.34` (accelerates hardest at the start, near pairs sweep out through the bottom corners), turn `0.30 → 0.54` (array yaws `AV_SWING`, tilts `AV_TILT`, depth collapses to `AV_SQUASH`, rows lift to `AV_Y_TURNED`, cubes start tumbling), build `0.54 → 0.90`, settle `0.82 → 0.99`.
-- Section 2 is 490vh (was 360vh) so the approach has its own scroll. Cube orientation while planted is the array's rotation times a fixed tilt (`_qTilt`), never the array's own yaw, see decisions.md.
-- Verified with Playwright + Brave at 1440x900 and 390x844 across 12 scroll positions each: no console errors, `vite build` clean, reduced motion still shows the finished box unpinned.
-- **Open:** still section 2's text placement (copy parked in `problemStates.ts`), the custom letters, the Illusdoodle naming. Not pushed to Vercel yet, this is a local commit only.
+- **Section 2's opening is a flythrough of a tunnel, not a scale-up.** 27 cubes sit four to a ring, one per corner of the frame, centred on the camera axis, which is exactly where the hero's zoom breaks through the "e". Ranks cycle, so the tunnel has no visible end. Timeline over the pinned scroll: mouth opens `0 to 0.11` with the gap (`AV_AP0` to 1), run `0.06 to 0.42` (fast the moment the mouth is open, eased to a stop), turn `0.26 to 0.56` (yaw `AV_SWING`, tilt `AV_TILT`, depth to `AV_SQUASH`, mouth back to `AV_AP_TURN`, cubes start tumbling), build `0.56 to 0.90`, settle `0.82 to 0.99`. All `AV_*` constants live in `cube/CubeAssembly.tsx`.
+- Section 2 is 490vh (was 360vh). Nothing draws until the section pins (`rawRef`, the unclamped progress). Tilts mirror per corner and radius jitter is per ring, so the tunnel is symmetric about the gap; measured centre of mass is within 0.5% of the frame centre at the hand-off.
+- Verified with Playwright and Brave: 12 scroll positions at 1440x900, 9 at 390x844, plus a six-frame sweep across the hand-off itself with the glide settled at each stop. No console errors, `vite build` clean. Frame times at 2560x1340 with dpr 2: 60fps median through the tunnel, the turn and the build.
+- An earlier pass built this as two ground-level rows flanking the path; rejected by Rajat as "a caterpillar randomly hovering on screen". See decisions.md.
+- **Open:** still section 2's text placement (copy parked in `problemStates.ts`), the custom letters, the Illusdoodle naming. Not pushed to Vercel: local commits only.
 
 ## Session Log: 2026-09-17 (later)
 

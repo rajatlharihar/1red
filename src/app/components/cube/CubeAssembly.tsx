@@ -3,13 +3,16 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
-/* ─── Down the avenue, then into one cube ───────────────────────────────────
- * The hero's zoom comes out of the "e" into an avenue: two rows of cubes
- * receding to a vanishing point at the centre of the frame, the way a lined
- * approach reads (the bush rows either side of the walk up to the Taj). The
- * rows slide past the camera, which is depth and parallax rather than a
- * scale-up, and then the whole array turns and loses its depth. That is what
- * breaks the order into the jumble the box is built from.
+/* ─── Through the tunnel, then into one cube ────────────────────────
+ * The hero's zoom does not stop at the "e". Directly behind the gap is a
+ * tunnel of cubes: four blocks per ring, one in each corner of the frame,
+ * ring after ring converging on the exact point the zoom breaks through, so
+ * the parting red of the logo hands straight over to blocks streaming out of
+ * the same four corners. Its mouth opens as the gap opens (`AV_AP0`), then
+ * the rings run at the camera and out past the corners. The ranks cycle, so
+ * 27 cubes make a tunnel with no end in sight. Then the whole array turns
+ * and loses its depth, which is what breaks the rings into the jumble the
+ * box is built from.
  *
  * NO COLLISIONS. The box builds from the inside out (centre, faces, edges,
  * corners). Each cube flies to a staging point outside the forming box on
@@ -20,7 +23,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
  * flying, cubes are pushed apart from one another and kept outside the
  * staging sphere, so nothing passes through the box on its way round it.
  * Positions are a pure function of scroll, so scrubbing back is identical.
- * ────────────────────────────────────────────────────────────────────────── */
+ * ─────────────────────────────────────────────────────────────────────────── */
 
 const RED = '#EA3323';
 export const CAM_Z = 9.4;
@@ -30,56 +33,64 @@ const N = 3;
 const COUNT = N * N * N;
 
 /* Timeline, as fractions of the pinned scroll. */
-const APPROACH_END = 0.34;
-const SWING_START = 0.3;
-const SWING_END = 0.54;
-const GATHER_START = 0.54;
+const APPROACH_END = 0.42;
+const SWING_START = 0.26;
+const SWING_END = 0.56;
+const GATHER_START = 0.56;
 const GATHER_END = 0.9;
 const SETTLE_START = 0.82;
 const SETTLE_END = 0.99;
 
-/* ─── The avenue ───────────────────────────────────────────────────────────
- * Cubes are paired left and right of the camera's path and ranked away from
- * it, so the section opens on a corridor whose vanishing point sits exactly
- * where the hero's zoom breaks through. It starts far enough away that the
- * whole corridor still fits inside the white gap while the hero's red is on
- * screen, then travels `AV_TRAVEL` so the near pairs sweep past the frame
- * edges. `AV_SWING`/`AV_TILT` turn the array and `AV_SQUASH` takes its depth
- * away, which is what turns two tidy rows into a jumble.
- * ────────────────────────────────────────────────────────────────────────── */
-/** Corridor half-width: how far each row sits off the path. */
-const AV_HALF_W = 3.0;
-/** Rows sit well under the eye line. That is what makes the two lines
- *  converge diagonally up to the vanishing point instead of flattening into
- *  one horizontal row of cubes. They lift back to the middle as they turn. */
-const AV_Y = -1.9;
-const AV_Y_TURNED = -0.2;
-/** Gap between consecutive pairs: close to a planted block's own width, so
- *  a row reads as a continuous hedge rather than scattered markers. */
-const AV_SPACING = 4.4;
-/** The nearest pair at scroll 0. Ranks run away from here (`-rank`), deep
- *  enough that the whole corridor still reads as one point at the centre. */
-const AV_Z0 = -30;
-/** How far the corridor slides past the camera during the approach: enough
- *  that the first pairs sweep out through the bottom corners of the frame. */
-const AV_TRAVEL = 52;
-/** The corridor holds still until the hero's red has given way to white.
- *  Until then it has to stay a point inside the gap. It then comes at the
- *  camera hardest immediately (the burst out of the "e") and eases off into
- *  the turn, rather than crawling for the first third of the section. */
-const AV_HOLD = 0.04;
-/** The array turns about this depth, roughly the middle of what's on screen. */
+/* ─── The tunnel ────────────────────────────────────────────────────
+ * Four cubes per ring, one per corner of the frame, centred on the frame's
+ * centre: that is where the hero's zoom comes through, and a ring in all
+ * four corners is the only arrangement that continues the four parting
+ * quadrants of the logo instead of hovering somewhere in the frame.
+ *
+ * Ranks cycle. `AV_CYCLE` is the depth a ring covers before it wraps back to
+ * the far end, and it wraps at `AV_Z_EXIT`, which is past the corners and off
+ * frame, so the wrap is never seen. 27 cubes therefore read as an endless
+ * tunnel instead of a short caterpillar of blocks.
+ * ─────────────────────────────────────────────────────────────────────────── */
+/** Rings in the cycle: four cubes each, 28 slots for 27 cubes. */
+const AV_RANKS = 7;
+/** Depth between rings. */
+const AV_SPACING = 10;
+const AV_CYCLE = AV_RANKS * AV_SPACING;
+/** Where a ring wraps back to the far end: past the frame's corners. */
+const AV_Z_EXIT = 4;
+/** Ring radius at the vertical edge of the frame. The x offset is scaled by
+ *  the aspect, so a block sits in the corner and not out to the side. */
+const AV_R = 3;
+/** The mouth at scroll 0: small enough that the whole tunnel sits inside the
+ *  white gap in the "e" while the logo's red is still on screen. It opens
+ *  with the gap, so the hand-off is one continuous move and not a cut. */
+const AV_AP0 = 0.045;
+const AV_OPEN_END = 0.11;
+/** The mouth closes back to this as the array turns, so the rings that have
+ *  already swept out past the corners come back in the way they left, and
+ *  the frame is never briefly empty between the tunnel and the jumble. */
+const AV_AP_TURN = 0.5;
+/** The tunnel only starts running once the mouth is open. */
+const AV_HOLD = 0.06;
+/** Depth covered during the approach: about a cycle and a half of rings
+ *  streaming past. It stops clear of the wrap band, so no ring is mid-fade
+ *  when the turn freezes it. */
+const AV_TRAVEL = 97.5;
+/** The array turns about this depth, roughly the middle of what is on screen. */
 const AV_PIVOT_Z = -13;
 const AV_SWING = 1.35;
 const AV_TILT = 0.38;
-/** Planted blocks are far chunkier than the cubes in the finished box: a
- *  block has to be comparable to the width of the path for the corridor to
- *  fill the frame at all. They shrink back as the rows break up. */
-const AV_SIZE = 2.1;
-/** Corridor depth left after the turn, so the rows collapse into a cloud. */
+/** Tunnel depth left after the turn, so the rings collapse into a cloud. */
 const AV_SQUASH = 0.17;
-/** Ranks in the corridor: pairs either side, so 27 cubes make 14. */
-const AV_RANKS = Math.ceil(COUNT / 2);
+/** Blocks in the tunnel are far chunkier than the cubes in the finished box.
+ *  They shrink back as the rings break up. */
+const AV_SIZE = 2.1;
+/** A block of a given height covers far more of a narrow frame's width than
+ *  of a wide one's, so on a phone the corner blocks would swallow the tunnel
+ *  they are supposed to frame. This trims them back by the aspect. Only the
+ *  tunnel is trimmed: the box that gets built still fits the frame on `unit`. */
+const avSizeFor = (aspect: number) => AV_SIZE * clamp01((aspect / 1.6 - 0.45) / 0.55) * 0.55 + AV_SIZE * 0.45;
 
 /** Staging radius in cube units: the box's bounding radius (√3 × 1.5) plus a
  *  cube's own, so a cube waiting there never touches the box. */
@@ -122,15 +133,19 @@ interface Piece {
   axis: THREE.Vector3;
   angle: number;
   speed: number;
-  /** Avenue: which row (-1 left, +1 right) and how far down the corridor. */
-  side: number;
+  /** Tunnel: which corner of the frame, and which ring. */
+  cx: number;
+  cy: number;
   rank: number;
-  /** Small offsets so the rows are planted, not stamped. */
-  jx: number;
-  jy: number;
+  /** Small offsets, so the rings are not perfectly stamped. The radius
+   *  jitter belongs to the ring, not the cube, so a ring stays a square and
+   *  the tunnel stays centred on the gap. */
+  jr: number;
   jz: number;
-  /** Fade-in order: the far end of the corridor lights up first. */
-  avDelay: number;
+  /** Mirrored per corner, so the four blocks of a ring are mirror images and
+   *  their shapes cancel out around the centre instead of all leaning the
+   *  same way. */
+  tilt: THREE.Quaternion;
 }
 
 /* Build order: centre, then faces, edges, corners, each tier overlapping the
@@ -173,6 +188,9 @@ function layout(cols: number, rows: number): Piece[] {
 
   return ordered.map((slot, i) => {
     const tier = tierOf(slot);
+    const ring = Math.floor(i / 4);
+    const cornerX = i % 4 === 0 || i % 4 === 3 ? 1 : -1;
+    const cornerY = i % 4 < 2 ? 1 : -1;
     const w = TIER_WINDOWS[tier];
     const k = tierSize[tier] > 1 ? tierSeen[tier] / (tierSize[tier] - 1) : 0;
     tierSeen[tier]++;
@@ -190,12 +208,12 @@ function layout(cols: number, rows: number): Piece[] {
       axis: new THREE.Vector3(hash(i, 6) - 0.5, hash(i, 7) - 0.5, hash(i, 8) - 0.5).normalize(),
       angle: hash(i, 9) * Math.PI * 2,
       speed: 0.15 + hash(i, 10) * 0.25,
-      side: i % 2 === 0 ? -1 : 1,
-      rank: Math.floor(i / 2),
-      jx: (hash(i, 21) - 0.5) * 0.5,
-      jy: (hash(i, 22) - 0.5) * 0.44,
-      jz: (hash(i, 23) - 0.5) * 1.3,
-      avDelay: (AV_RANKS - 1 - Math.floor(i / 2)) / (AV_RANKS - 1),
+      cx: cornerX,
+      cy: cornerY,
+      rank: ring,
+      jr: (hash(ring, 21) - 0.5) * 0.24,
+      jz: (hash(ring, 23) - 0.5) * 1.6,
+      tilt: new THREE.Quaternion().setFromEuler(new THREE.Euler(0.26 * cornerY, 0.38 * cornerX, 0)),
     };
   });
 }
@@ -207,11 +225,10 @@ const _qAv = new THREE.Quaternion();
 const _qTidy = new THREE.Quaternion();
 const _qBase = new THREE.Quaternion();
 const _av = new THREE.Vector3();
-/** Planted cubes are turned off-axis by this much, so they read as boxes
- *  rather than flat red rectangles. It rotates the cube, never the array:
- *  the corridor itself has to stay square to the camera or its vanishing
- *  point drifts off the gap the hero zooms through. */
-const _qTilt = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.26, 0.38, 0));
+/* Each piece carries its own off-axis tilt (`piece.tilt`), which turns a
+   block into a box rather than a flat red rectangle. It rotates the cube and
+   never the array: the tunnel itself has to stay square to the camera, or its
+   vanishing point drifts off the gap the hero zooms through. */
 const _euler = new THREE.Euler();
 const _a = new THREE.Vector3();
 const _b = new THREE.Vector3();
@@ -221,9 +238,14 @@ const _m = new THREE.Matrix4();
 
 export function CubeAssembly({
   progressRef,
+  rawRef,
   pointerRef,
 }: {
   progressRef: React.MutableRefObject<number>;
+  /** Unclamped section progress. Before the section pins, its canvas is not
+   *  yet aligned with the viewport, so anything drawn in it sits low of the
+   *  gap. Nothing is drawn until it is aligned. */
+  rawRef: React.MutableRefObject<number>;
   pointerRef: React.MutableRefObject<{ x: number; y: number }>;
 }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
@@ -295,20 +317,28 @@ export function CubeAssembly({
     );
     _qGroup.setFromEuler(_euler);
 
-    /* The corridor is laid out in cube units and scaled whole, so a phone
-       sees the same composition as the iMac, just smaller. */
+    /* The tunnel is laid out in one reference frame and then scaled about the
+       camera by `av`, so a phone sees the same tunnel as the iMac, smaller. */
     const av = unit / 0.85;
-    const travel = Math.pow(clamp01((p - AV_HOLD) / (APPROACH_END - AV_HOLD)), 0.75) * AV_TRAVEL * av;
+    /* Fast the moment the mouth is open, then eased to a stop rather than
+       cut off: the turn is already underway by then, so the tunnel never
+       visibly halts and waits. */
+    const run = clamp01((p - AV_HOLD) / (APPROACH_END - AV_HOLD));
+    const travel = (1 - Math.pow(1 - run, 2.2)) * AV_TRAVEL;
     const swing = clamp01((p - SWING_START) / (SWING_END - SWING_START));
     /* The turn leads; the break-up into the jumble follows it. */
     const rotT = easeInOutCubic(clamp01(swing / 0.62));
     const cloudT = easeInOutCubic(smoothstep(0.32, 1, swing));
-    const pivotZ = AV_PIVOT_Z * av;
+    /* The mouth opens with the gap in the "e", which is what makes the
+       hand-off continuous: the tunnel is inside the gap until the gap is
+       gone, and never appears from somewhere else in the frame. */
+    const aperture =
+      lerp(AV_AP0, 1, smoothstep(0, AV_OPEN_END, p)) * lerp(1, AV_AP_TURN, rotT);
+    const avSize = avSizeFor(aspect);
+    const gate = clamp01(rawRef.current / 0.006);
     const depth = lerp(1, AV_SQUASH, rotT);
-    const rowY = lerp(AV_Y, AV_Y_TURNED, rotT);
     _euler.set(AV_TILT * rotT, AV_SWING * rotT, 0);
     _qAv.setFromEuler(_euler);
-    _qTidy.copy(_qAv).multiply(_qTilt);
 
     const gather = clamp01((p - GATHER_START) / (GATHER_END - GATHER_START));
     const stageR = STAGE_R * unit;
@@ -319,25 +349,29 @@ export function CubeAssembly({
       const w = work[i];
       const local = clamp01((gather - piece.start) / piece.len);
 
-      /* Its place in the avenue: off to one side, ranked away down the
-         corridor, the whole corridor sliding past and then flattening in
-         towards the pivot as the array turns. */
-      const railZ = (AV_Z0 - piece.rank * AV_SPACING + piece.jz) * av + travel;
+      /* Its ring's place in the cycle. `phase` is depth behind the exit, so
+         it counts down as the tunnel runs and wraps a ring that has gone
+         past the corners back out to the far end. */
+      const phase = (((piece.rank * AV_SPACING - travel) % AV_CYCLE) + AV_CYCLE) % AV_CYCLE;
+      const r = (AV_R + piece.jr) * aperture;
       _av
-        .set((piece.side * AV_HALF_W + piece.jx) * av, (rowY + piece.jy) * av, (railZ - pivotZ) * depth)
+        .set(piece.cx * r * aspect, piece.cy * r, (AV_Z_EXIT - phase + piece.jz - AV_PIVOT_Z) * depth)
         .applyQuaternion(_qAv);
-      _av.z += pivotZ;
+      _av.z += AV_PIVOT_Z;
+      // Scale the whole tunnel about the camera, never about the origin.
+      _av.set(_av.x * av, _av.y * av, CAM_Z + (_av.z - CAM_Z) * av);
 
       /* The jumble the build starts from: spread across the frame, mid-depth. */
       const halfH = (CAM_Z - piece.z) * tanHalf;
       _a.set(piece.nx * halfH * aspect * 0.86, piece.ny * halfH * 0.8, piece.z);
       _b.copy(_av).lerp(_a, cloudT);
-      /* The far end of the corridor is already lit when the section opens,
-         so the hero zooms into something rather than onto nothing. */
-      const appear = clamp01((p + 0.025 - piece.avDelay * 0.03) / 0.045);
+      /* A ring only fades in over the deepest part of the cycle, where it is
+         far too small to see the fade, so a wrap never pops. */
+      const appear = gate * Math.max(smoothstep(1, 0.9, phase / AV_CYCLE), cloudT);
 
-      /* Tidy while it is planted in the row; tumbling once the rows break up. */
+      /* Square in the ring; tumbling once the rings break up. */
       const tumble = _q.setFromAxisAngle(piece.axis, piece.angle + time * piece.speed + p * 3);
+      _qTidy.copy(_qAv).multiply(piece.tilt);
       _qBase.copy(_qTidy).slerp(tumble, cloudT);
 
       if (piece.tier === 0) {
@@ -364,7 +398,7 @@ export function CubeAssembly({
       const grow = easeInOutSine(clamp01(local / (piece.tier === 0 ? 0.6 : FLIGHT - 0.1)));
       /* One size while they are a planted row; their own sizes once they are
          a jumble; all equal again in the box. */
-      w.scale = appear * lerp(AV_SIZE, lerp(piece.size, 1, grow), cloudT) * unit;
+      w.scale = appear * lerp(avSize * aperture, lerp(piece.size, 1, grow), cloudT) * unit;
       w.radius = CUBE_R * w.scale;
     });
 

@@ -230,11 +230,12 @@ Chronological, most recent last. Each entry: date (where known — this project 
 
 ---
 
-**DECISION (2026-09-17, later):** The hand-off out of the hero's zoom is a flythrough down an avenue of cubes, not the cubes scaling up towards the camera.
-**REASON:** Rajat: the scale-up read as a zoom, not as travel. His reference is the walk up to the Taj Mahal, rows of planting either side of the path. Then "those arrays are changed angle to show the current jumbled need to form one cube". Depth has to come from two rows converging on a vanishing point, which is also what the corridor gives for free: its vanishing point can sit exactly where the hero breaks through the "e".
+**DECISION (2026-09-17, later):** The hand-off out of the hero's zoom is a flythrough of a tunnel of cubes, four to a ring, one block in each corner of the frame, centred exactly on the gap in the "e".
+**REASON:** Rajat, twice. First, the cubes scaling up out of the centre read as another zoom and not as travel. Then, when it was built as two rows flanking the path at ground level, "it looks like a caterpillar randomly hovering on screen": rows at the camera's own height are not behind the "e" and do not continue anything the hero was doing. Blocks in all four corners do, because the zoom breaks through a cross-shaped gap with red in all four quadrants, and the tunnel's mouth can open on exactly that cross.
 **DO NOT:**
-- Put the rows at the camera's own height. At y = 0 the two rows project as one horizontal line of cubes and all sense of a corridor is lost, they have to sit below the eye line (`AV_Y`) so the lines converge diagonally.
-- Apply the cubes' off-axis tilt to the array itself. The cube orientation (`_qTilt`) and the array transform (`_qAv`) are deliberately separate: yawing the array moves the corridor's vanishing point off the gap the hero zooms through.
-- Rank the corridor with `AV_Z0 + rank * AV_SPACING`. `AV_Z0` is negative and ranks run *away* from the camera, so it is `-rank * AV_SPACING`; getting this backwards puts the far end of the corridor behind the camera and empties the screen mid-section.
-- Let the corridor move before the hero's red has gone (`AV_HOLD`). Until the backdrop is opaque the whole array has to stay a point inside the white gap, or cubes appear over the closing door.
-
+- Move the tunnel's axis off the camera axis. The hero's zoom drives `aim` to 1 well before `HANDOFF_P` (see `studioSequence.ts`), which puts the gap exactly on the camera axis, so a tunnel centred on (0, 0) is a tunnel exactly behind the "e". Any x/y offset breaks that for free.
+- Give every block the same off-axis tilt. They then all lean the same way and the tunnel measures about 3% off centre even though the positions are symmetric. Tilts mirror per corner (`piece.tilt`), and the radius jitter belongs to the ring, not the cube.
+- Draw anything before the section pins. Its sticky canvas is not aligned with the viewport until then, so the tunnel sits low of the gap over the closing door. Hence the `rawRef` gate, which needs the unclamped progress, not the clamped one.
+- Let the tunnel run before the mouth is open (`AV_HOLD`), or start the mouth wide (`AV_AP0`). Until the backdrop is opaque the whole tunnel has to fit inside the white cross.
+- Freeze the run and then start the turn. The tunnel visibly halts and waits. The run eases to a stop (`1 - (1 - t) ^ 2.2`) while the turn is already underway, and `AV_TRAVEL` is chosen so no ring is inside its fade band when the run stops.
+- Size the tunnel blocks off `unit` alone. A block of a given height covers far more of a narrow frame's width, so on a phone the corner blocks swallow the tunnel they frame. `avSizeFor(aspect)` trims them; the box being built still uses `unit`.

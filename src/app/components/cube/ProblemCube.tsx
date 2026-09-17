@@ -32,6 +32,7 @@ export function ProblemCube() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
+  const rawRef = useRef(0);
   const pointerRef = useRef({ x: 0, y: 0 });
   const reduceMotion = useReducedMotion() ?? false;
   const [inView, setInView] = useState(false);
@@ -48,6 +49,7 @@ export function ProblemCube() {
     // Reduced motion shows the finished box, no pin, no scrubbing.
     if (reduceMotion) {
       progressRef.current = 1;
+      rawRef.current = 1;
       return;
     }
     return subscribeGlide(() => {
@@ -56,7 +58,9 @@ export function ProblemCube() {
       const top = el.getBoundingClientRect().top + glide.raw;
       const scrollable = el.offsetHeight - window.innerHeight;
       if (scrollable <= 0) return;
-      const p = Math.max(0, Math.min(1, (glide.y - top) / scrollable));
+      const raw = (glide.y - top) / scrollable;
+      const p = Math.max(0, Math.min(1, raw));
+      rawRef.current = raw;
       progressRef.current = p;
       if (backdropRef.current) {
         const fade = (p - BACKDROP_FROM) / (BACKDROP_TO - BACKDROP_FROM);
@@ -105,7 +109,7 @@ export function ProblemCube() {
             camera={{ position: [0, 0, CAM_Z], fov: FOV }}
           >
             <CubeLighting />
-            <CubeAssembly progressRef={progressRef} pointerRef={pointerRef} />
+            <CubeAssembly progressRef={progressRef} rawRef={rawRef} pointerRef={pointerRef} />
           </Canvas>
         </div>
       </div>
