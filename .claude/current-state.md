@@ -1,7 +1,16 @@
 # Current State
 
 ## Last Updated
-2026-09-17
+2026-09-18
+
+## Resume here (end of the 2026-09-17 night session)
+
+Rajat stopped for the night and will pick this up next session. Nothing is mid-flight: the hand-off out of the hero is finished and verified.
+
+- **Not pushed.** `main` is committed locally up to `68b8b53`; https://1red.vercel.app is still serving `ce5cc8d`. Push with `git -c http.postBuffer=524288000 push` once he approves the hand-off. Never commit `pnpm-lock.yaml`, the placeholder `pnpm-workspace.yaml` edit or `Studio.glb.orig-backup`.
+- **First thing to do:** have him scroll the hand-off and say whether it is approved, then push.
+- **Open, in the order he has raised them:** where section 2's text goes (copy is parked and unrendered in `cube/problemStates.ts`, he decides the layout); his custom letters as the site's display type (`../Assets/1red-custom-letters.svg`, parked, do not build with them unprompted); Illusdoodle vs "Illusdoodles"; the empty facade wall right of the hero door (he is ideating with friends, do not build unprompted); the pencil hatch texture and plane, still undecided.
+- Read the tunnel session log below plus decisions.md before touching the hand-off again: four versions of it were rejected and the reasons are all recorded.
 
 ## Session Log: 2026-09-17 (tunnel)
 
