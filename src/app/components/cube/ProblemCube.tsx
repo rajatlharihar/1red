@@ -5,16 +5,19 @@ import { CubeAssembly, CubeLighting, CAM_Z, FOV } from './CubeAssembly';
 import { SCROLL_VH as HERO_VH, HANDOFF_P, TAIL_VH } from '../hero/StudioEntrance';
 import { glide, subscribeGlide } from '../scrollGlide';
 
-/* ─── Section 2: many cubes become one ─────────────────────────────────────
+/* ─── Section 2: down an avenue, then many cubes become one ────────────────
  * No hand-off screen. The section is pulled up over the end of the hero so
- * it pins while the zoom through the "e" is still running: cubes rush out of
- * the gap over the splitting red, the hero goes white underneath, and the
- * cubes spread, gather and lock into one box. Progress comes from the same
+ * it pins while the zoom through the "e" is still running: the avenue's
+ * vanishing point sits in the gap over the splitting red, the hero goes
+ * white underneath while the corridor of cubes slides past, and then the
+ * rows turn, break up, gather and lock into one box. Progress comes from the same
  * glided scroll position as the hero, so the two stay in step at any scroll
  * speed, with no React re-renders.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const SECTION_VH = 360;
+/* Longer than the build alone needs: the avenue gets its own run of scroll
+   before the rows turn. */
+const SECTION_VH = 490;
 const BG = '#FFFFFF';
 /** How much of the hero's animated scroll this section sits on top of. */
 const OVERLAP_VH = (1 - HANDOFF_P) * (HERO_VH - 100);

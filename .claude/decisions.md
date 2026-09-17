@@ -227,3 +227,14 @@ Chronological, most recent last. Each entry: date (where known — this project 
 **DECISION (2026-09-17):** The favicon file is `public/1red-favicon.svg`, not `favicon.svg`.
 **REASON:** Browsers cached the old icon under `/favicon.svg` even after the new glyph deployed. It stays the logo-red "1", white under `prefers-color-scheme: dark`.
 **DO NOT:** When the icon changes again, overwrite it in place; give it a new file name so browsers refetch it.
+
+---
+
+**DECISION (2026-09-17, later):** The hand-off out of the hero's zoom is a flythrough down an avenue of cubes, not the cubes scaling up towards the camera.
+**REASON:** Rajat: the scale-up read as a zoom, not as travel. His reference is the walk up to the Taj Mahal, rows of planting either side of the path. Then "those arrays are changed angle to show the current jumbled need to form one cube". Depth has to come from two rows converging on a vanishing point, which is also what the corridor gives for free: its vanishing point can sit exactly where the hero breaks through the "e".
+**DO NOT:**
+- Put the rows at the camera's own height. At y = 0 the two rows project as one horizontal line of cubes and all sense of a corridor is lost, they have to sit below the eye line (`AV_Y`) so the lines converge diagonally.
+- Apply the cubes' off-axis tilt to the array itself. The cube orientation (`_qTilt`) and the array transform (`_qAv`) are deliberately separate: yawing the array moves the corridor's vanishing point off the gap the hero zooms through.
+- Rank the corridor with `AV_Z0 + rank * AV_SPACING`. `AV_Z0` is negative and ranks run *away* from the camera, so it is `-rank * AV_SPACING`; getting this backwards puts the far end of the corridor behind the camera and empties the screen mid-section.
+- Let the corridor move before the hero's red has gone (`AV_HOLD`). Until the backdrop is opaque the whole array has to stay a point inside the white gap, or cubes appear over the closing door.
+

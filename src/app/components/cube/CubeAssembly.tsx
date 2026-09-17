@@ -3,10 +3,13 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
-/* ─── Many cubes → one cube ─────────────────────────────────────────────────
- * The hero's zoom through the "e" carries straight on: 27 cubes rush out of
- * the centre of the frame, spread across the viewport tumbling, then build a
- * 3×3×3 box while it turns.
+/* ─── Down the avenue, then into one cube ───────────────────────────────────
+ * The hero's zoom comes out of the "e" into an avenue: two rows of cubes
+ * receding to a vanishing point at the centre of the frame, the way a lined
+ * approach reads (the bush rows either side of the walk up to the Taj). The
+ * rows slide past the camera, which is depth and parallax rather than a
+ * scale-up, and then the whole array turns and loses its depth. That is what
+ * breaks the order into the jumble the box is built from.
  *
  * NO COLLISIONS. The box builds from the inside out (centre, faces, edges,
  * corners). Each cube flies to a staging point outside the forming box on
@@ -27,15 +30,56 @@ const N = 3;
 const COUNT = N * N * N;
 
 /* Timeline, as fractions of the pinned scroll. */
-const EMERGE_END = 0.2;
-const GATHER_START = 0.22;
-const GATHER_END = 0.86;
-const SETTLE_START = 0.74;
-const SETTLE_END = 0.96;
+const APPROACH_END = 0.34;
+const SWING_START = 0.3;
+const SWING_END = 0.54;
+const GATHER_START = 0.54;
+const GATHER_END = 0.9;
+const SETTLE_START = 0.82;
+const SETTLE_END = 0.99;
 
-/** Where emerging cubes start: deep in the frame, near its centre. */
-const EMERGE_Z = -36;
-const EMERGE_SPREAD = 0.12;
+/* ─── The avenue ───────────────────────────────────────────────────────────
+ * Cubes are paired left and right of the camera's path and ranked away from
+ * it, so the section opens on a corridor whose vanishing point sits exactly
+ * where the hero's zoom breaks through. It starts far enough away that the
+ * whole corridor still fits inside the white gap while the hero's red is on
+ * screen, then travels `AV_TRAVEL` so the near pairs sweep past the frame
+ * edges. `AV_SWING`/`AV_TILT` turn the array and `AV_SQUASH` takes its depth
+ * away, which is what turns two tidy rows into a jumble.
+ * ────────────────────────────────────────────────────────────────────────── */
+/** Corridor half-width: how far each row sits off the path. */
+const AV_HALF_W = 3.0;
+/** Rows sit well under the eye line. That is what makes the two lines
+ *  converge diagonally up to the vanishing point instead of flattening into
+ *  one horizontal row of cubes. They lift back to the middle as they turn. */
+const AV_Y = -1.9;
+const AV_Y_TURNED = -0.2;
+/** Gap between consecutive pairs: close to a planted block's own width, so
+ *  a row reads as a continuous hedge rather than scattered markers. */
+const AV_SPACING = 4.4;
+/** The nearest pair at scroll 0. Ranks run away from here (`-rank`), deep
+ *  enough that the whole corridor still reads as one point at the centre. */
+const AV_Z0 = -30;
+/** How far the corridor slides past the camera during the approach: enough
+ *  that the first pairs sweep out through the bottom corners of the frame. */
+const AV_TRAVEL = 52;
+/** The corridor holds still until the hero's red has given way to white.
+ *  Until then it has to stay a point inside the gap. It then comes at the
+ *  camera hardest immediately (the burst out of the "e") and eases off into
+ *  the turn, rather than crawling for the first third of the section. */
+const AV_HOLD = 0.04;
+/** The array turns about this depth, roughly the middle of what's on screen. */
+const AV_PIVOT_Z = -13;
+const AV_SWING = 1.35;
+const AV_TILT = 0.38;
+/** Planted blocks are far chunkier than the cubes in the finished box: a
+ *  block has to be comparable to the width of the path for the corridor to
+ *  fill the frame at all. They shrink back as the rows break up. */
+const AV_SIZE = 2.1;
+/** Corridor depth left after the turn, so the rows collapse into a cloud. */
+const AV_SQUASH = 0.17;
+/** Ranks in the corridor: pairs either side, so 27 cubes make 14. */
+const AV_RANKS = Math.ceil(COUNT / 2);
 
 /** Staging radius in cube units: the box's bounding radius (√3 × 1.5) plus a
  *  cube's own, so a cube waiting there never touches the box. */
@@ -51,7 +95,6 @@ const REST_ROT_X = 0.42;
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
 const smoothstep = (a: number, b: number, v: number) => {
   const t = clamp01((v - a) / (b - a));
@@ -79,7 +122,15 @@ interface Piece {
   axis: THREE.Vector3;
   angle: number;
   speed: number;
-  emergeDelay: number;
+  /** Avenue: which row (-1 left, +1 right) and how far down the corridor. */
+  side: number;
+  rank: number;
+  /** Small offsets so the rows are planted, not stamped. */
+  jx: number;
+  jy: number;
+  jz: number;
+  /** Fade-in order: the far end of the corridor lights up first. */
+  avDelay: number;
 }
 
 /* Build order: centre, then faces, edges, corners, each tier overlapping the
@@ -139,13 +190,28 @@ function layout(cols: number, rows: number): Piece[] {
       axis: new THREE.Vector3(hash(i, 6) - 0.5, hash(i, 7) - 0.5, hash(i, 8) - 0.5).normalize(),
       angle: hash(i, 9) * Math.PI * 2,
       speed: 0.15 + hash(i, 10) * 0.25,
-      emergeDelay: hash(i, 11),
+      side: i % 2 === 0 ? -1 : 1,
+      rank: Math.floor(i / 2),
+      jx: (hash(i, 21) - 0.5) * 0.5,
+      jy: (hash(i, 22) - 0.5) * 0.44,
+      jz: (hash(i, 23) - 0.5) * 1.3,
+      avDelay: (AV_RANKS - 1 - Math.floor(i / 2)) / (AV_RANKS - 1),
     };
   });
 }
 
 const _q = new THREE.Quaternion();
 const _qGroup = new THREE.Quaternion();
+/** The avenue's own orientation, and each cube's before the box takes over. */
+const _qAv = new THREE.Quaternion();
+const _qTidy = new THREE.Quaternion();
+const _qBase = new THREE.Quaternion();
+const _av = new THREE.Vector3();
+/** Planted cubes are turned off-axis by this much, so they read as boxes
+ *  rather than flat red rectangles. It rotates the cube, never the array:
+ *  the corridor itself has to stay square to the camera or its vanishing
+ *  point drifts off the gap the hero zooms through. */
+const _qTilt = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.26, 0.38, 0));
 const _euler = new THREE.Euler();
 const _a = new THREE.Vector3();
 const _b = new THREE.Vector3();
@@ -229,7 +295,21 @@ export function CubeAssembly({
     );
     _qGroup.setFromEuler(_euler);
 
-    const emerge = clamp01(p / EMERGE_END);
+    /* The corridor is laid out in cube units and scaled whole, so a phone
+       sees the same composition as the iMac, just smaller. */
+    const av = unit / 0.85;
+    const travel = Math.pow(clamp01((p - AV_HOLD) / (APPROACH_END - AV_HOLD)), 0.75) * AV_TRAVEL * av;
+    const swing = clamp01((p - SWING_START) / (SWING_END - SWING_START));
+    /* The turn leads; the break-up into the jumble follows it. */
+    const rotT = easeInOutCubic(clamp01(swing / 0.62));
+    const cloudT = easeInOutCubic(smoothstep(0.32, 1, swing));
+    const pivotZ = AV_PIVOT_Z * av;
+    const depth = lerp(1, AV_SQUASH, rotT);
+    const rowY = lerp(AV_Y, AV_Y_TURNED, rotT);
+    _euler.set(AV_TILT * rotT, AV_SWING * rotT, 0);
+    _qAv.setFromEuler(_euler);
+    _qTidy.copy(_qAv).multiply(_qTilt);
+
     const gather = clamp01((p - GATHER_START) / (GATHER_END - GATHER_START));
     const stageR = STAGE_R * unit;
     // The no-fly sphere opens as the build begins, not during the scatter.
@@ -239,16 +319,26 @@ export function CubeAssembly({
       const w = work[i];
       const local = clamp01((gather - piece.start) / piece.len);
 
-      // Scatter: out of the frame's centre, deep, towards its spot.
-      const e = clamp01((emerge - piece.emergeDelay * 0.35) / 0.65);
+      /* Its place in the avenue: off to one side, ranked away down the
+         corridor, the whole corridor sliding past and then flattening in
+         towards the pivot as the array turns. */
+      const railZ = (AV_Z0 - piece.rank * AV_SPACING + piece.jz) * av + travel;
+      _av
+        .set((piece.side * AV_HALF_W + piece.jx) * av, (rowY + piece.jy) * av, (railZ - pivotZ) * depth)
+        .applyQuaternion(_qAv);
+      _av.z += pivotZ;
+
+      /* The jumble the build starts from: spread across the frame, mid-depth. */
       const halfH = (CAM_Z - piece.z) * tanHalf;
       _a.set(piece.nx * halfH * aspect * 0.86, piece.ny * halfH * 0.8, piece.z);
-      const farH = (CAM_Z - EMERGE_Z) * tanHalf;
-      _b.set(piece.nx * farH * aspect * EMERGE_SPREAD, piece.ny * farH * EMERGE_SPREAD, EMERGE_Z);
-      _b.lerp(_a, easeOutCubic(e));
-      const appear = clamp01(e * 4);
+      _b.copy(_av).lerp(_a, cloudT);
+      /* The far end of the corridor is already lit when the section opens,
+         so the hero zooms into something rather than onto nothing. */
+      const appear = clamp01((p + 0.025 - piece.avDelay * 0.03) / 0.045);
 
+      /* Tidy while it is planted in the row; tumbling once the rows break up. */
       const tumble = _q.setFromAxisAngle(piece.axis, piece.angle + time * piece.speed + p * 3);
+      _qBase.copy(_qTidy).slerp(tumble, cloudT);
 
       if (piece.tier === 0) {
         const f = easeInOutSine(local);
@@ -270,9 +360,11 @@ export function CubeAssembly({
       }
 
       const square = easeInOutCubic(clamp01(local / (piece.tier === 0 ? 0.6 : FLIGHT - 0.1)));
-      w.quat.copy(tumble).slerp(_qGroup, square);
+      w.quat.copy(_qBase).slerp(_qGroup, square);
       const grow = easeInOutSine(clamp01(local / (piece.tier === 0 ? 0.6 : FLIGHT - 0.1)));
-      w.scale = appear * lerp(piece.size, 1, grow) * unit;
+      /* One size while they are a planted row; their own sizes once they are
+         a jumble; all equal again in the box. */
+      w.scale = appear * lerp(AV_SIZE, lerp(piece.size, 1, grow), cloudT) * unit;
       w.radius = CUBE_R * w.scale;
     });
 

@@ -3,6 +3,13 @@
 ## Last Updated
 2026-09-17
 
+## Session Log: 2026-09-17 (avenue)
+
+- **Section 2's opening is now a flythrough, not a scale-up.** 27 cubes are planted as two rows flanking the camera's path (`AV_*` constants in `cube/CubeAssembly.tsx`), receding to a vanishing point in the hero's "e" gap. Timeline over the pinned scroll: hold `0 → 0.04` (corridor stays a point inside the gap while the hero's red is on screen), approach `0.04 → 0.34` (accelerates hardest at the start, near pairs sweep out through the bottom corners), turn `0.30 → 0.54` (array yaws `AV_SWING`, tilts `AV_TILT`, depth collapses to `AV_SQUASH`, rows lift to `AV_Y_TURNED`, cubes start tumbling), build `0.54 → 0.90`, settle `0.82 → 0.99`.
+- Section 2 is 490vh (was 360vh) so the approach has its own scroll. Cube orientation while planted is the array's rotation times a fixed tilt (`_qTilt`), never the array's own yaw, see decisions.md.
+- Verified with Playwright + Brave at 1440x900 and 390x844 across 12 scroll positions each: no console errors, `vite build` clean, reduced motion still shows the finished box unpinned.
+- **Open:** still section 2's text placement (copy parked in `problemStates.ts`), the custom letters, the Illusdoodle naming. Not pushed to Vercel yet, this is a local commit only.
+
 ## Session Log: 2026-09-17 (later)
 
 - Hero and section 2 now read one eased scroll position (`src/app/components/scrollGlide.ts`); hero has a 100vh pinned tail (`TAIL_VH`). Section 2 overlaps the hero from `HANDOFF_P` 0.945, so cubes come out of the "e" with no white screen. Cube build is collision-free (OBB sweep: zero overlaps).

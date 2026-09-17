@@ -6,6 +6,11 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-17 (later)
+
+- **Hero hands into section 2 down an avenue, not a scale-up**: the cubes no longer start clustered deep at the centre of the frame and swell towards the camera. They are planted as two rows either side of the camera's path, receding to a vanishing point that sits exactly where the hero's zoom breaks through the "e" (the flanked approach of a lined walk, which is Rajat's Taj reference). The corridor holds still while the hero's red is still on screen, then comes at the camera and sweeps out through the bottom corners of the frame. The array then turns (`AV_SWING`/`AV_TILT`), loses its depth (`AV_SQUASH`) and lifts to the middle of the frame, which is what breaks two tidy rows into the jumble the 3x3x3 box is built from. All in `cube/CubeAssembly.tsx`; section 2 is now 490vh to give the approach its own run of scroll.
+- Planted blocks are chunkier than the cubes in the finished box (`AV_SIZE`) and carry a fixed off-axis tilt, so a row reads as boxes rather than flat red rectangles; both blend away as the rows break up.
+
 ## 2026-09-17
 
 - **Fallen stand removed** from the studio: `Studio_Setup_Tripod_6` (the tripod lying on the floor, bottom right) is cut from the scene at load in `StudioEnvironment.tsx`.
