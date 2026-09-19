@@ -8,7 +8,7 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ## 2026-09-19 (night, fourth pass)
 
-- **Rings come up out of the distance** rather than scaling in place: ring k starts `AV_BIRTH_DEPTH` (30) deeper and glides to its place over `AV_BIRTH_STEP` 0.006 per ring, `AV_BIRTH_LEN` 0.05, so it grows the way anything approaching does (Rajat: "scaling as the proximity").
+- **Rings come up out of the distance** rather than scaling in place: ring k starts `AV_BIRTH_DEPTH` (9) deeper and glides to its place over `AV_BIRTH_STEP` 0.012 per ring, `AV_BIRTH_LEN` 0.14 (30 / 0.006 / 0.05 first: Rajat, "too far ... a pop rather than a glide"), so it grows the way anything approaching does (Rajat: "scaling as the proximity").
 - **Looping flights**: the gather's flight is a cubic arc that swings further out from the axis first (`LOOP_OUT`), then comes round sideways onto the staging point (`LOOP_SWING`, each cube its own way round and amount, `loopOut`/`loopSwing`/`loopLift` per piece), with the cube tumbling on its own axis and square again as it lands (`LOOP_TUMBLE`). Flight is 0.7 of the window, shrink spread over the whole flight, tier windows 0.5 to 0.6 long. Rajat's drawn reference: a wide loop out to the frame's edge and back in, "moved in 3D space with rotations and positions with ease in and outs, more randomness".
 - **Cubes are no longer tone mapped** (`toneMapped: false`, like the mark): a tumbling metal face reflecting the room's bright panels went cream under ACES; clipped it stays red. The hand-off emissive is now the mark's exact `#FF0000` (`LOGO_EMISSIVE` 1), the key light is 1.0 (was 2.1) and `ENV` 0.5. The finished box reads brighter than before (measured face #B3271C against the old #A0000C).
 

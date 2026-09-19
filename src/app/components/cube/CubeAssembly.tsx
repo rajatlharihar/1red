@@ -139,9 +139,9 @@ const AV_SPREAD_TO = 0.46;
  *  `AV_BIRTH_STEP * k` to `AV_BIRTH_STEP * k + AV_BIRTH_LEN`, so it grows the
  *  way anything approaching does. The first ring is the "e" blocks carrying
  *  on, so it is never moved. */
-const AV_BIRTH_STEP = 0.006;
-const AV_BIRTH_LEN = 0.05;
-const AV_BIRTH_DEPTH = 30;
+const AV_BIRTH_STEP = 0.012;
+const AV_BIRTH_LEN = 0.14;
+const AV_BIRTH_DEPTH = 9;
 /** Blocks in the tunnel are far chunkier than the cubes in the finished box.
  *  They shrink to size on their flight to the box. */
 const AV_SIZE = 2.6;
