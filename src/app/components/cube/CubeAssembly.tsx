@@ -107,7 +107,7 @@ const AV_HANDOFF_Z = 3.67;
  *  a ring wrap unseen: at this radius a block's inner side face has left the
  *  frame before its ring reaches `AV_Z_EXIT`, even with its full tilt and
  *  the depth jitter. */
-const AV_R_EXIT = 3.4;
+const AV_R_EXIT = 5.2;
 /** Phase offset that puts the nearest ring exactly on `AV_HANDOFF_Z` at the
  *  hand-off, so the first blocks the eye meets are the "e" blocks the zoom
  *  just parted, carrying on, rather than a new, smaller thing starting. */
@@ -129,7 +129,13 @@ const AV_RUN_POW = 1.6;
 /** The four arrays diverge with the scroll: the gap between them, tight on
  *  the "e" at the hand-off, opens out to `AV_R_EXIT` over this stretch. */
 const AV_SPREAD_FROM = 0.0;
-const AV_SPREAD_TO = 0.42;
+const AV_SPREAD_TO = 0.46;
+/** Rings behind the first scale up into view one after another as the gap
+ *  in the "e" opens, instead of all being there already: ring k grows over
+ *  `AV_BIRTH_STEP * k` to `AV_BIRTH_STEP * k + AV_BIRTH_LEN`. The first ring
+ *  is the "e" blocks carrying on, so it is never scaled. */
+const AV_BIRTH_STEP = 0.005;
+const AV_BIRTH_LEN = 0.03;
 /** Blocks in the tunnel are far chunkier than the cubes in the finished box.
  *  They shrink to size on their flight to the box. */
 const AV_SIZE = 2.6;
@@ -144,6 +150,12 @@ const avSizeFor = (aspect: number) => AV_SIZE * clamp01((aspect / 1.6 - 0.45) / 
 const STAGE_R = 3.3;
 /** Share of a cube's gather window spent flying; the rest is the slide. */
 const FLIGHT = 0.6;
+/** The flight is an arc, not a line: its control point is the midpoint
+ *  swung sideways about the axis by this share of its distance from it (all
+ *  four streams the same way round, so the tunnel spirals into the box) and
+ *  brought this much closer to the lens, in box units. */
+const ARC_SWIRL = 0.7;
+const ARC_TOWARD = 1.6;
 /** Share of the gather window over which a tunnel block shrinks to a box cube. */
 const SHRINK = 0.3;
 /** Bounding radius of a unit cube, used for flight separation. */
@@ -289,6 +301,7 @@ const _c = new THREE.Vector3();
 const _euler = new THREE.Euler();
 const _av = new THREE.Vector3();
 const _d = new THREE.Vector3();
+const _p1 = new THREE.Vector3();
 const _scale = new THREE.Vector3();
 const _m = new THREE.Matrix4();
 
@@ -467,7 +480,8 @@ export function CubeAssembly({
       /* A ring only fades in over the deepest part of the cycle, where it is
          far too small to see the fade, so a wrap never pops. A cube on its
          way to the box is always shown. */
-      const appear = Math.max(smoothstep(1, 0.9, phase / AV_CYCLE), smoothstep(0, 0.3, local));
+      const born = piece.rank === 0 ? 1 : smoothstep(AV_BIRTH_STEP * piece.rank, AV_BIRTH_STEP * piece.rank + AV_BIRTH_LEN, p);
+      const appear = Math.max(smoothstep(1, 0.9, phase / AV_CYCLE) * born, smoothstep(0, 0.3, local));
 
       if (piece.tier === 0) {
         const f = easeInOutSine(local);
@@ -477,7 +491,19 @@ export function CubeAssembly({
       } else if (local < FLIGHT) {
         const f = easeInOutSine(local / FLIGHT);
         _d.copy(piece.dir).multiplyScalar(stageR).applyQuaternion(_qGroup);
-        w.pos.copy(_av).lerp(_d, f);
+        /* Quadratic arc from the tunnel to the staging point. */
+        _p1.addVectors(_av, _d).multiplyScalar(0.5);
+        const sx = _p1.x;
+        const sy = _p1.y;
+        _p1.x += -sy * ARC_SWIRL;
+        _p1.y += sx * ARC_SWIRL;
+        _p1.z += ARC_TOWARD * unit;
+        const u = 1 - f;
+        w.pos
+          .copy(_av)
+          .multiplyScalar(u * u)
+          .addScaledVector(_p1, 2 * u * f)
+          .addScaledVector(_d, f * f);
         w.mobility = 1 - smoothstep(FLIGHT - 0.2, FLIGHT, local);
         w.exclude = true;
       } else {

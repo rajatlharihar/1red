@@ -6,6 +6,12 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-19 (night, third pass)
+
+- **Rings scale up into view** behind the first one (`AV_BIRTH_STEP` 0.005 per ring, `AV_BIRTH_LEN` 0.03), so the tunnel is seen appearing as the "e" blocks leave instead of already being there. The first ring is never scaled: it is the "e" carrying on.
+- **Arrays spread to the whole screen**: `AV_R_EXIT` 5.2 (was 3.4), spread over section p 0 to 0.46.
+- **Spiral flights**: the gather's flight is a quadratic arc whose control point is swung about the axis (`ARC_SWIRL` 0.7, all four streams the same way round) and brought toward the lens (`ARC_TOWARD` 1.6 box units), so the tunnel spirals into the box. Cube size is settled within the first 30% of each window; nothing scales in the last stretch.
+
 ## 2026-09-19 (night, second pass)
 
 - **Boom slower and visible**: p 0.85 to 0.94, quadratic ease-out, starting as a diamond already peeking out behind the mark (`PANEL_SCALE0` 0.7) and ending at 7.5x so the studio's side walls are cleared on a 2.2:1 frame by about p 0.905. Its edge is logo red at 0.7px.
