@@ -164,7 +164,7 @@ export function ProblemCube() {
                   }}
                   style={{
                     display: 'block',
-                    fontSize: 'clamp(48px, 9vw, 150px)',
+                    fontSize: 'clamp(64px, 13vw, 230px)',
                     fontWeight: 800,
                     letterSpacing: '-0.05em',
                     lineHeight: 1.0,
