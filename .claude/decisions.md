@@ -341,3 +341,13 @@ Chronological, most recent last. Each entry: date (where known — this project 
 **DECISION (2026-09-19, night, fifth pass):** The tunnel's rings are 5 units apart and all present from the hand-off; no ring is ever scaled or moved in to "appear".
 **REASON:** Rajat, three times over the evening: the cubes after the "e" must never pop; anything that appears has to be there already and grow by camera proximity. Rings 10 apart left the second ring as a small far cluster with a visible gap behind the "e" blocks, and every birth animation (scale-in, glide-in from deeper) read as a snap.
 **DO NOT:** Reintroduce a birth/appear animation for the rings, or widen the spacing. If the tunnel feels short, add ranks, not distance.
+
+---
+
+**DECISION (2026-09-20):** The footer is brand black (`#0A0A0A`) with white type. This is the one exception to the "no dark backgrounds" rule in design-system.md, asked for by Rajat.
+
+---
+
+**DECISION (2026-09-20):** Pencil line art is drawn as pre-wobbled geometry (`pencil()` in `WhatsNext.tsx`), never with `feTurbulence`/`feDisplacementMap` filters on anything that moves.
+**REASON:** A filtered SVG under a parallax transform re-rasterises every frame; on the iMac the section stalled. Baked wobble costs nothing and stays crisp.
+**ALSO:** The grid and the drawing on it share one SVG layer, so parallax and drift never pull the drawing off the grid; vertices sit on grid intersections. Rajat: "make the contents properly fit in the grids".

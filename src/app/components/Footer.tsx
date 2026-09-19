@@ -67,10 +67,10 @@ function MagneticCTA() {
         x: pos.x,
         y: pos.y,
         scale: hovered ? 1.04 : 1,
-        borderColor: hovered ? 'rgba(0,0,0,0.28)' : 'rgba(0,0,0,0.14)',
+        borderColor: hovered ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.14)',
         boxShadow: hovered
-          ? '0 0 40px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.06)'
-          : '0 4px 16px rgba(0,0,0,0.04)',
+          ? '0 0 40px rgba(255,255,255,0.08), 0 8px 32px rgba(255,255,255,0.06)'
+          : '0 4px 16px rgba(255,255,255,0.04)',
       }}
       transition={{ duration: 0.4, ease: EASE }}
       className="btn-corners"
@@ -82,8 +82,8 @@ function MagneticCTA() {
         paddingRight: 36,
         paddingTop: 18,
         paddingBottom: 18,
-        border: '1px solid rgba(0,0,0,0.14)',
-        background: 'rgba(255,255,255,0.68)',
+        border: '1px solid rgba(255,255,255,0.14)',
+        background: 'rgba(255,255,255,0.08)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         fontSize: 13,
@@ -91,7 +91,7 @@ function MagneticCTA() {
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
         cursor: 'pointer',
-        color: 'rgb(10,10,10)',
+        color: 'white',
         userSelect: 'none',
       } as React.CSSProperties}
     >
@@ -130,7 +130,7 @@ function SocialLink({ label, href, delay }: { label: string; href: string; delay
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
         textDecoration: 'none',
-        color: 'rgb(10,10,10)',
+        color: 'white',
         opacity: hovered ? 1 : 0.44,
         transition: 'opacity 280ms ease-out',
       }}
@@ -170,8 +170,8 @@ function Tag({ label, delay }: { label: string; delay: number }) {
       <Link to="/services" style={{ textDecoration: 'none', color: 'inherit' }}>
       <motion.span
         animate={{
-          backgroundColor: hovered ? 'rgba(0,0,0,0.06)' : 'rgba(0,0,0,0)',
-          borderColor: hovered ? 'rgba(0,0,0,0.22)' : 'rgba(0,0,0,0.12)',
+          backgroundColor: hovered ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0)',
+          borderColor: hovered ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.12)',
           y: hovered ? -2 : 0,
         }}
         transition={{ duration: 0.3, ease: EASE }}
@@ -179,7 +179,7 @@ function Tag({ label, delay }: { label: string; delay: number }) {
         style={{
           display: 'inline-block',
           padding: '8px 18px',
-          border: '1px solid rgba(0,0,0,0.12)',
+          border: '1px solid rgba(255,255,255,0.12)',
           fontSize: 11,
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
@@ -207,11 +207,12 @@ export function Footer() {
       ref={sectionRef}
       style={{
         minHeight: '100vh',
-        background: 'rgb(248,248,248)',
+        background: '#0A0A0A',
+        color: 'white',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        borderTop: '1px solid rgba(0,0,0,0.07)',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
         paddingTop: 'clamp(3rem, 7vh, 6rem)',
         paddingBottom: 'clamp(2rem, 5vh, 4rem)',
         paddingLeft: 'clamp(1.5rem, 4vw, 5rem)',
@@ -231,7 +232,7 @@ export function Footer() {
           fontSize: 'clamp(80px, 18vw, 240px)',
           fontWeight: 900,
           letterSpacing: '-0.06em',
-          color: 'rgba(0,0,0,0.025)',
+          color: 'rgba(255,255,255,0.025)',
           whiteSpace: 'nowrap',
           pointerEvents: 'none',
           userSelect: 'none',
@@ -298,7 +299,7 @@ export function Footer() {
               fontWeight: 500,
               letterSpacing: '-0.02em',
               textDecoration: 'none',
-              color: 'rgb(10,10,10)',
+              color: 'white',
               opacity: emailHovered ? 1 : 0.7,
               transition: 'opacity 320ms ease-out',
               display: 'inline-block',
@@ -372,7 +373,7 @@ export function Footer() {
           transition={{ duration: 0.9, ease: EASE, delay: 0.1 }}
           style={{
             height: 1,
-            background: 'rgba(0,0,0,0.08)',
+            background: 'rgba(255,255,255,0.08)',
             originX: 0,
             marginBottom: 24,
           }}
@@ -395,7 +396,7 @@ export function Footer() {
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 textDecoration: 'none',
-                color: 'rgb(10,10,10)',
+                color: 'white',
                 opacity: 0.36,
                 transition: 'opacity 260ms ease-out',
               };
