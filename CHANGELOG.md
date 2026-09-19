@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-19 (night, seventh pass)
+
+- **The exposed lower-left block rises in**: the "e"'s lower-left block is the small rounded one, so the first ring's block under it had nothing to hide behind and was simply there when the section started drawing. It now starts `AV_LOW_RISE` (3.2) below its place and eases up over hero p `PANEL_TO` to 0.97. The other three first-ring blocks stay glued to their "e" blocks.
+
 ## 2026-09-19 (night, sixth pass)
 
 - **Rings come in from the sides**: rings behind the first start `AV_SLIDE_R` (8) further out along their corner's diagonal, deeper rings further, and ease into the stack over hero p `PANEL_TO` to 1.015 (keyed to the hero so they are already moving where the "e" blocks' rounded corners uncover them early), so they emerge from behind the departing "e" blocks as four chains sliding inward rather than being found already in place. The spread now begins at 0.1 so the two moves do not fight. Rajat: "some movement that those boxes are coming from the side".

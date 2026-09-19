@@ -144,6 +144,12 @@ const AV_SPREAD_TO = 0.46;
 const AV_SLIDE_R = 8;
 const AV_SLIDE_FROM_HERO = PANEL_TO;
 const AV_SLIDE_TO_HERO = 1.015;
+/** The "e"'s lower-left block is the small rounded one, so the first ring's
+ *  block under it has nothing to hide behind and would simply be there when
+ *  the section starts drawing. It rises into place from below the frame
+ *  instead, over the first part of the hand-off. */
+const AV_LOW_RISE = 3.2;
+const AV_LOW_RISE_TO_HERO = 0.97;
 /** Blocks in the tunnel are far chunkier than the cubes in the finished box.
  *  They shrink to size on their flight to the box. */
 const AV_SIZE = 2.6;
@@ -464,7 +470,9 @@ export function CubeAssembly({
     const run = clamp01(p / APPROACH_END);
     const travel = (1 - Math.pow(1 - run, AV_RUN_POW)) * AV_TRAVEL;
     const spread = smoothstep(AV_SPREAD_FROM, AV_SPREAD_TO, p);
-    const slideIn = 1 - easeOutCubic(clamp01((heroPRef.current - AV_SLIDE_FROM_HERO) / (AV_SLIDE_TO_HERO - AV_SLIDE_FROM_HERO)));
+    const heroP = heroPRef.current;
+    const slideIn = 1 - easeOutCubic(clamp01((heroP - AV_SLIDE_FROM_HERO) / (AV_SLIDE_TO_HERO - AV_SLIDE_FROM_HERO)));
+    const lowRise = 1 - easeOutCubic(clamp01((heroP - AV_SLIDE_FROM_HERO) / (AV_LOW_RISE_TO_HERO - AV_SLIDE_FROM_HERO)));
     const avSize = avSizeFor(aspect);
     /* Shift the whole frame up by however far the canvas sits below the
        viewport. Same full-frame size, so nothing is rescaled. */
@@ -511,6 +519,7 @@ export function CubeAssembly({
       const fromSide = piece.rank === 0 ? 0 : AV_SLIDE_R * slideIn * (0.5 + piece.rank / 12);
       const r = lerp(rTight, AV_R_EXIT, 1 - (1 - spread) * (1 - flare)) + piece.jr + fromSide;
       _av.set(piece.cx * r, piece.cy * r, z);
+      if (piece.rank === 0 && piece.cx < 0 && piece.cy < 0) _av.y -= AV_LOW_RISE * lowRise;
       // Scale the whole tunnel about the camera, never about the origin.
       _av.set(_av.x * av, _av.y * av, CAM_Z + (_av.z - CAM_Z) * av);
 
