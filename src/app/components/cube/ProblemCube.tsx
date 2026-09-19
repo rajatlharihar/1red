@@ -140,26 +140,10 @@ export function ProblemCube() {
           {/* The sheet behind the canvas: white. Hidden until the mark has
               gone; until then the canvas paints its own white for the mark
               to cut. */}
-          <div ref={sheetRef} style={{ position: 'absolute', inset: 0, background: BG, opacity: reduceMotion ? 1 : 0 }} />
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <Canvas
-              frameloop={inView ? 'always' : 'never'}
-              dpr={dpr}
-              gl={{ antialias: true, powerPreference: 'high-performance' }}
-              camera={{ position: [0, 0, CAM_Z], fov: FOV }}
-            >
-              <CubeLighting />
-              <CubeAssembly progressRef={progressRef} heroPRef={heroPRef} offsetRef={offsetRef} pointerRef={pointerRef} />
-              {!reduceMotion && (
-                <Suspense fallback={null}>
-                  <MarkOccluder heroPRef={heroPRef} />
-                </Suspense>
-              )}
-            </Canvas>
-          </div>
-          {/* The copy, above the canvas and above the box, which settles
-              lower to leave it clear. Lines rise out of their masks as the
-              box locks. */}
+          <div ref={sheetRef} style={{ position: 'absolute', inset: 0, background: BG, opacity: reduceMotion ? 1 : 0 }}>
+            {/* The copy, high on the sheet; the box settles just over its
+                foot, so the last line runs a little behind the box. Lines
+                rise out of their masks as the box locks. */}
           <div
             aria-hidden={!reduceMotion}
             style={{
@@ -192,6 +176,23 @@ export function ProblemCube() {
                 </span>
               </div>
             ))}
+          </div>
+          </div>
+          <div style={{ position: 'absolute', inset: 0 }}>
+            <Canvas
+              frameloop={inView ? 'always' : 'never'}
+              dpr={dpr}
+              gl={{ antialias: true, powerPreference: 'high-performance' }}
+              camera={{ position: [0, 0, CAM_Z], fov: FOV }}
+            >
+              <CubeLighting />
+              <CubeAssembly progressRef={progressRef} heroPRef={heroPRef} offsetRef={offsetRef} pointerRef={pointerRef} />
+              {!reduceMotion && (
+                <Suspense fallback={null}>
+                  <MarkOccluder heroPRef={heroPRef} />
+                </Suspense>
+              )}
+            </Canvas>
           </div>
         </div>
       </div>
