@@ -163,20 +163,22 @@ const avSizeFor = (aspect: number) => AV_SIZE * clamp01((aspect / 1.6 - 0.45) / 
  *  cube's own, so a cube waiting there never touches the box. */
 const STAGE_R = 3.3;
 /** Share of a cube's gather window spent flying; the rest is the slide. */
-const FLIGHT = 0.7;
-/** The flight is a loop through the space, not a line: a cubic arc that
- *  first swings further out from the axis (`LOOP_OUT` box units, scaled by
- *  the cube's own `loopOut`), then comes round sideways onto its staging
- *  point (`LOOP_SWING`, each cube its own way round and amount), with some
+const FLIGHT = 0.75;
+/** The flight is an orbit of the frame, not a line: each cube sweeps
+ *  clockwise about the axis from where the tunnel left it to the angle of
+ *  its staging point, at least half a turn (`ORBIT_MIN_TURN`), some a full
+ *  turn more (`extraTurn`), swinging out to `ORBIT_SWING` box units (its own
+ *  `orbit`) at mid-flight so the sweep covers the whole screen, with some
  *  lift toward or away from the lens. The cube tumbles on the way (its own
- *  axis, `LOOP_TUMBLE` radians at most) and is square again as it lands. */
-const LOOP_OUT = 2.6;
-const LOOP_SWING = 2.6;
-const LOOP_LIFT = 1.6;
-const LOOP_TUMBLE = Math.PI * 0.8;
+ *  axis, `ORBIT_TUMBLE` radians at most) and is square again as it lands. */
+const ORBIT_SWING = 2.2;
+const ORBIT_MIN_TURN = Math.PI;
+const ORBIT_LIFT = 1.6;
+const ORBIT_TUMBLE = Math.PI * 0.8;
+const TAU = Math.PI * 2;
 /** Share of the gather window over which a tunnel block shrinks to a box
  *  cube: the whole flight, so the change hides inside the motion. */
-const SHRINK = 0.6;
+const SHRINK = 0.75;
 /** Bounding radius of a unit cube, used for flight separation. */
 const CUBE_R = 0.87;
 
@@ -226,10 +228,10 @@ interface Piece {
    *  their shapes cancel out around the centre instead of all leaning the
    *  same way. */
   tilt: THREE.Quaternion;
-  /** The cube's own loop on its flight to the box. */
-  loopOut: number;
-  loopSwing: number;
-  loopLift: number;
+  /** The cube's own orbit on its flight to the box. */
+  orbit: number;
+  extraTurn: boolean;
+  lift: number;
   tumbleAxis: THREE.Vector3;
   tumble: number;
 }
@@ -237,10 +239,10 @@ interface Piece {
 /* Build order: centre, then faces, edges, corners, each tier overlapping the
    last. The centre is home before any face starts its slide. */
 const TIER_WINDOWS = [
-  { from: 0, to: 0, len: 0.5 },
-  { from: 0.04, to: 0.18, len: 0.6 },
-  { from: 0.1, to: 0.3, len: 0.6 },
-  { from: 0.22, to: 0.4, len: 0.6 },
+  { from: 0, to: 0, len: 0.66 },
+  { from: 0.03, to: 0.14, len: 0.72 },
+  { from: 0.08, to: 0.22, len: 0.72 },
+  { from: 0.16, to: 0.28, len: 0.72 },
 ];
 
 /** Which of the four arrays each slot belongs to, and in which ring. Each
@@ -302,11 +304,11 @@ function layout(): Piece[] {
         jr: (hash(rank, 21) - 0.5) * 0.24,
         jz: (hash(rank, 23) - 0.5) * 0.8,
         tilt: new THREE.Quaternion().setFromEuler(new THREE.Euler(0.26 * c.cy, 0.38 * c.cx, 0)),
-        loopOut: 0.6 + hash(pieces.length, 31) * 0.8,
-        loopSwing: (hash(pieces.length, 32) < 0.5 ? -1 : 1) * (0.6 + hash(pieces.length, 33) * 0.8),
-        loopLift: (hash(pieces.length, 34) - 0.5) * 2,
+        orbit: 0.6 + hash(pieces.length, 31) * 0.8,
+        extraTurn: hash(pieces.length, 32) < 0.3,
+        lift: (hash(pieces.length, 34) - 0.5) * 2,
         tumbleAxis: new THREE.Vector3(hash(pieces.length, 35) - 0.5, hash(pieces.length, 36) - 0.5, hash(pieces.length, 37) - 0.5).normalize(),
-        tumble: (0.4 + hash(pieces.length, 38) * 0.6) * LOOP_TUMBLE,
+        tumble: (0.4 + hash(pieces.length, 38) * 0.6) * ORBIT_TUMBLE,
       });
     });
   });
@@ -332,8 +334,6 @@ const _c = new THREE.Vector3();
 const _euler = new THREE.Euler();
 const _av = new THREE.Vector3();
 const _d = new THREE.Vector3();
-const _p1 = new THREE.Vector3();
-const _p2 = new THREE.Vector3();
 const _qTumble = new THREE.Quaternion();
 const _scale = new THREE.Vector3();
 const _m = new THREE.Matrix4();
@@ -536,25 +536,19 @@ export function CubeAssembly({
       } else if (local < FLIGHT) {
         const f = easeInOutSine(local / FLIGHT);
         _d.copy(piece.dir).multiplyScalar(stageR).applyQuaternion(_qGroup);
-        /* A loop: out from the axis first, then round onto the staging point. */
-        const lat = Math.hypot(_av.x, _av.y) || 1;
-        _p1.set(
-          _av.x + (_av.x / lat) * LOOP_OUT * piece.loopOut * unit,
-          _av.y + (_av.y / lat) * LOOP_OUT * piece.loopOut * unit,
-          _av.z + LOOP_LIFT * piece.loopLift * unit
-        );
-        _p2.set(
-          _d.x - _d.y * LOOP_SWING * piece.loopSwing * 0.3 + (_d.x / (Math.hypot(_d.x, _d.y) || 1)) * LOOP_SWING * 0.5 * unit,
-          _d.y + _d.x * LOOP_SWING * piece.loopSwing * 0.3 + (_d.y / (Math.hypot(_d.x, _d.y) || 1)) * LOOP_SWING * 0.5 * unit,
-          _d.z + unit
-        );
-        const u = 1 - f;
-        w.pos
-          .copy(_av)
-          .multiplyScalar(u * u * u)
-          .addScaledVector(_p1, 3 * u * u * f)
-          .addScaledVector(_p2, 3 * u * f * f)
-          .addScaledVector(_d, f * f * f);
+        /* Orbit: clockwise about the axis from where it is to the angle of
+           its staging point, swinging wide at mid-flight. */
+        const th0 = Math.atan2(_av.y, _av.x);
+        const r0 = Math.hypot(_av.x, _av.y);
+        const r1 = Math.hypot(_d.x, _d.y);
+        const th1 = r1 > 1e-6 ? Math.atan2(_d.y, _d.x) : th0;
+        let turn = (((th1 - th0) % TAU) + TAU) % TAU - TAU; // (−2π, 0]: clockwise
+        if (turn > -ORBIT_MIN_TURN) turn -= TAU;
+        if (piece.extraTurn) turn -= TAU;
+        const th = th0 + turn * f;
+        const swing = Math.sin(Math.PI * f);
+        const rr = lerp(r0, r1, f) + ORBIT_SWING * piece.orbit * unit * swing;
+        w.pos.set(rr * Math.cos(th), rr * Math.sin(th), lerp(_av.z, _d.z, f) + ORBIT_LIFT * piece.lift * unit * swing);
         w.mobility = 1 - smoothstep(FLIGHT - 0.2, FLIGHT, local);
         w.exclude = true;
       } else {

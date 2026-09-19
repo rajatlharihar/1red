@@ -326,6 +326,12 @@ Chronological, most recent last. Each entry: date (where known — this project 
 
 ---
 
+**DECISION (2026-09-19, night, eighth pass):** The gather flight is a clockwise orbit of the frame (polar sweep about the axis with a mid-flight swing), not a straight line or a local loop.
+**REASON:** Rajat wants the cubes to fly around the whole screen before docking, all moving at once, none stagnant. Straight flights and small loops both read as a scatter near the box.
+**DO NOT:** Let tier windows leave cubes idle during the gather; keep `ORBIT_MIN_TURN` at π so every cube crosses the frame.
+
+---
+
 **DECISION (2026-09-19, night, fourth pass):** The cube material skips tone mapping.
 **REASON:** With the cubes tumbling on their flights, a face turned at the room's bright panels overexposed and ACES took the red to cream (unchanged by env intensity or light strength, since the reflected radiance itself is the problem). Clipping keeps the hue. It also ends the `#F40013` compromise: the hand-off emissive is the mark's exact red.
 **SUPERSEDES:** the 2026-09-17 note on `LOGO_EMISSIVE` 0.89 and "do not chase #FF0000". The finished box is brighter than the old `#A0000C`; if Rajat wants the darker box back, lower `ENV` and the key light rather than re-enabling tone mapping.

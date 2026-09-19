@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-19 (night, eighth pass)
+
+- **The gather is an orbit of the frame.** Rajat: the top cubes randomised while the bottom ones sat still, and he wants each cube to "fly around the whole screen", e.g. the top-left cube going round by the top-right and bottom-right to dock at the bottom of the box, with no collisions. Each cube now sweeps clockwise about the axis from where the tunnel left it to the angle of its staging point, at least half a turn (`ORBIT_MIN_TURN`), 30% of them a full turn more (`extraTurn`), swinging out to `ORBIT_SWING` 2.2 box units (its own `orbit` factor) at mid-flight, with lift toward or away from the lens, tumbling, then the axis slide as before. Tier windows start within the first 28% of the gather and run 0.66 to 0.72 long with `FLIGHT` 0.75, so every cube is moving from early on and nothing is stagnant. Separation and the no-fly sphere are unchanged.
+
 ## 2026-09-19 (night, seventh pass)
 
 - **The exposed lower-left block rises in**: the "e"'s lower-left block is the small rounded one, so the first ring's block under it had nothing to hide behind and was simply there when the section started drawing. It now starts `AV_LOW_RISE` (3.2) below its place and eases up over hero p `PANEL_TO` to 0.97. The other three first-ring blocks stay glued to their "e" blocks.
