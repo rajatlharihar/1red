@@ -8,7 +8,7 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ## 2026-09-19 (night, sixth pass)
 
-- **Rings come in from the sides**: rings behind the first start `AV_SLIDE_R` (5) further out along their corner's diagonal, deeper rings further, and ease into the stack by section p `AV_SLIDE_TO` 0.09, so they emerge from behind the departing "e" blocks as four chains sliding inward rather than being found already in place. The spread now begins at 0.1 so the two moves do not fight. Rajat: "some movement that those boxes are coming from the side".
+- **Rings come in from the sides**: rings behind the first start `AV_SLIDE_R` (8) further out along their corner's diagonal, deeper rings further, and ease into the stack over hero p `PANEL_TO` to 1.015 (keyed to the hero so they are already moving where the "e" blocks' rounded corners uncover them early), so they emerge from behind the departing "e" blocks as four chains sliding inward rather than being found already in place. The spread now begins at 0.1 so the two moves do not fight. Rajat: "some movement that those boxes are coming from the side".
 
 ## 2026-09-19 (night, fifth pass)
 

@@ -137,10 +137,13 @@ const AV_SPREAD_FROM = 0.1;
 const AV_SPREAD_TO = 0.46;
 /** The rings behind the first come in from the sides as the "e" parts: each
  *  starts `AV_SLIDE_R` further out along its corner's diagonal, the deeper
- *  rings further still, and eases into the stack by `AV_SLIDE_TO`. Behind
- *  the departing "e" blocks at first, so they emerge from under them. */
-const AV_SLIDE_R = 5;
-const AV_SLIDE_TO = 0.09;
+ *  rings further still, and eases into the stack. Keyed to the hero's own
+ *  progress and starting as soon as the section draws, so they are already
+ *  on the move where the "e" blocks' rounded corners uncover them early,
+ *  and far enough out to be behind the blocks until then. */
+const AV_SLIDE_R = 8;
+const AV_SLIDE_FROM_HERO = PANEL_TO;
+const AV_SLIDE_TO_HERO = 1.015;
 /** Blocks in the tunnel are far chunkier than the cubes in the finished box.
  *  They shrink to size on their flight to the box. */
 const AV_SIZE = 2.6;
@@ -461,7 +464,7 @@ export function CubeAssembly({
     const run = clamp01(p / APPROACH_END);
     const travel = (1 - Math.pow(1 - run, AV_RUN_POW)) * AV_TRAVEL;
     const spread = smoothstep(AV_SPREAD_FROM, AV_SPREAD_TO, p);
-    const slideIn = 1 - easeOutCubic(clamp01(p / AV_SLIDE_TO));
+    const slideIn = 1 - easeOutCubic(clamp01((heroPRef.current - AV_SLIDE_FROM_HERO) / (AV_SLIDE_TO_HERO - AV_SLIDE_FROM_HERO)));
     const avSize = avSizeFor(aspect);
     /* Shift the whole frame up by however far the canvas sits below the
        viewport. Same full-frame size, so nothing is rescaled. */
