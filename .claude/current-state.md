@@ -5,6 +5,9 @@
 
 ## Session Log: 2026-09-20
 
+- Evening: placeholder lines behind the finished box (Rajat to supply copy), "Let's create" CTAs red with fill hover, footer email/watermark/nav-logo/overscroll changes. See CHANGELOG 2026-09-20 (evening). The custom letters are now in use for the footer watermark only (`StudioWord.tsx`); the sheet lacks H and I.
+- Rajat said the cube gather is "perfect ... just a little slowed"; unclear whether he wants it slower or finds it slow. Ask before touching the timing.
+
 - "Let's create" (`WhatsNext.tsx`) rebuilt as the pencil sheet: grid overlapping Selected Work, scroll-drawn continuous line with a line-figure, three parallax layers with idle drift. See CHANGELOG 2026-09-20. Waiting on Rajat's review of the drawing's composition and the figure. Tags/waveform/watermark removed on his "plenty" note; easy to restore from git if wanted.
 
 ## Session Log: 2026-09-19

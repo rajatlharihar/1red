@@ -14,7 +14,7 @@ import {
   LOGO_Z,
   PANEL_TO,
 } from '../hero/studioSequence';
-import { FOV } from './CubeAssembly';
+import { FOV, HERO_DONE } from './CubeAssembly';
 
 /* ─── The mark, as a hole in section 2 ─────────────────────────────────────
  * Section 2 is drawn on top of the hero. While the mark is still on screen
@@ -69,7 +69,7 @@ export function MarkOccluder({ heroPRef }: { heroPRef: React.MutableRefObject<nu
     const p = heroPRef.current;
     // With the rest of the section: from the frame going white behind the
     // mark until the zoom has passed the frame through the gap.
-    g.visible = p >= PANEL_TO && p < 0.995;
+    g.visible = p >= PANEL_TO && p < HERO_DONE;
     if (!g.visible) return;
     const s = sampleSequence(p);
 

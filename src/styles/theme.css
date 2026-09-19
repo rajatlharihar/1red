@@ -198,3 +198,45 @@
     corner-shape: superellipse(1.4);
   }
 }
+
+/* Fill CTA: a colour slides up under the label on hover, and the label
+   itself swaps upward (two stacked copies). Colours per variant. */
+.fill-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 36px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid var(--fill-btn-border);
+  background: var(--fill-btn-bg);
+  color: var(--fill-btn-fg);
+  transition: color 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.12s ease-out;
+}
+.fill-btn:active { transform: scale(0.97); }
+.fill-btn__fill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--fill-btn-fill);
+  border-radius: inherit;
+  transform: translateY(101%);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.fill-btn__label { display: grid; overflow: clip; line-height: 1.2; }
+.fill-btn__label > span { grid-area: 1 / 1; transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+.fill-btn__label > span:nth-child(2) { transform: translateY(120%); }
+.fill-btn__icon { display: inline-flex; transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+.fill-btn:hover { color: var(--fill-btn-fill-fg); border-color: var(--fill-btn-fill); }
+.fill-btn:hover .fill-btn__fill { transform: translateY(0); }
+.fill-btn:hover .fill-btn__label > span:first-child { transform: translateY(-120%); }
+.fill-btn:hover .fill-btn__label > span:nth-child(2) { transform: translateY(0); }
+.fill-btn:hover .fill-btn__icon { transform: translate(2px, -2px); }
+.fill-btn--red { --fill-btn-fg: #fff; --fill-btn-bg: #EA3323; --fill-btn-border: #EA3323; --fill-btn-fill: #0A0A0A; --fill-btn-fill-fg: #fff; }
+.fill-btn--red-outline { --fill-btn-fg: #EA3323; --fill-btn-bg: transparent; --fill-btn-border: #EA3323; --fill-btn-fill: #EA3323; --fill-btn-fill-fg: #fff; }

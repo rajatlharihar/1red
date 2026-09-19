@@ -162,6 +162,18 @@ export function Navigation() {
   const compactT = useSpring(compactRaw, { stiffness: 300, damping: 27, mass: 0.5 });
   const lastYRef = useRef(0);
 
+  /* ── The footer carries the mark itself, so the logo island steps aside
+     while the footer is on screen: one logo at a time. ── */
+  const footerRaw = useMotionValue(0);
+  const footerT = useSpring(footerRaw, { stiffness: 220, damping: 30, mass: 0.6 });
+  useEffect(() => {
+    const footer = document.querySelector('footer');
+    if (!footer) return;
+    const io = new IntersectionObserver((e) => footerRaw.set(e[0].isIntersecting ? 1 : 0), { rootMargin: '-120px 0px 0px 0px' });
+    io.observe(footer);
+    return () => io.disconnect();
+  }, [footerRaw, location.pathname]);
+
   useEffect(() => {
     lastYRef.current = scrollY.get();
     const unsub = scrollY.on('change', (y) => {
@@ -193,6 +205,9 @@ export function Navigation() {
   const islandOpacity = useTransform([entranceT, compactT], (v) => (v as number[])[0] * (1 - (v as number[])[1] * 0.1));
   const islandY = useTransform(compactT, (v: number) => -v * 5);
   const islandScale = useTransform(compactT, (v: number) => 1 - v * 0.055);
+  const logoOpacity = useTransform([islandOpacity, footerT], (v) => (v as number[])[0] * (1 - (v as number[])[1]));
+  const logoScale = useTransform([islandScale, footerT], (v) => (v as number[])[0] * (1 - (v as number[])[1] * 0.12));
+  const logoPointer = useTransform([entranceT, footerT], (v) => ((v as number[])[0] > 0.15 && (v as number[])[1] < 0.5 ? 'auto' : 'none')) as unknown as 'auto' | 'none';
   const pointerEvents = useTransform(entranceT, (v: number) => (v > 0.15 ? 'auto' : 'none')) as unknown as 'auto' | 'none';
 
   return (
@@ -206,16 +221,16 @@ export function Navigation() {
         pointerEvents: 'none',
       }}
     >
-      {/* ══════════ Logo island — top-left, always present, floats independently ══════════ */}
+      {/* ══════════ Logo island — top-left, floats independently; steps aside for the footer ══════════ */}
       <motion.div
         style={{
           position: 'fixed',
           top: 'clamp(14px, 2.6vw, 26px)',
           left: 'clamp(14px, 2.6vw, 26px)',
-          opacity: islandOpacity,
+          opacity: logoOpacity,
           y: islandY,
-          scale: islandScale,
-          pointerEvents,
+          scale: logoScale,
+          pointerEvents: logoPointer,
           ...glassStyle,
         }}
       >

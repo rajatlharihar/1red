@@ -6,6 +6,12 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-20 (evening)
+
+- **Placeholder copy behind the finished box** (`ProblemCube.tsx`): a white sheet behind the canvas carries two big lines ("Ideas take shape." / "Block by block.", placeholders for Rajat's words) that rise out of masks over section p 0.8 to 0.95 as the box locks; the canvas drops its own white plane once the mark has gone (`HERO_DONE`), so the box occludes the text.
+- **"Let's create"**: eyebrow ("Available for projects", red square) removed; CTAs are red with the IRA-style fill (`.fill-btn` in `theme.css`: a fill slides up under the label on hover, the label swaps upward): primary red with an ink fill, secondary red outline with a red fill.
+- **Footer**: email `hi@1red.in`; the "STUDIO" watermark is set in Rajat's block letters (`StudioWord.tsx`, glyphs lifted from `Assets/1red-custom-letters.svg` by bounding box; the sheet has no I or H yet, so the I is a bar) at 3% white; the nav's logo island fades out while the footer is on screen (one mark at a time); the canvas below the page is brand black (`html` background in `index.css`), so a rubber-band past the footer stays black while the top stays white.
+
 ## 2026-09-20 (later)
 
 - **Sheet made cheap and locked to its grid.** The pencil wobble is now baked into the geometry (`pencil()`: segments walked in steps, points nudged by smooth noise), no SVG filters: the `feTurbulence`/`feDisplacementMap` version re-rasterised under the parallax every frame and Rajat found it "veryyyy laggy". The grid lives in the same layer as the figure and line, so they share one parallax and one continuous drift and never separate; every vertex of the drawing sits on a grid intersection or half-cell (`CELL` 96 on a 15-cell sheet). The sheet starts `SHEET_ABOVE` (128 sheet px) above the section, so the grid reaches a little way over the end of Selected Work but not up to its text. The far triangle and near diamond keep their own parallax rates and drifts. Phones: grid only.

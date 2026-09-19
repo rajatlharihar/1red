@@ -1,3 +1,13 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+
+/* The canvas behind the page: white above it (the overscroll at the top),
+   brand black below it, so a rubber-band past the footer never shows white. */
+html {
+  background-color: #0A0A0A;
+  background-image: linear-gradient(#ffffff, #ffffff);
+  background-repeat: no-repeat;
+  background-size: 100% 200vh;
+  background-position: 0 -100vh;
+}

@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, useInView, useScroll, useTransform, useReducedMotion, type MotionValue } from 'motion/react';
 import { ArrowUpRight } from 'lucide-react';
 
@@ -208,55 +208,18 @@ function Sheet({
   );
 }
 
-/* ─── Magnetic button ────────────────────────────────────────────────────── */
+/* ─── Fill CTA (styles in theme.css) ────────────────────────────────────── */
 
-function MagneticButton({ children, primary = false }: { children: React.ReactNode; primary?: boolean }) {
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [hovered, setHovered] = useState(false);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setPos({
-      x: (e.clientX - (rect.left + rect.width / 2)) * 0.3,
-      y: (e.clientY - (rect.top + rect.height / 2)) * 0.3,
-    });
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setHovered(false);
-    setPos({ x: 0, y: 0 });
-  }, []);
-
+function FillButton({ children, outline = false, icon }: { children: string; outline?: boolean; icon?: React.ReactNode }) {
   return (
-    <motion.button
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      onMouseMove={handleMouseMove}
-      animate={{ x: pos.x, y: pos.y, scale: hovered ? 1.04 : 1 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.8 }}
-      className="btn-corners"
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 10,
-        paddingLeft: 36,
-        paddingRight: 36,
-        paddingTop: 18,
-        paddingBottom: 18,
-        fontSize: 12,
-        fontWeight: 600,
-        letterSpacing: '0.09em',
-        textTransform: 'uppercase',
-        cursor: 'pointer',
-        border: primary ? 'none' : `1px solid rgba(10,10,10,0.28)`,
-        background: primary ? (hovered ? 'rgba(20,20,20,1)' : INK) : hovered ? INK : 'transparent',
-        color: primary ? 'white' : hovered ? 'white' : INK,
-        transition: 'background 0.28s ease, color 0.28s ease',
-        willChange: 'transform',
-      }}
-    >
-      {children}
-    </motion.button>
+    <button className={`fill-btn btn-corners ${outline ? 'fill-btn--red-outline' : 'fill-btn--red'}`}>
+      <span className="fill-btn__fill" aria-hidden />
+      <span className="fill-btn__label">
+        <span>{children}</span>
+        <span aria-hidden>{children}</span>
+      </span>
+      {icon && <span className="fill-btn__icon">{icon}</span>}
+    </button>
   );
 }
 
@@ -320,26 +283,6 @@ export function WhatsNext() {
           maxWidth: 1100,
         }}
       >
-        <div style={{ overflow: 'hidden', marginBottom: 28 }}>
-          <motion.div
-            initial={{ y: '110%' }}
-            animate={inView ? { y: 0 } : {}}
-            transition={{ duration: 0.62, ease: EASE }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 10,
-              fontSize: 11,
-              letterSpacing: '0.16em',
-              textTransform: 'uppercase',
-              opacity: 0.42,
-            }}
-          >
-            <span style={{ width: 6, height: 6, background: '#EA3323', display: 'inline-block' }} />
-            Available for projects in 2026
-          </motion.div>
-        </div>
-
         <div style={{ overflow: 'hidden' }}>
           <motion.h2
             initial={{ y: '110%' }}
@@ -400,13 +343,8 @@ export function WhatsNext() {
           transition={{ duration: 0.68, ease: EASE, delay: 0.36 }}
           style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginTop: 44 }}
         >
-          <MagneticButton primary>
-            Start a project
-            <motion.span whileHover={{ x: 2, y: -2 }} transition={{ duration: 0.25 }}>
-              <ArrowUpRight size={15} strokeWidth={2} />
-            </motion.span>
-          </MagneticButton>
-          <MagneticButton>Book a call</MagneticButton>
+          <FillButton icon={<ArrowUpRight size={15} strokeWidth={2} />}>Start a project</FillButton>
+          <FillButton outline>Book a call</FillButton>
         </motion.div>
       </div>
 

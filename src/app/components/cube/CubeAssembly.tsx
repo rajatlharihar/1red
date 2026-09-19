@@ -7,6 +7,9 @@ import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeome
 import { createInkLineMaterial } from '../hero/inkLines';
 import { PANEL_TO } from '../hero/studioSequence';
 
+/** Hero progress at which the zoom has carried the mark out of the frame. */
+export const HERO_DONE = 0.995;
+
 /* ─── Through the tunnel, then into one cube ────────────────────────────
  * The hero's zoom does not stop at the "e". Directly behind the gap is a
  * tunnel of cubes: four blocks per ring, one in each corner of the frame,
@@ -441,7 +444,10 @@ export function CubeAssembly({
     const on = heroPRef.current >= PANEL_TO;
     m.visible = on;
     lines.visible = on;
-    if (backdrop.current) backdrop.current.visible = on;
+    /* The white plane exists for the mark's occluder to cut. Once the mark
+       has gone the section's own white sheet takes over behind the canvas,
+       so the text on it can sit behind the cube. */
+    if (backdrop.current) backdrop.current.visible = on && heroPRef.current < HERO_DONE;
     if (!on) return;
     const p = progressRef.current;
     const cam = state.camera as THREE.PerspectiveCamera;

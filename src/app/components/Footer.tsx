@@ -3,13 +3,14 @@ import { motion, useInView } from 'motion/react';
 import { Link, useNavigate } from 'react-router';
 import { ArrowUpRight } from 'lucide-react';
 import { Logo } from './Logo';
+import { StudioWord } from './StudioWord';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 // Real contact details don't exist yet — one deliberate placeholder set,
 // exported so the standalone /contact page (Contact.tsx) reuses the exact
 // same values instead of duplicating them.
-export const CONTACT_EMAIL = 'hello@youragency.com';
+export const CONTACT_EMAIL = 'hi@1red.in';
 export const socialLinks = [
   { label: 'LinkedIn',  href: '#' },
   { label: 'Instagram', href: '#' },
@@ -221,25 +222,20 @@ export function Footer() {
         overflow: 'hidden',
       }}
     >
-      {/* Ambient watermark */}
+      {/* Ambient watermark, in Rajat's block letters */}
       <div
         aria-hidden
         style={{
           position: 'absolute',
-          bottom: -40,
+          bottom: -24,
           left: '50%',
           transform: 'translateX(-50%)',
-          fontSize: 'clamp(80px, 18vw, 240px)',
-          fontWeight: 900,
-          letterSpacing: '-0.06em',
-          color: 'rgba(255,255,255,0.025)',
-          whiteSpace: 'nowrap',
+          width: 'clamp(420px, 62vw, 1100px)',
           pointerEvents: 'none',
           userSelect: 'none',
-          lineHeight: 1,
         }}
       >
-        STUDIO
+        <StudioWord fill="rgba(255,255,255,0.03)" style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
 
       {/* ── Top row: Logo + Headline ── */}
@@ -291,7 +287,7 @@ export function Footer() {
           transition={{ duration: 0.68, ease: EASE, delay: 0.32 }}
         >
           <a
-            href="mailto:hello@youragency.com"
+            href="mailto:hi@1red.in"
             onMouseEnter={() => setEmailHovered(true)}
             onMouseLeave={() => setEmailHovered(false)}
             style={{
@@ -306,7 +302,7 @@ export function Footer() {
               position: 'relative',
             }}
           >
-            hello@youragency.com
+            hi@1red.in
             <motion.div
               animate={{ scaleX: emailHovered ? 1 : 0 }}
               transition={{ duration: 0.36, ease: EASE }}
