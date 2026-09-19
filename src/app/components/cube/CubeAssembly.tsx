@@ -193,6 +193,9 @@ const REST_ROT_Y = -0.55;
 const REST_ROT_X = 0.42;
 /** Slow turn onto the resting angle over the section, radians per unit p. */
 const DRIFT_Y = 0.35;
+/** How far the camera rises as the box settles, so the box sits lower in
+ *  the frame under the copy (world units). */
+const BOX_DROP = 1.15;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -634,6 +637,8 @@ export function CubeAssembly({
     if (backdrop.current) backdrop.current.position.z = cam.position.z - BACKDROP_DIST;
 
     cam.position.z = lerp(CAM_Z, CAM_Z - 0.7, settle);
+    // The box settles lower in the frame, clear of the copy above it.
+    cam.position.y = BOX_DROP * settle;
   });
 
   return (

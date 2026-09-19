@@ -137,46 +137,10 @@ export function ProblemCube() {
           onMouseMove={onPointerMove}
           style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}
         >
-          {/* The sheet behind the canvas: white, with the copy the finished
-              box sits in front of. Hidden until the mark has gone; until
-              then the canvas paints its own white for the mark to cut. */}
-          <div
-            ref={sheetRef}
-            aria-hidden={!reduceMotion}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: BG,
-              opacity: reduceMotion ? 1 : 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              padding: '0 clamp(1.5rem, 4vw, 5rem)',
-            }}
-          >
-            {LINES.map((line, i) => (
-              <div key={line} style={{ overflow: 'hidden' }}>
-                <span
-                  ref={(el) => {
-                    lineRefs.current[i] = el;
-                  }}
-                  style={{
-                    display: 'block',
-                    fontSize: 'clamp(64px, 13vw, 230px)',
-                    fontWeight: 800,
-                    letterSpacing: '-0.05em',
-                    lineHeight: 1.0,
-                    color: INK,
-                    transform: reduceMotion ? 'none' : 'translateY(110%)',
-                  }}
-                >
-                  {line}
-                </span>
-              </div>
-            ))}
-          </div>
+          {/* The sheet behind the canvas: white. Hidden until the mark has
+              gone; until then the canvas paints its own white for the mark
+              to cut. */}
+          <div ref={sheetRef} style={{ position: 'absolute', inset: 0, background: BG, opacity: reduceMotion ? 1 : 0 }} />
           <div style={{ position: 'absolute', inset: 0 }}>
             <Canvas
               frameloop={inView ? 'always' : 'never'}
@@ -192,6 +156,42 @@ export function ProblemCube() {
                 </Suspense>
               )}
             </Canvas>
+          </div>
+          {/* The copy, above the canvas and above the box, which settles
+              lower to leave it clear. Lines rise out of their masks as the
+              box locks. */}
+          <div
+            aria-hidden={!reduceMotion}
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: 'clamp(4rem, 9vh, 8rem)',
+              textAlign: 'center',
+              pointerEvents: 'none',
+              padding: '0 clamp(1.5rem, 4vw, 5rem)',
+            }}
+          >
+            {LINES.map((line, i) => (
+              <div key={line} style={{ overflow: 'hidden' }}>
+                <span
+                  ref={(el) => {
+                    lineRefs.current[i] = el;
+                  }}
+                  style={{
+                    display: 'block',
+                    fontSize: 'clamp(40px, 7.2vw, 132px)',
+                    fontWeight: 800,
+                    letterSpacing: '-0.05em',
+                    lineHeight: 1.0,
+                    color: INK,
+                    transform: reduceMotion ? 'none' : 'translateY(110%)',
+                  }}
+                >
+                  {line}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
