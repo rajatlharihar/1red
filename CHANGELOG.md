@@ -6,6 +6,11 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-20 (night)
+
+- **Bottom-of-page lag**: (1) Selected Work's looping video now pauses when it leaves the viewport (an `IntersectionObserver` in `VisualPanel`), instead of decoding all the way down the page. (2) The sheet's idle drift moved from an SVG `<g>` transform (which re-rasterised the whole drawing at retina every frame) onto the `<svg>` element itself, with the parallax on a wrapping div, so every layer is a composited transform of a raster drawn once; the grid is its own svg so the line drawing itself does not repaint it. Headless Brave can't reproduce the lag (60fps before and after at 2556x1174); it is the iMac's retina raster cost.
+- Pushed to `main` for Vercel.
+
 ## 2026-09-20 (evening)
 
 - **Placeholder copy behind the finished box** (`ProblemCube.tsx`): a white sheet behind the canvas carries two big lines ("Ideas take shape." / "Block by block.", placeholders for Rajat's words) that rise out of masks over section p 0.8 to 0.95 as the box locks; the canvas drops its own white plane once the mark has gone (`HERO_DONE`), so the box occludes the text.

@@ -283,6 +283,14 @@ function VisualPanel({ project }: { project: (typeof projects)[0] }) {
     const attempt = () => v.play().catch(() => {});
     if (v.readyState >= 2) attempt();
     else v.addEventListener('canplay', attempt, { once: true });
+    // Decoding a looping video off screen costs frames further down the
+    // page, so it only plays while it is actually in view.
+    const io = new IntersectionObserver((e) => {
+      if (e[0].isIntersecting) attempt();
+      else v.pause();
+    });
+    io.observe(v);
+    return () => io.disconnect();
   }, [project.video]);
 
   return (

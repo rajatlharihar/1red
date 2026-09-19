@@ -152,9 +152,14 @@ function Sheet({
   parallaxFar: MotionValue<number>;
 }) {
   const stroke = { fill: 'none', stroke: INK, strokeWidth: STROKE, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
-  const layer = { position: 'absolute' as const, inset: 0, width: '100%', height: '100%' };
+  /* Each layer is a div carrying the parallax (a CSS transform) around an
+     svg carrying the drift (also a CSS transform, on the svg element itself,
+     never on a group inside it): both stay on the compositor, so the
+     drawing is rasterised once and only moved. */
+  const layer = { position: 'absolute' as const, inset: 0, width: '100%', height: '100%', willChange: 'transform' };
   const drift = (dur: number, dx: number, dy: number) =>
     reduce ? {} : { animate: { x: [0, dx, 0, -dx * 0.6, 0], y: [0, dy, -dy * 0.5, dy * 0.3, 0] }, transition: { duration: dur, repeat: Infinity, ease: 'easeInOut' as const } };
+  const gridDrift = drift(17, -10, 8);
 
   return (
     <div
@@ -171,38 +176,40 @@ function Sheet({
     >
       {/* far: a loose triangle */}
       {!narrow && (
-        <motion.svg viewBox={VIEW} preserveAspectRatio="xMidYMin slice" style={{ ...layer, y: parallaxFar }}>
-          <motion.g {...drift(13, 8, -12)}>
+        <motion.div style={{ ...layer, y: parallaxFar }}>
+          <motion.svg viewBox={VIEW} preserveAspectRatio="xMidYMin slice" style={layer} {...drift(13, 8, -12)}>
             <motion.path d={SHAPE_LEFT} {...stroke} style={{ pathLength: drawn }} />
-          </motion.g>
-        </motion.svg>
+          </motion.svg>
+        </motion.div>
       )}
 
-      {/* mid: the grid, the figure and the line it draws, locked together */}
-      <motion.svg viewBox={VIEW} preserveAspectRatio="xMidYMin slice" style={{ ...layer, y: parallaxMid }}>
-        <motion.g {...drift(17, -10, 8)}>
+      {/* mid: the grid, and the figure with the line it draws, on the same
+          parallax and drift so they never separate. The grid is its own svg,
+          so the line drawing itself does not re-rasterise the grid. */}
+      <motion.div style={{ ...layer, y: parallaxMid }}>
+        <motion.svg viewBox={VIEW} preserveAspectRatio="xMidYMin slice" style={layer} {...gridDrift}>
           <path d={GRID} fill="none" stroke={INK} strokeWidth={1} strokeOpacity={0.09} strokeLinecap="round" />
-          {!narrow && (
-            <>
-              <motion.path d={LINE} {...stroke} style={{ pathLength: drawn }} />
-              {FIGURE_FILLED.map((d) => (
-                <path key={d} d={d} {...stroke} fill={PAPER} />
-              ))}
-              {FIGURE_LINES.map((d) => (
-                <path key={d} d={d} {...stroke} />
-              ))}
-            </>
-          )}
-        </motion.g>
-      </motion.svg>
+        </motion.svg>
+        {!narrow && (
+          <motion.svg viewBox={VIEW} preserveAspectRatio="xMidYMin slice" style={layer} {...gridDrift}>
+            <motion.path d={LINE} {...stroke} style={{ pathLength: drawn }} />
+            {FIGURE_FILLED.map((d) => (
+              <path key={d} d={d} {...stroke} fill={PAPER} />
+            ))}
+            {FIGURE_LINES.map((d) => (
+              <path key={d} d={d} {...stroke} />
+            ))}
+          </motion.svg>
+        )}
+      </motion.div>
 
       {/* near: a diamond */}
       {!narrow && (
-        <motion.svg viewBox={VIEW} preserveAspectRatio="xMidYMin slice" style={{ ...layer, y: parallaxNear }}>
-          <motion.g {...drift(9, 10, 8)}>
+        <motion.div style={{ ...layer, y: parallaxNear }}>
+          <motion.svg viewBox={VIEW} preserveAspectRatio="xMidYMin slice" style={layer} {...drift(9, 10, 8)}>
             <motion.path d={SHAPE_RIGHT} {...stroke} style={{ pathLength: drawn }} />
-          </motion.g>
-        </motion.svg>
+          </motion.svg>
+        </motion.div>
       )}
     </div>
   );
