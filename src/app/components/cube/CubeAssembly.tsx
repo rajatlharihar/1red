@@ -3,16 +3,17 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
-/* ─── Through the tunnel, then into one cube ────────────────────────
+/* ─── Through the tunnel, then into one cube ────────────────────────────
  * The hero's zoom does not stop at the "e". Directly behind the gap is a
  * tunnel of cubes: four blocks per ring, one in each corner of the frame,
  * ring after ring converging on the exact point the zoom breaks through, so
  * the parting red of the logo hands straight over to blocks streaming out of
- * the same four corners. Its mouth opens as the gap opens (`AV_AP0`), then
- * the rings run at the camera and out past the corners. The ranks cycle, so
- * 27 cubes make a tunnel with no end in sight. Then the whole array turns
- * and loses its depth, which is what breaks the rings into the jumble the
- * box is built from.
+ * the same four corners. The rings run at the camera and out past the
+ * corners; the ranks cycle, so 27 cubes make a tunnel with no end in sight.
+ * Then the run eases to a stop and, still seen head-on, the tunnel gathers:
+ * its blocks leave their rings one by one, shrink, square up and lock into
+ * one box at the centre of the frame. The camera never turns; the tunnel
+ * itself becomes the box.
  *
  * NO COLLISIONS. The box builds from the inside out (centre, faces, edges,
  * corners). Each cube flies to a staging point outside the forming box on
@@ -53,11 +54,12 @@ const COUNT = N * N * N;
  *  size rather than by guessing depths. */
 const TAN_HALF = Math.tan((FOV / 2) * (Math.PI / 180));
 
-/* Timeline, as fractions of the pinned scroll. */
-const APPROACH_END = 0.42;
-const SWING_START = 0.26;
-const SWING_END = 0.56;
-const GATHER_START = 0.56;
+/* Timeline, as fractions of the pinned scroll. The gather starts while the
+   run is still easing out, so the tunnel never sits waiting; the centre cube
+   is the only one moving in that overlap, and the run is all but stopped by
+   the time the first face starts its flight. */
+const APPROACH_END = 0.5;
+const GATHER_START = 0.46;
 const GATHER_END = 0.9;
 const SETTLE_START = 0.82;
 const SETTLE_END = 0.99;
@@ -97,10 +99,6 @@ const AV_CORNER_Z = CAM_Z - AV_R / TAN_HALF;
  *  blocks the zoom just parted, and read as the same blocks carrying on
  *  rather than a new, smaller thing starting. */
 const AV_PHASE0 = AV_Z_EXIT - AV_CORNER_Z;
-/** The mouth closes back to this as the array turns, so the rings that have
- *  already swept out past the corners come back in the way they left, and
- *  the frame is never briefly empty between the tunnel and the jumble. */
-const AV_AP_TURN = 0.5;
 /** The run waits out the fade-in (`gate`) and no longer. Any longer and
  *  blocks sit still while the "e" blocks are still rushing outwards, which
  *  breaks the move. Any shorter and the first ring has already swept past
@@ -108,16 +106,10 @@ const AV_AP_TURN = 0.5;
 const AV_HOLD = 0.006;
 /** Depth covered during the approach: about a cycle and a half of rings
  *  streaming past. It stops clear of the wrap band, so no ring is mid-fade
- *  when the turn freezes it. */
+ *  when the run stops and the gather begins. */
 const AV_TRAVEL = 102;
-/** The array turns about this depth, roughly the middle of what is on screen. */
-const AV_PIVOT_Z = -13;
-const AV_SWING = 1.35;
-const AV_TILT = 0.38;
-/** Tunnel depth left after the turn, so the rings collapse into a cloud. */
-const AV_SQUASH = 0.17;
 /** Blocks in the tunnel are far chunkier than the cubes in the finished box.
- *  They shrink back as the rings break up. */
+ *  They shrink to size on their flight to the box. */
 const AV_SIZE = 2.6;
 /** A block of a given height covers far more of a narrow frame's width than
  *  of a wide one's, so on a phone the corner blocks would swallow the tunnel
@@ -130,6 +122,8 @@ const avSizeFor = (aspect: number) => AV_SIZE * clamp01((aspect / 1.6 - 0.45) / 
 const STAGE_R = 3.6;
 /** Share of a cube's gather window spent flying; the rest is the slide. */
 const FLIGHT = 0.7;
+/** Share of the gather window over which a tunnel block shrinks to a box cube. */
+const SHRINK = 0.3;
 /** Bounding radius of a unit cube, used for flight separation. */
 const CUBE_R = 0.87;
 
@@ -159,13 +153,6 @@ interface Piece {
   /** Gather window, as fractions of the gather phase. */
   start: number;
   len: number;
-  nx: number;
-  ny: number;
-  z: number;
-  size: number;
-  axis: THREE.Vector3;
-  angle: number;
-  speed: number;
   /** Tunnel: which corner of the frame, and which ring. */
   cx: number;
   cy: number;
@@ -190,25 +177,7 @@ const TIER_WINDOWS = [
   { from: 0.4, to: 0.58, len: 0.4 },
 ];
 
-/** Spreads the cubes over a jittered grid so they fill the frame evenly
- *  instead of clumping. */
-function layout(cols: number, rows: number): Piece[] {
-  const cells: Array<{ nx: number; ny: number }> = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const i = r * cols + c;
-      cells.push({
-        nx: ((c + 0.2 + hash(i, 1) * 0.6) / cols) * 2 - 1,
-        ny: ((r + 0.2 + hash(i, 2) * 0.6) / rows) * 2 - 1,
-      });
-    }
-  }
-  const picked = cells
-    .map((cell, i) => ({ cell, k: hash(i, 3) }))
-    .sort((a, b) => a.k - b.k)
-    .slice(0, COUNT)
-    .map((e) => e.cell);
-
+function layout(): Piece[] {
   const slots: THREE.Vector3[] = [];
   for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) slots.push(new THREE.Vector3(x, y, z));
   const tierOf = (s: THREE.Vector3) => Math.abs(s.x) + Math.abs(s.y) + Math.abs(s.z);
@@ -227,20 +196,12 @@ function layout(cols: number, rows: number): Piece[] {
     const w = TIER_WINDOWS[tier];
     const k = tierSize[tier] > 1 ? tierSeen[tier] / (tierSize[tier] - 1) : 0;
     tierSeen[tier]++;
-    const cell = picked[i];
     return {
       slot,
       dir: tier === 0 ? new THREE.Vector3() : slot.clone().normalize(),
       tier,
       start: lerp(w.from, w.to, k),
       len: w.len,
-      nx: cell.nx,
-      ny: cell.ny,
-      z: -4 + hash(i, 4) * 5,
-      size: 0.72 + hash(i, 5) * 0.4,
-      axis: new THREE.Vector3(hash(i, 6) - 0.5, hash(i, 7) - 0.5, hash(i, 8) - 0.5).normalize(),
-      angle: hash(i, 9) * Math.PI * 2,
-      speed: 0.15 + hash(i, 10) * 0.25,
       cx: cornerX,
       cy: cornerY,
       rank: ring,
@@ -251,20 +212,13 @@ function layout(cols: number, rows: number): Piece[] {
   });
 }
 
-const _q = new THREE.Quaternion();
 const _qGroup = new THREE.Quaternion();
-/** The avenue's own orientation, and each cube's before the box takes over. */
-const _qAv = new THREE.Quaternion();
-const _qTidy = new THREE.Quaternion();
-const _qBase = new THREE.Quaternion();
-const _av = new THREE.Vector3();
 /* Each piece carries its own off-axis tilt (`piece.tilt`), which turns a
    block into a box rather than a flat red rectangle. It rotates the cube and
-   never the array: the tunnel itself has to stay square to the camera, or its
+   never the array: the tunnel itself stays square to the camera, or its
    vanishing point drifts off the gap the hero zooms through. */
 const _euler = new THREE.Euler();
-const _a = new THREE.Vector3();
-const _b = new THREE.Vector3();
+const _av = new THREE.Vector3();
 const _d = new THREE.Vector3();
 const _scale = new THREE.Vector3();
 const _m = new THREE.Matrix4();
@@ -316,8 +270,7 @@ export function CubeAssembly({
     [geo, mat]
   );
 
-  const landscape = useMemo(() => layout(7, 4), []);
-  const portrait = useMemo(() => layout(4, 7), []);
+  const pieces = useMemo(layout, []);
 
   // Per-frame working state, one entry per cube.
   const work = useMemo(
@@ -337,10 +290,8 @@ export function CubeAssembly({
     const m = mesh.current;
     if (!m) return;
     const p = progressRef.current;
-    const time = state.clock.elapsedTime;
     const cam = state.camera as THREE.PerspectiveCamera;
     const aspect = state.size.width / state.size.height;
-    const pieces = aspect >= 1 ? landscape : portrait;
     const tanHalf = Math.tan(THREE.MathUtils.degToRad(FOV / 2));
 
     const frameW = 2 * CAM_Z * tanHalf * aspect;
@@ -359,18 +310,10 @@ export function CubeAssembly({
        camera by `av`, so a phone sees the same tunnel as the iMac, smaller. */
     const av = unit / 0.85;
     /* Fast the moment the mouth is open, then eased to a stop rather than
-       cut off: the turn is already underway by then, so the tunnel never
+       cut off: the gather is already underway by then, so the tunnel never
        visibly halts and waits. */
     const run = clamp01((p - AV_HOLD) / (APPROACH_END - AV_HOLD));
     const travel = (1 - Math.pow(1 - run, 2.2)) * AV_TRAVEL;
-    const swing = clamp01((p - SWING_START) / (SWING_END - SWING_START));
-    /* The turn leads; the break-up into the jumble follows it. */
-    const rotT = easeInOutCubic(clamp01(swing / 0.62));
-    const cloudT = easeInOutCubic(smoothstep(0.32, 1, swing));
-    /* The tunnel is at full width from the first frame: its blocks have to
-       match the size of the parting "e" blocks, not grow into them. The only
-       thing that moves the mouth is the turn, which draws it back in. */
-    const aperture = lerp(1, AV_AP_TURN, rotT);
     const avSize = avSizeFor(aspect);
     /* Shift the whole frame up by however far the canvas sits below the
        viewport. Same full-frame size, so nothing is rescaled. */
@@ -395,9 +338,6 @@ export function CubeAssembly({
     mat.metalness = lerp(1, 0.92, skin);
     mat.roughness = lerp(1, 0.31, skin);
     mat.envMapIntensity = 0.8 * skin;
-    const depth = lerp(1, AV_SQUASH, rotT);
-    _euler.set(AV_TILT * rotT, AV_SWING * rotT, 0);
-    _qAv.setFromEuler(_euler);
 
     const gather = clamp01((p - GATHER_START) / (GATHER_END - GATHER_START));
     const stageR = STAGE_R * unit;
@@ -412,36 +352,25 @@ export function CubeAssembly({
          it counts down as the tunnel runs and wraps a ring that has gone
          past the corners back out to the far end. */
       const phase = (((piece.rank * AV_SPACING + AV_PHASE0 - travel) % AV_CYCLE) + AV_CYCLE) % AV_CYCLE;
-      const r = (AV_R + piece.jr) * aperture;
-      _av
-        .set(piece.cx * r * aspect, piece.cy * r, (AV_Z_EXIT - phase + piece.jz - AV_PIVOT_Z) * depth)
-        .applyQuaternion(_qAv);
-      _av.z += AV_PIVOT_Z;
+      const r = AV_R + piece.jr;
+      _av.set(piece.cx * r * aspect, piece.cy * r, AV_Z_EXIT - phase + piece.jz);
       // Scale the whole tunnel about the camera, never about the origin.
       _av.set(_av.x * av, _av.y * av, CAM_Z + (_av.z - CAM_Z) * av);
 
-      /* The jumble the build starts from: spread across the frame, mid-depth. */
-      const halfH = (CAM_Z - piece.z) * tanHalf;
-      _a.set(piece.nx * halfH * aspect * 0.86, piece.ny * halfH * 0.8, piece.z);
-      _b.copy(_av).lerp(_a, cloudT);
       /* A ring only fades in over the deepest part of the cycle, where it is
-         far too small to see the fade, so a wrap never pops. */
-      const appear = Math.max(smoothstep(1, 0.9, phase / AV_CYCLE), cloudT);
-
-      /* Square in the ring; tumbling once the rings break up. */
-      const tumble = _q.setFromAxisAngle(piece.axis, piece.angle + time * piece.speed + p * 3);
-      _qTidy.copy(_qAv).multiply(piece.tilt);
-      _qBase.copy(_qTidy).slerp(tumble, cloudT);
+         far too small to see the fade, so a wrap never pops. A cube on its
+         way to the box is always shown. */
+      const appear = Math.max(smoothstep(1, 0.9, phase / AV_CYCLE), smoothstep(0, 0.3, local));
 
       if (piece.tier === 0) {
         const f = easeInOutSine(local);
-        w.pos.copy(_b).lerp(_d.set(0, 0, 0), f);
+        w.pos.copy(_av).lerp(_d.set(0, 0, 0), f);
         w.mobility = 1 - smoothstep(0.2, 0.5, local);
         w.exclude = false;
       } else if (local < FLIGHT) {
         const f = easeInOutSine(local / FLIGHT);
         _d.copy(piece.dir).multiplyScalar(stageR).applyQuaternion(_qGroup);
-        w.pos.copy(_b).lerp(_d, f);
+        w.pos.copy(_av).lerp(_d, f);
         w.mobility = 1 - smoothstep(FLIGHT - 0.2, FLIGHT, local);
         w.exclude = true;
       } else {
@@ -452,12 +381,13 @@ export function CubeAssembly({
         w.exclude = false;
       }
 
+      /* Square in the ring, then turned to the box's own orientation over the
+         flight. The shrink to a box cube is quicker: the nearest ring's blocks
+         are huge and right by the lens, and would cross the frame as giant
+         slabs if they kept their size for long. */
       const square = easeInOutCubic(clamp01(local / (piece.tier === 0 ? 0.6 : FLIGHT - 0.1)));
-      w.quat.copy(_qBase).slerp(_qGroup, square);
-      const grow = easeInOutSine(clamp01(local / (piece.tier === 0 ? 0.6 : FLIGHT - 0.1)));
-      /* One size while they are a planted row; their own sizes once they are
-         a jumble; all equal again in the box. */
-      w.scale = appear * lerp(avSize * aperture, lerp(piece.size, 1, grow), cloudT) * unit;
+      w.quat.copy(piece.tilt).slerp(_qGroup, square);
+      w.scale = appear * lerp(avSize, 1, easeInOutSine(clamp01(local / SHRINK))) * unit;
       w.radius = CUBE_R * w.scale;
     });
 

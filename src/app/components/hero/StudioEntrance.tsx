@@ -39,7 +39,7 @@ export const TAIL_VH = 100;
    multi-second stalls. ~3.2M pixels keeps lines crisp at normal sizes and
    drops to ~1x only on very large windows. */
 const PIXEL_BUDGET = 3.2e6;
-function budgetDpr(max: number) {
+export function budgetDpr(max: number) {
   const px = window.innerWidth * window.innerHeight;
   return Math.max(0.75, Math.min(max, window.devicePixelRatio || 1, Math.sqrt(PIXEL_BUDGET / px)));
 }

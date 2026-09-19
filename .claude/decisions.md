@@ -261,3 +261,29 @@ Chronological, most recent last. Each entry: date (where known — this project 
 - Take `gapHalfFraction` as the whole gap. It measures the square hole at the centre of the mark, and the slots running out of it are about 5% wider, which is what the clip has to follow. `GAP_SCALE` carries that, verified against the rendered hero rather than assumed: the cubes now stop 2px from the red at two separate points in the hand-off.
 - Let the clip lift on a different schedule from the mark leaving the frame. It lifts when the cross covers the frame, which is the same moment the mark's blocks clear it. Lift earlier and cubes cross onto the red; lift later and the cubes show straight cut edges against white.
 
+
+---
+
+**DECISION (2026-09-19):** Section 2 gathers into the box straight out of the head-on tunnel. There is no turn, no squash, no jumble.
+**REASON:** Rajat, with two screenshots: "instead of camera angle going this way splitting it, it can split like [the tunnel view] itself to form the box". The angled cloud read as a different shot; the frontal tunnel is the shot he wants the box to come out of.
+**DO NOT:** Reintroduce `AV_SWING`/`AV_TILT`/`AV_SQUASH`/`AV_AP_TURN` or the jittered cloud layout. Keep the gather overlapping the run's ease-out (`GATHER_START` < `APPROACH_END`) so the tunnel never sits waiting; keep `SHRINK` well under `FLIGHT`, or the nearest ring's blocks cross the frame as giant slabs.
+
+---
+
+**DECISION (2026-09-19):** The white backdrop is clipped together with the canvas, opaque, and the whole layer is hidden until hero p 0.93 (`CLIP_FROM_P`).
+**REASON:** With the backdrop fading in separately, the studio's black walls and tripods showed through the ends of the cross in the "e" and at the frame edges for hero p 0.94 to 0.985. Inside the gap the cyclorama is white, so a white layer clipped to the gap is invisible there and covers the black. The gate exists because before `aim` reaches 1 the gap is off the camera axis, and an unclipped-vertical-arm strip of white would cut across the red.
+**SUPERSEDES:** the 2026-09-17 "do not clip the backdrop along with the canvas" note; the clip lifts for the whole layer at the same moment, so the backdrop still covers the frame once the mark is gone.
+
+---
+
+**DECISION (2026-09-19):** The studio's ink washes to white inside the zoom (`wash`, hero p 0.895 to 0.932): approach ground, door frame, stands and lamp sketch lines. The mark's own lines and sides are untouched.
+**REASON:** The mark's rounded corners leave gaps to the frame's edges as they sweep out, and black floor/tripod flickered in them. White there reads as the light taking the room before the zoom breaks through.
+
+---
+
+**DECISION (2026-09-19):** Section 2's canvas takes the hero's pixel budget (`budgetDpr(1.75)`), never a flat dpr.
+**REASON:** Both canvases render at the hand-off. A flat 1.75 put a 4473x2054 canvas on top of the hero's 2639x1212 on a 2 GB GPU: 28.9ms median frames, 65ms p95. Budgeted: 16.7 / 46.
+
+---
+
+**NOTE (2026-09-19):** Live screenshots via claude-in-chrome are only valid while the Brave window is frontmost: macOS stops `requestAnimationFrame` for an occluded window, so the glide freezes and every screenshot shows the last frame drawn. Use headless Brave through `playwright-core` from the scratchpad for scroll-scrub verification instead (script shape: goto, warm-up scroll, then scrollTo + 1.6 s wait + screenshot per position).

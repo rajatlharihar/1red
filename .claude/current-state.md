@@ -1,7 +1,15 @@
 # Current State
 
 ## Last Updated
-2026-09-18
+2026-09-19
+
+## Session Log: 2026-09-19
+
+- Rajat's two notes on the hand-off: the zoom-to-tunnel was "not seamless" with "a glitch that keeps happening", and the array's turn into an angled jumble should go; the box should form out of the head-on tunnel view. Both done, see CHANGELOG 2026-09-19 and decisions.md.
+- Glitch causes found and fixed: black studio walls through the gap (backdrop now clipped with the canvas), black tripod/floor behind the mark's rounded corners (studio ink washes to white inside the zoom), and hitching from an unbudgeted dpr 1.75 canvas on top of the hero's (now `budgetDpr`).
+- `CubeAssembly.tsx` timeline now: run `0.006 to 0.5` (eased stop), gather `0.46 to 0.9` (centre, faces, edges, corners), settle `0.82 to 0.99`. No swing/squash constants remain.
+- Verified with headless Brave (playwright-core in the scratchpad, not committed) at 1440x900 and 390x844; no page errors; `vite build` clean. Committed locally, **not pushed**.
+- Still open, unchanged: section 2's text placement; the custom letters; Illusdoodle naming; the facade wall; the pencil hatch.
 
 ## Resume here (end of the 2026-09-17 night session)
 

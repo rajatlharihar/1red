@@ -412,7 +412,11 @@ export function StudioScene({
     mats.roomBacking.color.copy(palette.backing).lerp(palette.lit, L);
     mats.logoFace.color.copy(palette.logoDark).lerp(palette.logoFace, L);
     mats.logoSide.color.copy(palette.logoDark).lerp(palette.logoSide, L);
-    mats.sketch.color.copy(palette.sketchDark).lerp(palette.ink, L);
+    mats.sketch.color.copy(palette.sketchDark).lerp(palette.ink, L).lerp(palette.lit, s.wash);
+    // The studio's ink goes to white inside the zoom, so only the mark is
+    // left in the frame as it breaks through into the next section.
+    mats.ground.color.copy(palette.floor).lerp(palette.lit, s.wash);
+    mats.ink.color.copy(palette.ink).lerp(palette.lit, s.wash);
 
     /* One turn, then scale through the counter of the "r". The zoom group's
        origin IS that hole on the mark's front face, so the face never moves

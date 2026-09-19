@@ -122,7 +122,14 @@ export interface SequenceState {
   logoZoom: number;
   /** 0 = lamp heads face the viewer, 1 = they face the mark. */
   lampTurn: number;
+  /** 0 = the studio's ink (floor, stands, lamps) is black, 1 = washed to
+   *  white. Runs inside the zoom, so by the time the mark's blocks sweep
+   *  past the frame's corners nothing dark is left to flicker behind them. */
+  wash: number;
 }
+
+const WASH_FROM = 0.895;
+const WASH_TO = 0.932;
 
 export function sampleSequence(p: number): SequenceState {
   const t = clamp01(p);
@@ -182,7 +189,9 @@ export function sampleSequence(p: number): SequenceState {
   // pushes in they swing round and settle on the mark.
   const lampTurn = easeInOutSine(track(t, 0.47, 0.72));
 
-  return { camX, camY, camZ, camRoll, lookX, lookY, lookZ, doorOffset, lights, logoSpin, logoZoom, lampTurn };
+  const wash = easeInOutSine(track(t, WASH_FROM, WASH_TO));
+
+  return { camX, camY, camZ, camRoll, lookX, lookY, lookZ, doorOffset, lights, logoSpin, logoZoom, lampTurn, wash };
 }
 
 /** Half-thickness of the white cross in the "e", as a fraction of the
