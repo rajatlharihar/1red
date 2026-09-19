@@ -10,6 +10,7 @@
 - `CubeAssembly.tsx` timeline now: run `0.006 to 0.5` (eased stop), gather `0.46 to 0.9` (centre, faces, edges, corners), settle `0.82 to 0.99`. No swing/squash constants remain.
 - Verified with headless Brave (playwright-core in the scratchpad, not committed) at 1440x900 and 390x844; no page errors; `vite build` clean. Committed locally, **not pushed**.
 - Later the same day, on Rajat's five-screenshot review: the zoom is now the paper panel growing and tilting over the studio (see CHANGELOG 2026-09-19 later); the wash is gone; tunnel cubes carry the mark's ink edges and lose them over section p 0.1 to 0.44. `hero/inkLines.ts` is the shared home of the ink line helpers.
+- Night: on Rajat's next review (four crops): the boom rhombus replaces the cyc-face panel; rings are square/tight/untilted at the hand-off and flare out; the CSS clip is replaced by `cube/MarkOccluder.tsx` (depth-only mark at the hero's projection) with the white backdrop now a plane in the canvas. Shared geometry in `hero/logoGeometry.ts`.
 - Still open, unchanged: section 2's text placement; the custom letters; Illusdoodle naming; the facade wall; the pencil hatch.
 
 ## Resume here (end of the 2026-09-17 night session)

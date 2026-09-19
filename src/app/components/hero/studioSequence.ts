@@ -122,26 +122,27 @@ export interface SequenceState {
   logoZoom: number;
   /** 0 = lamp heads face the viewer, 1 = they face the mark. */
   lampTurn: number;
-  /** The paper panel behind the mark taking the frame: 0 = it is the
-   *  cyclorama's face, 1 = scaled to `PANEL_SCALE` and tilted by
-   *  `PANEL_TILT`, covering everything but the mark. */
+  /** The boom: 0 = a point behind the mark, 1 = a white square scaled to
+   *  `PANEL_SCALE`, turned from `PANEL_TILT0` to `PANEL_TILT`, covering
+   *  everything but the mark. */
   panel: number;
 }
 
-/* ── The paper panel ─────────────────────────────────────────────────────
- * The cyclorama's front face, measured from Studio.glb's `paper` mesh after
- * the model's rotation and scale: x −1.66 … 1.60, y 0 … 2.61. As the zoom
- * begins it grows and turns a little, like a square set on a corner, until
- * the white paper is the whole frame and the studio has gone behind it. The
- * mark is drawn over it; the tunnel in section 2 is behind the mark in
- * turn. */
-export const PANEL_W = 3.27;
-export const PANEL_H = 2.62;
-export const PANEL_CX = -0.03;
-export const PANEL_SCALE = 3.2;
+/* ── The boom ────────────────────────────────────────────────────────────
+ * Right after the mark's turn, a white square appears behind it as a small
+ * rhombus and booms out, turning as it grows, until the white is the whole
+ * frame and the studio has gone behind it. The mark is drawn over it; the
+ * tunnel in section 2 is behind the mark in turn. Eased out, so it leaps
+ * and then settles: the "boom". */
+export const PANEL_SIDE = 1;
+export const PANEL_SCALE0 = 0.05;
+export const PANEL_SCALE = 5.6;
+export const PANEL_TILT0 = Math.PI / 4;
 export const PANEL_TILT = -0.2;
-const PANEL_FROM = 0.89;
-const PANEL_TO = 0.936;
+const PANEL_FROM = 0.865;
+/** Hero progress from which the frame behind the mark is pure white. Section
+ *  2 starts drawing here. */
+export const PANEL_TO = 0.935;
 
 export function sampleSequence(p: number): SequenceState {
   const t = clamp01(p);
@@ -201,7 +202,7 @@ export function sampleSequence(p: number): SequenceState {
   // pushes in they swing round and settle on the mark.
   const lampTurn = easeInOutSine(track(t, 0.47, 0.72));
 
-  const panel = easeInOutSine(track(t, PANEL_FROM, PANEL_TO));
+  const panel = 1 - Math.pow(1 - track(t, PANEL_FROM, PANEL_TO), 3);
 
   return { camX, camY, camZ, camRoll, lookX, lookY, lookZ, doorOffset, lights, logoSpin, logoZoom, lampTurn, panel };
 }

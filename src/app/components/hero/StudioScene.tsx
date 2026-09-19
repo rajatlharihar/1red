@@ -5,11 +5,11 @@ import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { createHatchTexture } from './surfaceTextures';
 import { StudioEnvironment, type RoomMaterials } from './StudioEnvironment';
 import { INK, FILL_OFFSET, createInkLineMaterial, inkEdges } from './inkLines';
+import { buildLogoGeometry } from './logoGeometry';
 import {
   sampleSequence,
   lerp,
   RESTING_STATE,
-  BACKDROP_Z,
   DOOR_APEX_Y,
   DOOR_BASE_W,
   DOOR_HEADER_Y,
@@ -19,16 +19,14 @@ import {
   FACADE_W,
   FACADE_Z,
   LOGO_DEPTH,
-  LOGO_K,
   LOGO_PIVOT,
-  LOGO_SVG_BOX,
   LOGO_SVG_URL,
   LOGO_Y,
   LOGO_Z,
-  PANEL_W,
-  PANEL_H,
-  PANEL_CX,
+  PANEL_SIDE,
+  PANEL_SCALE0,
   PANEL_SCALE,
+  PANEL_TILT0,
   PANEL_TILT,
 } from './studioSequence';
 
@@ -204,9 +202,9 @@ export function StudioScene({
       logoFace: new THREE.MeshBasicMaterial({ color: LOGO_DARK, toneMapped: false }),
       logoSide: new THREE.MeshBasicMaterial({ color: LOGO_DARK, toneMapped: false }),
       line: createInkLineMaterial(),
-      // The paper panel that takes the frame in the zoom, and its ink edge.
-      // Both skip the depth test so they cover whatever stands in front of
-      // the cyclorama; the mark is drawn after them (`renderOrder`).
+      // The rhombus that booms out behind the mark, and its ink edge. Both
+      // skip the depth test so they cover whatever stands in front of the
+      // cyclorama; the mark is drawn after them (`renderOrder`).
       panel: new THREE.MeshBasicMaterial({ color: ROOM_LIT, toneMapped: false, depthTest: false, depthWrite: false }),
       panelLine: (() => {
         const m = createInkLineMaterial();
@@ -237,29 +235,13 @@ export function StudioScene({
       logoSide: new THREE.Color(LOGO_SIDE),
       sketchDark: new THREE.Color(SKETCH_DARK),
       ink: new THREE.Color(INK),
-      // The lit cyclorama's own tint (its hatch over white), measured off
-      // the frame, so the panel is invisible the moment it starts to move.
-      panelRest: new THREE.Color('#F5F5F5'),
     }),
     []
   );
 
-  /* The mark in 3D, extruded from the traced brand mark (see studioSequence). Each
-     SVG path is turned into shapes whole — createShapes resolves a path's
-     own subpaths into outlines and holes together, so the counters stay
-     holes and nothing is split apart. Flipped to y-up (with z, so the
-     winding stays outward) and centred on the mark's own bounds. */
   const svg = useLoader(SVGLoader, LOGO_SVG_URL);
   const logo = useMemo(() => {
-    const shapes = svg.paths.flatMap((path) => SVGLoader.createShapes(path));
-    const depth = LOGO_DEPTH / LOGO_K;
-    const geo = new THREE.ExtrudeGeometry(shapes, { depth, bevelEnabled: false, curveSegments: 10 });
-    geo.translate(
-      -(LOGO_SVG_BOX.x0 + LOGO_SVG_BOX.x1) / 2,
-      -(LOGO_SVG_BOX.y0 + LOGO_SVG_BOX.y1) / 2,
-      -depth / 2
-    );
-    geo.scale(LOGO_K, -LOGO_K, -LOGO_K);
+    const geo = buildLogoGeometry(svg);
     return { geo, lines: inkEdges(geo, mats.line) };
   }, [svg, mats]);
   useEffect(() => {
@@ -341,7 +323,7 @@ export function StudioScene({
   }, []);
   const transomLines = useMemo(() => inkEdges(transomGeo, mats.line), [transomGeo, mats]);
 
-  const panelGeo = useMemo(() => new THREE.PlaneGeometry(PANEL_W, PANEL_H), []);
+  const panelGeo = useMemo(() => new THREE.PlaneGeometry(PANEL_SIDE, PANEL_SIDE), []);
   const panelLines = useMemo(() => inkEdges(panelGeo, mats.panelLine), [panelGeo, mats]);
   useEffect(
     () => () => {
@@ -411,18 +393,17 @@ export function StudioScene({
     mats.logoSide.color.copy(palette.logoDark).lerp(palette.logoSide, L);
     mats.sketch.color.copy(palette.sketchDark).lerp(palette.ink, L);
 
-    /* The paper takes the frame: the cyclorama's face grows and turns a
-       little behind the mark until nothing of the studio is left. Drawn
-       without depth so it passes over the floor, stands and lamps in front
-       of it; the mark is drawn after it, so it stays on top. */
+    /* The boom: a small white rhombus behind the mark scales up as it turns
+       until nothing of the studio is left. Drawn without depth so it passes
+       over the floor, stands and lamps in front of it; the mark is drawn
+       after it, so it stays on top. */
     if (panelRef.current) {
       const g = s.panel;
       panelRef.current.visible = g > 0;
-      const k = lerp(1, PANEL_SCALE, g);
+      const k = lerp(PANEL_SCALE0, PANEL_SCALE, g);
       panelRef.current.scale.set(k, k, 1);
-      panelRef.current.rotation.z = PANEL_TILT * g;
-      mats.panel.color.copy(palette.panelRest).lerp(palette.lit, g);
-      mats.panelLine.opacity = Math.min(1, g * 6);
+      panelRef.current.rotation.z = lerp(PANEL_TILT0, PANEL_TILT, g);
+      mats.panelLine.opacity = Math.min(1, g * 8);
     }
 
     /* One turn, then scale through the counter of the "r". The zoom group's
@@ -501,7 +482,7 @@ export function StudioScene({
         </mesh>
       </group>
 
-      <group ref={panelRef} position={[PANEL_CX, PANEL_H / 2, BACKDROP_Z + 0.01]} visible={false}>
+      <group ref={panelRef} position={[0, LOGO_Y, LOGO_Z - 0.05]} visible={false}>
         <mesh geometry={panelGeo} material={mats.panel} renderOrder={1} />
         <primitive object={panelLines} renderOrder={1} />
       </group>

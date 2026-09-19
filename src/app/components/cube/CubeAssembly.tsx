@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
-import { createInkLineMaterial, FILL_OFFSET } from '../hero/inkLines';
+import { createInkLineMaterial } from '../hero/inkLines';
+import { PANEL_TO } from '../hero/studioSequence';
 
 /* ─── Through the tunnel, then into one cube ────────────────────────────
  * The hero's zoom does not stop at the "e". Directly behind the gap is a
@@ -92,21 +93,30 @@ const AV_CYCLE = AV_RANKS * AV_SPACING;
  *  a block's inner edge clears the frame, or a ring would vanish while still
  *  half on screen. */
 const AV_Z_EXIT = 7.4;
-/** Ring radius at the vertical edge of the frame. The x offset is scaled by
- *  the aspect, so a block sits in the corner and not out to the side. Kept
- *  tight against `AV_SIZE`: a block covers `AV_SIZE * 0.85 / 2 / AV_R` of the
- *  frame's height as its ring crosses the corners, and that ratio is what
- *  decides whether the first ring arrives at the size of the "e" blocks or
- *  as a handful of specks. */
-const AV_R = 2.2;
-/** Depth at which a ring's blocks straddle the corners of the frame: their
- *  biggest on-screen moment. */
-const AV_CORNER_Z = CAM_Z - AV_R / TAN_HALF;
-/** Phase offset that puts the nearest ring exactly on `AV_CORNER_Z` at the
- *  hand-off, so the first blocks the eye meets are the size of the "e"
- *  blocks the zoom just parted, and read as the same blocks carrying on
- *  rather than a new, smaller thing starting. */
-const AV_PHASE0 = AV_Z_EXIT - AV_CORNER_Z;
+/** A ring is square, whatever the frame's shape: the four blocks' inner
+ *  edges sit this far from the axis, on both axes, so at the hand-off they
+ *  land on the edges of the gap in the "e" (its half-width is 0.29 of the
+ *  frame's half-height at `HANDOFF_P`; 0.45 at the nearest ring's near face,
+ *  `AV_HANDOFF_Z` deep, is 0.27). The blocks then read as the "e" blocks
+ *  carrying on: same edges, same flat red, same ink lines. */
+const AV_INNER = 0.45;
+/** Depth of the nearest ring at the hand-off. */
+const AV_HANDOFF_Z = 3.67;
+/** Rings flare out as they come at the camera, from `AV_HANDOFF_Z` to the
+ *  exit: tight behind the "e", then spacing out as they pass. Also what lets
+ *  a ring wrap unseen: at this radius a block's inner side face has left the
+ *  frame before its ring reaches `AV_Z_EXIT`, even with its full tilt and
+ *  the depth jitter. */
+const AV_R_EXIT = 3.4;
+/** Phase offset that puts the nearest ring exactly on `AV_HANDOFF_Z` at the
+ *  hand-off, so the first blocks the eye meets are the "e" blocks the zoom
+ *  just parted, carrying on, rather than a new, smaller thing starting. */
+const AV_PHASE0 = AV_Z_EXIT - AV_HANDOFF_Z;
+/** The blocks arrive square to the camera, like the flat "e" blocks, and
+ *  take on their off-axis tilt over this stretch of the section as they
+ *  travel, which is what turns them into boxes. */
+const AV_TILT_FROM = 0.01;
+const AV_TILT_TO = 0.22;
 /** The run waits out the fade-in (`gate`) and no longer. Any longer and
  *  blocks sit still while the "e" blocks are still rushing outwards, which
  *  breaks the move. Any shorter and the first ring has already swept past
@@ -134,6 +144,10 @@ const FLIGHT = 0.7;
 const SHRINK = 0.3;
 /** Bounding radius of a unit cube, used for flight separation. */
 const CUBE_R = 0.87;
+
+/** The white behind everything, this far in front of the camera: past the
+ *  deepest ring, within the camera's far plane. */
+const BACKDROP_DIST = 120;
 
 const REST_ROT_Y = -0.55;
 const REST_ROT_X = 0.42;
@@ -229,6 +243,8 @@ const EDGES = [
 ];
 
 const _qGroup = new THREE.Quaternion();
+const _qTilt = new THREE.Quaternion();
+const _qFlat = new THREE.Quaternion();
 const _c = new THREE.Vector3();
 /* Each piece carries its own off-axis tilt (`piece.tilt`), which turns a
    block into a box rather than a flat red rectangle. It rotates the cube and
@@ -242,10 +258,14 @@ const _m = new THREE.Matrix4();
 
 export function CubeAssembly({
   progressRef,
+  heroPRef,
   offsetRef,
   pointerRef,
 }: {
   progressRef: React.MutableRefObject<number>;
+  /** The hero's progress, unclamped: nothing is drawn until the frame
+   *  behind the mark has gone white (`PANEL_TO`). */
+  heroPRef: React.MutableRefObject<number>;
   /** Pixels this canvas still sits below the top of the viewport, before the
    *  section pins. The frame is shifted up by it, so the tunnel stays on the
    *  gap in the "e" even while the canvas is only partly in view and the
@@ -254,6 +274,7 @@ export function CubeAssembly({
   pointerRef: React.MutableRefObject<{ x: number; y: number }>;
 }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
+  const backdrop = useRef<THREE.Mesh>(null);
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
 
@@ -327,6 +348,11 @@ export function CubeAssembly({
   useFrame((state) => {
     const m = mesh.current;
     if (!m) return;
+    const on = heroPRef.current >= PANEL_TO;
+    m.visible = on;
+    lines.visible = on;
+    if (backdrop.current) backdrop.current.visible = on;
+    if (!on) return;
     const p = progressRef.current;
     const cam = state.camera as THREE.PerspectiveCamera;
     const aspect = state.size.width / state.size.height;
@@ -377,6 +403,7 @@ export function CubeAssembly({
     mat.roughness = lerp(1, 0.31, skin);
     mat.envMapIntensity = 0.8 * skin;
 
+    const tiltT = smoothstep(AV_TILT_FROM, AV_TILT_TO, p);
     const gather = clamp01((p - GATHER_START) / (GATHER_END - GATHER_START));
     const stageR = STAGE_R * unit;
     // The no-fly sphere opens as the build begins, not during the scatter.
@@ -390,8 +417,10 @@ export function CubeAssembly({
          it counts down as the tunnel runs and wraps a ring that has gone
          past the corners back out to the far end. */
       const phase = (((piece.rank * AV_SPACING + AV_PHASE0 - travel) % AV_CYCLE) + AV_CYCLE) % AV_CYCLE;
-      const r = AV_R + piece.jr;
-      _av.set(piece.cx * r * aspect, piece.cy * r, AV_Z_EXIT - phase + piece.jz);
+      const z = AV_Z_EXIT - phase + piece.jz;
+      const rTight = AV_INNER + avSize / 2;
+      const r = lerp(rTight, AV_R_EXIT, smoothstep(AV_HANDOFF_Z, AV_Z_EXIT, z)) + piece.jr;
+      _av.set(piece.cx * r, piece.cy * r, z);
       // Scale the whole tunnel about the camera, never about the origin.
       _av.set(_av.x * av, _av.y * av, CAM_Z + (_av.z - CAM_Z) * av);
 
@@ -424,7 +453,8 @@ export function CubeAssembly({
          are huge and right by the lens, and would cross the frame as giant
          slabs if they kept their size for long. */
       const square = easeInOutCubic(clamp01(local / (piece.tier === 0 ? 0.6 : FLIGHT - 0.1)));
-      w.quat.copy(piece.tilt).slerp(_qGroup, square);
+      _qTilt.copy(_qFlat).slerp(piece.tilt, tiltT);
+      w.quat.copy(_qTilt).slerp(_qGroup, square);
       w.scale = appear * lerp(avSize, 1, easeInOutSine(clamp01(local / SHRINK))) * unit;
       w.radius = CUBE_R * w.scale;
     });
@@ -477,12 +507,19 @@ export function CubeAssembly({
     edgeBuf.needsUpdate = true;
     lineMat.opacity = 1 - smoothstep(OUTLINE_FROM, OUTLINE_TO, p);
     lines.visible = lineMat.opacity > 0;
+    /* The backdrop rides with the camera, always filling the frame, so
+       the mark's occluder can hide it along with the cubes. */
+    if (backdrop.current) backdrop.current.position.z = cam.position.z - BACKDROP_DIST;
 
     cam.position.z = lerp(CAM_Z, CAM_Z - 0.7, settle);
   });
 
   return (
     <>
+      <mesh ref={backdrop} position={[0, 0, CAM_Z - BACKDROP_DIST]} renderOrder={-5} frustumCulled={false}>
+        <planeGeometry args={[BACKDROP_DIST * TAN_HALF * 2 * 6, BACKDROP_DIST * TAN_HALF * 2 * 1.2]} />
+        <meshBasicMaterial color="#FFFFFF" toneMapped={false} />
+      </mesh>
       <instancedMesh ref={mesh} args={[geo, mat, COUNT]} frustumCulled={false} />
       <primitive object={lines} />
     </>

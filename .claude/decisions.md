@@ -299,3 +299,21 @@ Chronological, most recent last. Each entry: date (where known — this project 
 **DECISION (2026-09-19, later):** Tunnel cubes draw the same ink edges as the mark's blocks and lose them slowly as they go metal.
 **REASON:** Rajat: "those cubes can continue the outlines and change along the transition slowly".
 **DO NOT:** Put `polygonOffset` on the cube fills to help the lines: it opens hairline seams between the 27 cubes on the finished box. The line material's own 0.4% view-ray bias is enough.
+
+---
+
+**DECISION (2026-09-19, night):** Section 2 hides its tunnel behind the mark with a depth-only copy of the mark at the hero's own projection (`MarkOccluder`), not a CSS clip.
+**REASON:** The cross clip cut cubes with a straight edge beside the "e" blocks' rounded corners and could not follow the other slots or the sides. A depth-only mark occludes with the real outline everywhere, for free.
+**HOW:** Both cameras look down −z, so the hero's view-space mark, with x and y scaled by tan(FOV_section/2)/tan(HERO_FOV/2) and depth kept, projects identically in section 2. The occluder is gated with the rest of the section (`PANEL_TO` to 0.995) and lives in the same frame shift (`setViewOffset`), so it must not be drawn before the shift is applied.
+**DO NOT:** Bring back `clip-path`/`gapHalfFraction` for the reveal, or put the white backdrop back in the DOM: it has to be occluded by the mark too, so it is a plane in the canvas.
+
+---
+
+**DECISION (2026-09-19, night):** The tunnel's rings are square and tight (`AV_INNER`), arrive untilted, and flare to `AV_R_EXIT` as they reach the camera.
+**REASON:** Rajat wanted the first ring to read as the "e" blocks carrying on: same edges, same flat faces. One-block-per-frame-corner could not line up with a square gap on a wide screen, and a tilted block is not a flat "e" block.
+**DO NOT:** Scale the ring's x by the aspect again, or start the tilt at full. Keep `AV_R_EXIT` ≥ 3.4: below that a wrapping ring's inner side face is still in frame (with tilt and `jz`) and pops.
+
+---
+
+**DECISION (2026-09-19, night):** The boom is a 1 m white square at the mark's centre scaling 0.05 → 5.6 while turning 45° → −0.2 rad, cubic ease-out, p 0.865 → 0.935.
+**REASON:** Rajat: "a small rhombus behind the one red logo and it scales up as it rotates, like the boom effect". Starting at 0.05 means it is hidden behind the mark until it is already moving, so there is no pop.
