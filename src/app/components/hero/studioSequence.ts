@@ -122,14 +122,26 @@ export interface SequenceState {
   logoZoom: number;
   /** 0 = lamp heads face the viewer, 1 = they face the mark. */
   lampTurn: number;
-  /** 0 = the studio's ink (floor, stands, lamps) is black, 1 = washed to
-   *  white. Runs inside the zoom, so by the time the mark's blocks sweep
-   *  past the frame's corners nothing dark is left to flicker behind them. */
-  wash: number;
+  /** The paper panel behind the mark taking the frame: 0 = it is the
+   *  cyclorama's face, 1 = scaled to `PANEL_SCALE` and tilted by
+   *  `PANEL_TILT`, covering everything but the mark. */
+  panel: number;
 }
 
-const WASH_FROM = 0.895;
-const WASH_TO = 0.932;
+/* ── The paper panel ─────────────────────────────────────────────────────
+ * The cyclorama's front face, measured from Studio.glb's `paper` mesh after
+ * the model's rotation and scale: x −1.66 … 1.60, y 0 … 2.61. As the zoom
+ * begins it grows and turns a little, like a square set on a corner, until
+ * the white paper is the whole frame and the studio has gone behind it. The
+ * mark is drawn over it; the tunnel in section 2 is behind the mark in
+ * turn. */
+export const PANEL_W = 3.27;
+export const PANEL_H = 2.62;
+export const PANEL_CX = -0.03;
+export const PANEL_SCALE = 3.2;
+export const PANEL_TILT = -0.2;
+const PANEL_FROM = 0.89;
+const PANEL_TO = 0.936;
 
 export function sampleSequence(p: number): SequenceState {
   const t = clamp01(p);
@@ -189,9 +201,9 @@ export function sampleSequence(p: number): SequenceState {
   // pushes in they swing round and settle on the mark.
   const lampTurn = easeInOutSine(track(t, 0.47, 0.72));
 
-  const wash = easeInOutSine(track(t, WASH_FROM, WASH_TO));
+  const panel = easeInOutSine(track(t, PANEL_FROM, PANEL_TO));
 
-  return { camX, camY, camZ, camRoll, lookX, lookY, lookZ, doorOffset, lights, logoSpin, logoZoom, lampTurn, wash };
+  return { camX, camY, camZ, camRoll, lookX, lookY, lookZ, doorOffset, lights, logoSpin, logoZoom, lampTurn, panel };
 }
 
 /** Half-thickness of the white cross in the "e", as a fraction of the

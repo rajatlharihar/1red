@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { createInkLineMaterial, FILL_OFFSET } from '../hero/inkLines';
 
 /* ─── Through the tunnel, then into one cube ────────────────────────────
  * The hero's zoom does not stop at the "e". Directly behind the gap is a
@@ -43,6 +46,11 @@ const LOGO_EMISSIVE = 0.89;
  *  taken the hero away. Set `SKIN_TO` to 0 to keep metal throughout. */
 const SKIN_FROM = 0.02;
 const SKIN_TO = 0.12;
+/** The mark's blocks carry ink edges, and so do the tunnel's blocks as they
+ *  take over from them. The lines go slowly as the blocks go metal, gone
+ *  before the gather begins. */
+const OUTLINE_FROM = 0.1;
+const OUTLINE_TO = 0.44;
 export const CAM_Z = 9.4;
 export const FOV = 42;
 
@@ -212,7 +220,16 @@ function layout(): Piece[] {
   });
 }
 
+/** The 12 edges of a unit cube, as corner index pairs into `CORNERS`. */
+const CORNERS = [-0.5, 0.5].flatMap((x) => [-0.5, 0.5].flatMap((y) => [-0.5, 0.5].map((z) => new THREE.Vector3(x, y, z))));
+const EDGES = [
+  [0, 1], [2, 3], [4, 5], [6, 7],
+  [0, 2], [1, 3], [4, 6], [5, 7],
+  [0, 4], [1, 5], [2, 6], [3, 7],
+];
+
 const _qGroup = new THREE.Quaternion();
+const _c = new THREE.Vector3();
 /* Each piece carries its own off-axis tilt (`piece.tilt`), which turns a
    block into a box rather than a flat red rectangle. It rotates the cube and
    never the array: the tunnel itself stays square to the camera, or its
@@ -255,9 +272,28 @@ export function CubeAssembly({
 
   const geo = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
   const mat = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: RED, roughness: 0.31, metalness: 0.92, envMapIntensity: 0.8 }),
+    () =>
+      new THREE.MeshStandardMaterial({ color: RED, roughness: 0.31, metalness: 0.92, envMapIntensity: 0.8 }),
     []
   );
+  /* Ink edges on every cube: one fat-line geometry holding all 27 cubes'
+     edges, its endpoints rewritten each frame from the instance matrices. */
+  const lineMat = useMemo(() => {
+    const m = createInkLineMaterial();
+    m.transparent = true;
+    return m;
+  }, []);
+  const lines = useMemo(() => {
+    const g = new LineSegmentsGeometry();
+    g.setPositions(new Float32Array(COUNT * EDGES.length * 6));
+    const l = new LineSegments2(g, lineMat);
+    l.frustumCulled = false;
+    return l;
+  }, [lineMat]);
+  const size = useThree((s) => s.size);
+  useEffect(() => {
+    lineMat.resolution.set(size.width, size.height);
+  }, [lineMat, size]);
   const skinCols = useMemo(
     () => ({ logo: new THREE.Color(LOGO_RED), cube: new THREE.Color(RED), black: new THREE.Color('#000000') }),
     []
@@ -266,8 +302,10 @@ export function CubeAssembly({
     () => () => {
       geo.dispose();
       mat.dispose();
+      lines.geometry.dispose();
+      lineMat.dispose();
     },
-    [geo, mat]
+    [geo, mat, lines, lineMat]
   );
 
   const pieces = useMemo(layout, []);
@@ -417,17 +455,38 @@ export function CubeAssembly({
       }
     }
 
+    const edgeBuf = lines.geometry.attributes.instanceStart.data as THREE.InstancedInterleavedBuffer;
+    const edges = edgeBuf.array as Float32Array;
     for (let i = 0; i < COUNT; i++) {
       const w = work[i];
       _scale.setScalar(w.scale);
       m.setMatrixAt(i, _m.compose(w.pos, w.quat, _scale));
+      for (let e = 0; e < EDGES.length; e++) {
+        const o = (i * EDGES.length + e) * 6;
+        _c.copy(CORNERS[EDGES[e][0]]).applyMatrix4(_m);
+        edges[o] = _c.x;
+        edges[o + 1] = _c.y;
+        edges[o + 2] = _c.z;
+        _c.copy(CORNERS[EDGES[e][1]]).applyMatrix4(_m);
+        edges[o + 3] = _c.x;
+        edges[o + 4] = _c.y;
+        edges[o + 5] = _c.z;
+      }
     }
     m.instanceMatrix.needsUpdate = true;
+    edgeBuf.needsUpdate = true;
+    lineMat.opacity = 1 - smoothstep(OUTLINE_FROM, OUTLINE_TO, p);
+    lines.visible = lineMat.opacity > 0;
 
     cam.position.z = lerp(CAM_Z, CAM_Z - 0.7, settle);
   });
 
-  return <instancedMesh ref={mesh} args={[geo, mat, COUNT]} frustumCulled={false} />;
+  return (
+    <>
+      <instancedMesh ref={mesh} args={[geo, mat, COUNT]} frustumCulled={false} />
+      <primitive object={lines} />
+    </>
+  );
 }
 
 /** Highlights only: the environment map supplies the fill, and an ambient

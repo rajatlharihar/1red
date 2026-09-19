@@ -1,15 +1,15 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { useFrame, useLoader, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
-import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { createHatchTexture } from './surfaceTextures';
 import { StudioEnvironment, type RoomMaterials } from './StudioEnvironment';
+import { INK, FILL_OFFSET, createInkLineMaterial, inkEdges } from './inkLines';
 import {
   sampleSequence,
+  lerp,
   RESTING_STATE,
+  BACKDROP_Z,
   DOOR_APEX_Y,
   DOOR_BASE_W,
   DOOR_HEADER_Y,
@@ -25,6 +25,11 @@ import {
   LOGO_SVG_URL,
   LOGO_Y,
   LOGO_Z,
+  PANEL_W,
+  PANEL_H,
+  PANEL_CX,
+  PANEL_SCALE,
+  PANEL_TILT,
 } from './studioSequence';
 
 /* ─── The entrance to Studio.glb ───────────────────────────────────────────
@@ -42,7 +47,6 @@ const RED = '#FF0000'; // full-intensity red; room and mark skip tone mapping
  * foreshorten and cross correctly as the camera travels. */
 const CREAM = '#E7E1CE';
 const CREAM_DOOR = '#E2DCC7';
-const INK = '#0A0A0A'; // brand ink (design-system.md)
 
 const FACADE_COL = CREAM;
 const VOID_COL = '#EDE8D9';
@@ -58,12 +62,6 @@ const LOGO_SIDE = '#C40000';
 const LOGO_DARK = '#140504';
 const SKETCH_DARK = '#CFC7B0';
 
-/* Ink edges are screen-space quads with a constant pixel width (WebGL
- * ignores `linewidth` on plain lines). They sit EXACTLY on the geometry's
- * corners; the fills are pushed back in depth with polygonOffset instead of
- * the lines being nudged off their corners in world space. */
-const LINE_PX = 1.2;
-const FILL_OFFSET = { polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 4 } as const;
 
 const FACADE_T = 1.8;
 
@@ -113,33 +111,6 @@ const SECTIONS = DOOR_SECTION_TOPS.map((top, i) => {
 });
 
 
-/* A line on a corner shares depth with the faces meeting there and breaks
-   into dashes where one of them is seen edge-on. Pulling each endpoint 0.4%
-   of its distance toward the camera — along its own view ray, so its screen
-   position is unchanged — wins that tie at every range without ever
-   bringing a genuinely hidden edge through a surface. */
-function createInkLineMaterial(color = INK, width = LINE_PX) {
-  const m = new LineMaterial({ color: new THREE.Color(color).getHex(), linewidth: width });
-  m.toneMapped = false;
-  m.onBeforeCompile = (shader) => {
-    shader.vertexShader = shader.vertexShader.replace(
-      'vec4 end = modelViewMatrix * vec4( instanceEnd, 1.0 );',
-      'vec4 end = modelViewMatrix * vec4( instanceEnd, 1.0 );\n\t\t\tstart.xyz *= 0.996;\n\t\t\tend.xyz *= 0.996;'
-    );
-  };
-  return m;
-}
-
-function inkEdges(geo: THREE.BufferGeometry, mat: LineMaterial, liftFloorTo?: number) {
-  const edges = new THREE.EdgesGeometry(geo, 25);
-  if (liftFloorTo !== undefined) {
-    const pos = edges.attributes.position;
-    for (let i = 0; i < pos.count; i++) if (Math.abs(pos.getY(i)) < 1e-4) pos.setY(i, liftFloorTo);
-  }
-  const lines = new LineSegments2(new LineSegmentsGeometry().fromEdgesGeometry(edges), mat);
-  edges.dispose();
-  return lines;
-}
 
 function trapezoid(yb: number, yt: number, hwb: number, hwt: number, depth: number, z: number) {
   const s = new THREE.Shape();
@@ -183,6 +154,7 @@ export function StudioScene({
 
   const sectionRefs = useRef<Array<THREE.Group | null>>([]);
   const logoZoom = useRef<THREE.Group>(null);
+  const panelRef = useRef<THREE.Group>(null);
   const logoSpin = useRef<THREE.Group>(null);
 
   const hatch = useMemo(() => {
@@ -232,6 +204,17 @@ export function StudioScene({
       logoFace: new THREE.MeshBasicMaterial({ color: LOGO_DARK, toneMapped: false }),
       logoSide: new THREE.MeshBasicMaterial({ color: LOGO_DARK, toneMapped: false }),
       line: createInkLineMaterial(),
+      // The paper panel that takes the frame in the zoom, and its ink edge.
+      // Both skip the depth test so they cover whatever stands in front of
+      // the cyclorama; the mark is drawn after them (`renderOrder`).
+      panel: new THREE.MeshBasicMaterial({ color: ROOM_LIT, toneMapped: false, depthTest: false, depthWrite: false }),
+      panelLine: (() => {
+        const m = createInkLineMaterial();
+        m.depthTest = false;
+        m.depthWrite = false;
+        m.transparent = true;
+        return m;
+      })(),
       // Pencil outlines on the lamps: cream strokes in the dark room, ink once lit.
       sketch: createInkLineMaterial(SKETCH_DARK, 0.9),
       // The lamps' emitting faces: full white from the start, dark room or lit.
@@ -254,6 +237,9 @@ export function StudioScene({
       logoSide: new THREE.Color(LOGO_SIDE),
       sketchDark: new THREE.Color(SKETCH_DARK),
       ink: new THREE.Color(INK),
+      // The lit cyclorama's own tint (its hatch over white), measured off
+      // the frame, so the panel is invisible the moment it starts to move.
+      panelRest: new THREE.Color('#F5F5F5'),
     }),
     []
   );
@@ -278,6 +264,7 @@ export function StudioScene({
   }, [svg, mats]);
   useEffect(() => {
     mats.line.resolution.set(size.width, size.height);
+    mats.panelLine.resolution.set(size.width, size.height);
     mats.sketch.resolution.set(size.width, size.height);
     mats.sectionLine.resolution.set(size.width, size.height);
   }, [mats, size]);
@@ -354,6 +341,16 @@ export function StudioScene({
   }, []);
   const transomLines = useMemo(() => inkEdges(transomGeo, mats.line), [transomGeo, mats]);
 
+  const panelGeo = useMemo(() => new THREE.PlaneGeometry(PANEL_W, PANEL_H), []);
+  const panelLines = useMemo(() => inkEdges(panelGeo, mats.panelLine), [panelGeo, mats]);
+  useEffect(
+    () => () => {
+      panelGeo.dispose();
+      panelLines.geometry.dispose();
+    },
+    [panelGeo, panelLines]
+  );
+
   /* The jambs run along each slope of the opening, centred on its edge so
      half their width shows inside the hole and half is buried in the wall. */
   const jamb = useMemo(() => {
@@ -412,11 +409,21 @@ export function StudioScene({
     mats.roomBacking.color.copy(palette.backing).lerp(palette.lit, L);
     mats.logoFace.color.copy(palette.logoDark).lerp(palette.logoFace, L);
     mats.logoSide.color.copy(palette.logoDark).lerp(palette.logoSide, L);
-    mats.sketch.color.copy(palette.sketchDark).lerp(palette.ink, L).lerp(palette.lit, s.wash);
-    // The studio's ink goes to white inside the zoom, so only the mark is
-    // left in the frame as it breaks through into the next section.
-    mats.ground.color.copy(palette.floor).lerp(palette.lit, s.wash);
-    mats.ink.color.copy(palette.ink).lerp(palette.lit, s.wash);
+    mats.sketch.color.copy(palette.sketchDark).lerp(palette.ink, L);
+
+    /* The paper takes the frame: the cyclorama's face grows and turns a
+       little behind the mark until nothing of the studio is left. Drawn
+       without depth so it passes over the floor, stands and lamps in front
+       of it; the mark is drawn after it, so it stays on top. */
+    if (panelRef.current) {
+      const g = s.panel;
+      panelRef.current.visible = g > 0;
+      const k = lerp(1, PANEL_SCALE, g);
+      panelRef.current.scale.set(k, k, 1);
+      panelRef.current.rotation.z = PANEL_TILT * g;
+      mats.panel.color.copy(palette.panelRest).lerp(palette.lit, g);
+      mats.panelLine.opacity = Math.min(1, g * 6);
+    }
 
     /* One turn, then scale through the counter of the "r". The zoom group's
        origin IS that hole on the mark's front face, so the face never moves
@@ -494,11 +501,16 @@ export function StudioScene({
         </mesh>
       </group>
 
+      <group ref={panelRef} position={[PANEL_CX, PANEL_H / 2, BACKDROP_Z + 0.01]} visible={false}>
+        <mesh geometry={panelGeo} material={mats.panel} renderOrder={1} />
+        <primitive object={panelLines} renderOrder={1} />
+      </group>
+
       <group ref={logoZoom} position={[LOGO_PIVOT.x, LOGO_Y + LOGO_PIVOT.y, LOGO_Z + LOGO_DEPTH / 2]}>
         <group position={[-LOGO_PIVOT.x, -LOGO_PIVOT.y, -LOGO_DEPTH / 2]}>
           <group ref={logoSpin}>
-            <mesh geometry={logo.geo} material={[mats.logoFace, mats.logoSide]} />
-            <primitive object={logo.lines} />
+            <mesh geometry={logo.geo} material={[mats.logoFace, mats.logoSide]} renderOrder={2} />
+            <primitive object={logo.lines} renderOrder={2} />
           </group>
         </group>
       </group>

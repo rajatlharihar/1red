@@ -287,3 +287,15 @@ Chronological, most recent last. Each entry: date (where known — this project 
 ---
 
 **NOTE (2026-09-19):** Live screenshots via claude-in-chrome are only valid while the Brave window is frontmost: macOS stops `requestAnimationFrame` for an occluded window, so the glide freezes and every screenshot shows the last frame drawn. Use headless Brave through `playwright-core` from the scratchpad for scroll-scrub verification instead (script shape: goto, warm-up scroll, then scrollTo + 1.6 s wait + screenshot per position).
+
+---
+
+**DECISION (2026-09-19, later):** The hero's zoom is a white paper panel growing and tilting behind the mark until it is the whole frame, not a wash of the studio's ink to white.
+**REASON:** Rajat: "one white square behind one red scales up while it's rotating, simultaneously, a little tilted like a rhombus". The wash went through grey (Image: the studio at half-wash) which he read as a flash; the panel never shows an intermediate state, and takes the cyclorama's own grey tint with it.
+**DO NOT:** Bring the wash back. Keep the panel at `renderOrder` 1 with depth off and the mark at 2: with depth on, the floor sweep, stands and lamps in front of the cyclorama would cut into the panel. `PANEL_SCALE` 3.2 is sized for a 2.2:1 frame at the tilt; smaller showed a studio sliver at the right edge mid-growth.
+
+---
+
+**DECISION (2026-09-19, later):** Tunnel cubes draw the same ink edges as the mark's blocks and lose them slowly as they go metal.
+**REASON:** Rajat: "those cubes can continue the outlines and change along the transition slowly".
+**DO NOT:** Put `polygonOffset` on the cube fills to help the lines: it opens hairline seams between the 27 cubes on the finished box. The line material's own 0.4% view-ray bias is enough.

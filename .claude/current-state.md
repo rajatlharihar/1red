@@ -9,6 +9,7 @@
 - Glitch causes found and fixed: black studio walls through the gap (backdrop now clipped with the canvas), black tripod/floor behind the mark's rounded corners (studio ink washes to white inside the zoom), and hitching from an unbudgeted dpr 1.75 canvas on top of the hero's (now `budgetDpr`).
 - `CubeAssembly.tsx` timeline now: run `0.006 to 0.5` (eased stop), gather `0.46 to 0.9` (centre, faces, edges, corners), settle `0.82 to 0.99`. No swing/squash constants remain.
 - Verified with headless Brave (playwright-core in the scratchpad, not committed) at 1440x900 and 390x844; no page errors; `vite build` clean. Committed locally, **not pushed**.
+- Later the same day, on Rajat's five-screenshot review: the zoom is now the paper panel growing and tilting over the studio (see CHANGELOG 2026-09-19 later); the wash is gone; tunnel cubes carry the mark's ink edges and lose them over section p 0.1 to 0.44. `hero/inkLines.ts` is the shared home of the ink line helpers.
 - Still open, unchanged: section 2's text placement; the custom letters; Illusdoodle naming; the facade wall; the pencil hatch.
 
 ## Resume here (end of the 2026-09-17 night session)

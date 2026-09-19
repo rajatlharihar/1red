@@ -6,6 +6,12 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-19 (later)
+
+- **The paper takes the frame.** Rajat's direction for the zoom: "one white square behind the red scales up while it's rotating, a little tilted like a rhombus". The cyclorama's front face (measured off the `paper` mesh: 3.27 x 2.62 m) is now a panel in `StudioScene.tsx` that, from the first frame of the zoom (`panel`, hero p 0.89 to 0.936 in `studioSequence.ts`), grows to `PANEL_SCALE` 3.2 and turns `PANEL_TILT` (−0.2 rad) behind the mark, drawn without depth (`renderOrder` 1) so it passes over the floor, stands and lamps; the mark draws after it (`renderOrder` 2). Its ink edge fades in with it. Nothing dark is ever behind the mark's blocks as they sweep out, and the cyclorama's hatch tint (the "grey thing") lerps to pure white as it grows. The studio-ink wash from earlier today was removed: it went grey on the way to white, which Rajat read as a flash.
+- **The cubes carry the outlines.** Tunnel cubes get the same ink edges as the mark's blocks (`createInkLineMaterial`, now shared from `hero/inkLines.ts`): one `LineSegments2` holding all 27 cubes' 12 edges, endpoints rewritten each frame from the instance matrices. They fade over section p 0.1 to 0.44 (`OUTLINE_*`) as the blocks go metal, gone before the gather. No polygonOffset on the cube fills: it let the internal faces through as hairline seams on the finished box.
+- Verified with one persistent headless Brave (playwright-core server in the scratchpad) at 1440x900, 2556x1174 and 390x844; no page errors; `vite build` clean. Not pushed.
+
 ## 2026-09-19
 
 - **The tunnel becomes the box; no turn.** Rajat: the array swinging to an angle and breaking into a jumble (`AV_SWING`/`AV_TILT`/`AV_SQUASH`/`AV_AP_TURN`) was the wrong move. Those are gone from `cube/CubeAssembly.tsx`: the tunnel's run eases to a stop (`APPROACH_END` 0.5) and, still seen head-on, its blocks leave their rings one by one (gather 0.46 to 0.9, centre first), shrink to box size within the first 30% of their flight (`SHRINK`, or the nearest ring crosses the frame as giant slabs), square up and lock into the box. The jumble layout (`layout(cols, rows)`, per-cube sizes, tumble axes) was deleted with it.
