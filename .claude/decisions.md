@@ -323,3 +323,9 @@ Chronological, most recent last. Each entry: date (where known — this project 
 **DECISION (2026-09-19, night, second pass):** The gather assigns slots by quadrant so each of the four arrays folds into its own quarter of the box, and the box does not spin while it builds.
 **REASON:** Rajat: the cubes "randomly appear" and the becoming was "not smooth". With slots handed out round-robin and the box spinning 1.5 turns, cubes crossed the frame to reach slots on the far side and the whole thing read as a scatter. Short flights on each cube's own side, all four streams at once, read as the tunnel closing into the box.
 **DO NOT:** Bring back the continuous `spinY` or a round-robin corner assignment. Keep `STAGE_R` ≥ 3.3 (a flying cube must clear the box's corners) and the run at `AV_TRAVEL` 42, chosen so no ring is in its fade band when the gather starts.
+
+---
+
+**DECISION (2026-09-19, night, fourth pass):** The cube material skips tone mapping.
+**REASON:** With the cubes tumbling on their flights, a face turned at the room's bright panels overexposed and ACES took the red to cream (unchanged by env intensity or light strength, since the reflected radiance itself is the problem). Clipping keeps the hue. It also ends the `#F40013` compromise: the hand-off emissive is the mark's exact red.
+**SUPERSEDES:** the 2026-09-17 note on `LOGO_EMISSIVE` 0.89 and "do not chase #FF0000". The finished box is brighter than the old `#A0000C`; if Rajat wants the darker box back, lower `ENV` and the key light rather than re-enabling tone mapping.

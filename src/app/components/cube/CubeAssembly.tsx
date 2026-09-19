@@ -41,7 +41,10 @@ const LOGO_RED = '#FF0000';
  *  numerically: 0.89 lands on #F40018, 1.5 is already #FF3F2A). The hero's
  *  own extruded sides are #C40000, so the frame carries a range of reds
  *  anyway and this sits inside it. */
-const LOGO_EMISSIVE = 0.89;
+const LOGO_EMISSIVE = 1;
+/** Reflection strength of the red metal. Tumbling cubes show their tops to
+ *  the room's bright ceiling; above this they go cream mid-flight. */
+const ENV = 0.5;
 /** The skin changes over from logo red to red metal across this stretch of
  *  the section: flat through the hand-off, metal by the time the white has
  *  taken the hero away. Set `SKIN_TO` to 0 to keep metal throughout. */
@@ -130,12 +133,15 @@ const AV_RUN_POW = 1.6;
  *  the "e" at the hand-off, opens out to `AV_R_EXIT` over this stretch. */
 const AV_SPREAD_FROM = 0.0;
 const AV_SPREAD_TO = 0.46;
-/** Rings behind the first scale up into view one after another as the gap
- *  in the "e" opens, instead of all being there already: ring k grows over
- *  `AV_BIRTH_STEP * k` to `AV_BIRTH_STEP * k + AV_BIRTH_LEN`. The first ring
- *  is the "e" blocks carrying on, so it is never scaled. */
-const AV_BIRTH_STEP = 0.005;
-const AV_BIRTH_LEN = 0.03;
+/** Rings behind the first come up out of the distance one after another as
+ *  the gap in the "e" opens, instead of all being there already: ring k
+ *  starts `AV_BIRTH_DEPTH` deeper than its place and glides up to it over
+ *  `AV_BIRTH_STEP * k` to `AV_BIRTH_STEP * k + AV_BIRTH_LEN`, so it grows the
+ *  way anything approaching does. The first ring is the "e" blocks carrying
+ *  on, so it is never moved. */
+const AV_BIRTH_STEP = 0.006;
+const AV_BIRTH_LEN = 0.05;
+const AV_BIRTH_DEPTH = 30;
 /** Blocks in the tunnel are far chunkier than the cubes in the finished box.
  *  They shrink to size on their flight to the box. */
 const AV_SIZE = 2.6;
@@ -149,15 +155,20 @@ const avSizeFor = (aspect: number) => AV_SIZE * clamp01((aspect / 1.6 - 0.45) / 
  *  cube's own, so a cube waiting there never touches the box. */
 const STAGE_R = 3.3;
 /** Share of a cube's gather window spent flying; the rest is the slide. */
-const FLIGHT = 0.6;
-/** The flight is an arc, not a line: its control point is the midpoint
- *  swung sideways about the axis by this share of its distance from it (all
- *  four streams the same way round, so the tunnel spirals into the box) and
- *  brought this much closer to the lens, in box units. */
-const ARC_SWIRL = 0.7;
-const ARC_TOWARD = 1.6;
-/** Share of the gather window over which a tunnel block shrinks to a box cube. */
-const SHRINK = 0.3;
+const FLIGHT = 0.7;
+/** The flight is a loop through the space, not a line: a cubic arc that
+ *  first swings further out from the axis (`LOOP_OUT` box units, scaled by
+ *  the cube's own `loopOut`), then comes round sideways onto its staging
+ *  point (`LOOP_SWING`, each cube its own way round and amount), with some
+ *  lift toward or away from the lens. The cube tumbles on the way (its own
+ *  axis, `LOOP_TUMBLE` radians at most) and is square again as it lands. */
+const LOOP_OUT = 2.6;
+const LOOP_SWING = 2.6;
+const LOOP_LIFT = 1.6;
+const LOOP_TUMBLE = Math.PI * 0.8;
+/** Share of the gather window over which a tunnel block shrinks to a box
+ *  cube: the whole flight, so the change hides inside the motion. */
+const SHRINK = 0.6;
 /** Bounding radius of a unit cube, used for flight separation. */
 const CUBE_R = 0.87;
 
@@ -206,15 +217,21 @@ interface Piece {
    *  their shapes cancel out around the centre instead of all leaning the
    *  same way. */
   tilt: THREE.Quaternion;
+  /** The cube's own loop on its flight to the box. */
+  loopOut: number;
+  loopSwing: number;
+  loopLift: number;
+  tumbleAxis: THREE.Vector3;
+  tumble: number;
 }
 
 /* Build order: centre, then faces, edges, corners, each tier overlapping the
    last. The centre is home before any face starts its slide. */
 const TIER_WINDOWS = [
-  { from: 0, to: 0, len: 0.4 },
-  { from: 0.06, to: 0.2, len: 0.5 },
-  { from: 0.14, to: 0.34, len: 0.5 },
-  { from: 0.28, to: 0.48, len: 0.5 },
+  { from: 0, to: 0, len: 0.5 },
+  { from: 0.04, to: 0.18, len: 0.6 },
+  { from: 0.1, to: 0.3, len: 0.6 },
+  { from: 0.22, to: 0.4, len: 0.6 },
 ];
 
 /** Which of the four arrays each slot belongs to, and in which ring. Each
@@ -276,6 +293,11 @@ function layout(): Piece[] {
         jr: (hash(rank, 21) - 0.5) * 0.24,
         jz: (hash(rank, 23) - 0.5) * 1.6,
         tilt: new THREE.Quaternion().setFromEuler(new THREE.Euler(0.26 * c.cy, 0.38 * c.cx, 0)),
+        loopOut: 0.6 + hash(pieces.length, 31) * 0.8,
+        loopSwing: (hash(pieces.length, 32) < 0.5 ? -1 : 1) * (0.6 + hash(pieces.length, 33) * 0.8),
+        loopLift: (hash(pieces.length, 34) - 0.5) * 2,
+        tumbleAxis: new THREE.Vector3(hash(pieces.length, 35) - 0.5, hash(pieces.length, 36) - 0.5, hash(pieces.length, 37) - 0.5).normalize(),
+        tumble: (0.4 + hash(pieces.length, 38) * 0.6) * LOOP_TUMBLE,
       });
     });
   });
@@ -302,6 +324,8 @@ const _euler = new THREE.Euler();
 const _av = new THREE.Vector3();
 const _d = new THREE.Vector3();
 const _p1 = new THREE.Vector3();
+const _p2 = new THREE.Vector3();
+const _qTumble = new THREE.Quaternion();
 const _scale = new THREE.Vector3();
 const _m = new THREE.Matrix4();
 
@@ -343,7 +367,15 @@ export function CubeAssembly({
   const geo = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
   const mat = useMemo(
     () =>
-      new THREE.MeshStandardMaterial({ color: RED, roughness: 0.31, metalness: 0.92, envMapIntensity: 0.8 }),
+      new THREE.MeshStandardMaterial({
+        color: RED,
+        roughness: 0.38,
+        metalness: 0.92,
+        envMapIntensity: ENV,
+        // Clipped, not tone mapped: an overexposed red face stays red instead
+        // of going cream, and the hand-off emissive is the mark's exact red.
+        toneMapped: false,
+      }),
     []
   );
   /* Ink edges on every cube: one fat-line geometry holding all 27 cubes'
@@ -451,8 +483,8 @@ export function CubeAssembly({
        all there is. At metalness 0 the dielectric specular lifts the whole
        block to #F4342E instead of #F40018. */
     mat.metalness = lerp(1, 0.92, skin);
-    mat.roughness = lerp(1, 0.31, skin);
-    mat.envMapIntensity = 0.8 * skin;
+    mat.roughness = lerp(1, 0.38, skin);
+    mat.envMapIntensity = ENV * skin;
 
     const tiltT = smoothstep(AV_TILT_FROM, AV_TILT_TO, p);
     const gather = clamp01((p - GATHER_START) / (GATHER_END - GATHER_START));
@@ -468,7 +500,11 @@ export function CubeAssembly({
          it counts down as the tunnel runs and wraps a ring that has gone
          past the corners back out to the far end. */
       const phase = (((piece.rank * AV_SPACING + AV_PHASE0 - travel) % AV_CYCLE) + AV_CYCLE) % AV_CYCLE;
-      const z = AV_Z_EXIT - phase + piece.jz;
+      const born =
+        piece.rank === 0
+          ? 1
+          : easeInOutSine(smoothstep(AV_BIRTH_STEP * piece.rank, AV_BIRTH_STEP * piece.rank + AV_BIRTH_LEN, p));
+      const z = AV_Z_EXIT - phase + piece.jz - (1 - born) * AV_BIRTH_DEPTH;
       const rTight = AV_INNER + avSize / 2;
       // Opened by the scroll, and by nearness to the lens, whichever is more.
       const flare = smoothstep(AV_HANDOFF_Z, AV_Z_EXIT, z);
@@ -480,8 +516,7 @@ export function CubeAssembly({
       /* A ring only fades in over the deepest part of the cycle, where it is
          far too small to see the fade, so a wrap never pops. A cube on its
          way to the box is always shown. */
-      const born = piece.rank === 0 ? 1 : smoothstep(AV_BIRTH_STEP * piece.rank, AV_BIRTH_STEP * piece.rank + AV_BIRTH_LEN, p);
-      const appear = Math.max(smoothstep(1, 0.9, phase / AV_CYCLE) * born, smoothstep(0, 0.3, local));
+      const appear = Math.max(smoothstep(1, 0.9, phase / AV_CYCLE), smoothstep(0, 0.3, local));
 
       if (piece.tier === 0) {
         const f = easeInOutSine(local);
@@ -491,19 +526,25 @@ export function CubeAssembly({
       } else if (local < FLIGHT) {
         const f = easeInOutSine(local / FLIGHT);
         _d.copy(piece.dir).multiplyScalar(stageR).applyQuaternion(_qGroup);
-        /* Quadratic arc from the tunnel to the staging point. */
-        _p1.addVectors(_av, _d).multiplyScalar(0.5);
-        const sx = _p1.x;
-        const sy = _p1.y;
-        _p1.x += -sy * ARC_SWIRL;
-        _p1.y += sx * ARC_SWIRL;
-        _p1.z += ARC_TOWARD * unit;
+        /* A loop: out from the axis first, then round onto the staging point. */
+        const lat = Math.hypot(_av.x, _av.y) || 1;
+        _p1.set(
+          _av.x + (_av.x / lat) * LOOP_OUT * piece.loopOut * unit,
+          _av.y + (_av.y / lat) * LOOP_OUT * piece.loopOut * unit,
+          _av.z + LOOP_LIFT * piece.loopLift * unit
+        );
+        _p2.set(
+          _d.x - _d.y * LOOP_SWING * piece.loopSwing * 0.3 + (_d.x / (Math.hypot(_d.x, _d.y) || 1)) * LOOP_SWING * 0.5 * unit,
+          _d.y + _d.x * LOOP_SWING * piece.loopSwing * 0.3 + (_d.y / (Math.hypot(_d.x, _d.y) || 1)) * LOOP_SWING * 0.5 * unit,
+          _d.z + unit
+        );
         const u = 1 - f;
         w.pos
           .copy(_av)
-          .multiplyScalar(u * u)
-          .addScaledVector(_p1, 2 * u * f)
-          .addScaledVector(_d, f * f);
+          .multiplyScalar(u * u * u)
+          .addScaledVector(_p1, 3 * u * u * f)
+          .addScaledVector(_p2, 3 * u * f * f)
+          .addScaledVector(_d, f * f * f);
         w.mobility = 1 - smoothstep(FLIGHT - 0.2, FLIGHT, local);
         w.exclude = true;
       } else {
@@ -521,6 +562,11 @@ export function CubeAssembly({
       const square = easeInOutCubic(clamp01(local / (piece.tier === 0 ? 0.6 : FLIGHT - 0.1)));
       _qTilt.copy(_qFlat).slerp(piece.tilt, tiltT);
       w.quat.copy(_qTilt).slerp(_qGroup, square);
+      /* Tumbling on the way, back to square as it lands: a full swing that
+         rises and returns over the flight. */
+      const fl = clamp01(local / FLIGHT);
+      _qTumble.setFromAxisAngle(piece.tumbleAxis, Math.sin(Math.PI * fl) * piece.tumble);
+      w.quat.premultiply(_qTumble);
       w.scale = appear * lerp(avSize, 1, easeInOutSine(clamp01(local / SHRINK))) * unit;
       w.radius = CUBE_R * w.scale;
     });
@@ -597,8 +643,10 @@ export function CubeAssembly({
 export function CubeLighting() {
   return (
     <>
-      <directionalLight position={[4, 6, 7]} intensity={2.1} color="#FFF6EC" />
-      <directionalLight position={[-5, 2, -3]} intensity={0.7} color="#E8EEFA" />
+      {/* Kept low: a tumbling metal face turned straight at a strong key
+          overexposes, and the tone mapping takes the red to cream. */}
+      <directionalLight position={[4, 6, 7]} intensity={1.0} color="#FFF6EC" />
+      <directionalLight position={[-5, 2, -3]} intensity={0.5} color="#E8EEFA" />
     </>
   );
 }
