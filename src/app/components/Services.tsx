@@ -3,54 +3,54 @@ import { motion, useInView } from 'motion/react';
 import { ArrowUpRight } from 'lucide-react';
 import { ServicesStack } from './ServicesStack';
 
+/* Five disciplines. Websites and UI/UX are one thing here: the product and
+   the site are designed by the same hands, and the BMTC app film carries
+   the card. */
 const services = [
   {
     number: '01',
-    title: 'Website Design',
+    eyebrow: 'Web & product',
+    title: 'Websites & UI/UX',
     description:
-      'From concept to pixel-perfect execution. We design responsive, conversion-focused websites that are as beautiful as they are functional — built for growth.',
-    tags: ['UI Design', 'Wireframing', 'Prototyping', 'Webflow', 'CMS', 'E-commerce'],
+      'The site and the product, designed as one. Research, flows and prototypes through to a build that is fast, responsive and made to convert.',
+    tags: ['Web Design', 'UI/UX', 'Prototyping', 'Design Systems', 'Webflow', 'E-commerce'],
     video: '/videos/app-showcase.mp4',
   },
   {
     number: '02',
-    title: 'Branding',
+    eyebrow: 'Identity',
+    title: 'Brand Identity',
     description:
-      'We craft distinctive brand identities that resonate. Logo systems, visual language, brand guidelines — the complete toolkit for a brand that commands attention.',
+      'A mark, a voice and a visual language that hold together everywhere they appear. Logo systems, typography, guidelines: the whole kit.',
     tags: ['Logo Design', 'Visual Identity', 'Brand Strategy', 'Typography', 'Art Direction'],
     video: '/videos/apptile-logomotion.mp4',
   },
   {
     number: '03',
-    title: 'Social Media Management',
+    eyebrow: 'Performance',
+    title: 'Ads & Campaigns',
     description:
-      'Strategic, scroll-stopping content. We design and manage social presence that builds audiences, drives engagement, and grows community month over month.',
-    tags: ['Content Strategy', 'Design Systems', 'Ad Creatives', 'Feed Design', 'Analytics'],
+      'Creatives built to be measured. Static, motion and video ad sets, landing pages to match, and the iteration loop that keeps them earning.',
+    tags: ['Ad Creatives', 'Campaign Design', 'Landing Pages', 'Meta & Google', 'A/B Variants'],
     video: '/videos/terrabarn-socials.mp4',
   },
   {
     number: '04',
-    title: 'UI/UX Design',
+    eyebrow: 'Content',
+    title: 'Creative Content',
     description:
-      'Human-centred design that removes friction and delights at every touch point. From user research to high-fidelity prototypes, we make complex things simple.',
-    tags: ['User Research', 'Interaction Design', 'Prototyping', 'Usability Testing', 'Design Systems'],
-    video: '/videos/reservation.mp4',
+      'Feeds, reels, illustration and editorial that people actually stop for. Planned monthly, designed in your language, shipped on time.',
+    tags: ['Social Content', 'Reels', 'Illustration', 'Content Strategy', 'Feed Design'],
+    video: '/videos/Fg-01_3.mp4',
   },
   {
     number: '05',
-    title: 'Motion Graphics',
+    eyebrow: 'Motion',
+    title: 'Motion & Film',
     description:
-      'Stillness is forgettable. We create cinematic motion assets — animations, transitions, and video content — that bring your brand to life across every screen.',
-    tags: ['After Effects', 'Lottie', 'Brand Motion', 'Social Reels', 'UI Animation'],
+      'Logo animation, product films, UI motion and launch videos. Stillness is forgettable; we make the brand move.',
+    tags: ['Brand Motion', 'Product Film', 'UI Animation', 'After Effects', 'Lottie'],
     video: '/videos/ground-logo.mp4',
-  },
-  {
-    number: '06',
-    title: 'Creative Strategy',
-    description:
-      'The thinking behind the making. We partner with founders and teams to define creative direction, sharpen positioning, and build the visual frameworks that scale.',
-    tags: ['Brand Positioning', 'Creative Direction', 'Campaign Strategy', 'Storytelling'],
-    video: '/videos/Fg-01_3.mp4',
   },
 ];
 

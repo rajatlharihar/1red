@@ -351,3 +351,9 @@ Chronological, most recent last. Each entry: date (where known — this project 
 **DECISION (2026-09-20):** Pencil line art is drawn as pre-wobbled geometry (`pencil()` in `WhatsNext.tsx`), never with `feTurbulence`/`feDisplacementMap` filters on anything that moves.
 **REASON:** A filtered SVG under a parallax transform re-rasterises every frame; on the iMac the section stalled. Baked wobble costs nothing and stays crisp.
 **ALSO:** The grid and the drawing on it share one SVG layer, so parallax and drift never pull the drawing off the grid; vertices sit on grid intersections. Rajat: "make the contents properly fit in the grids".
+
+---
+
+**DECISION (2026-09-20):** The services roster is five cards, with Websites and UI/UX as one card led by the BMTC app film.
+**REASON:** Rajat: the studio's work is websites, ads, creative content, branding "and stuff"; UI/UX and web should be one card "with the video of the BMTC keep playing". Ads & Campaigns and Creative Content are the two that were missing; Creative Strategy is a way of working, not a card.
+**DO NOT:** Split web and UI/UX again, or shrink the film back into a thumbnail: the card is a split with the film full height.

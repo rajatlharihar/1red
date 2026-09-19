@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-20 (late)
+
+- **Services re-laid and re-rostered** (`Services.tsx`, `ServicesStack.tsx`). The takeover stack stays; each card is now a split: copy on the left 54% (number, arrow, eyebrow, title, blurb, tags), the film filling the right 46% edge to edge and top to bottom, playing the whole time the card is up (a band across the top on phones; a JS breakpoint, `useWide`, since the card is styled inline). Roster is five: Websites & UI/UX (web and product merged, on Rajat's call, carried by the BMTC app film `app-showcase.mp4`), Brand Identity, Ads & Campaigns, Creative Content, Motion & Film. Creative Strategy folded into the blurbs. Eyebrows added to the data (`eyebrow`).
+
 ## 2026-09-20 (night)
 
 - **Bottom-of-page lag**: (1) Selected Work's looping video now pauses when it leaves the viewport (an `IntersectionObserver` in `VisualPanel`), instead of decoding all the way down the page. (2) The sheet's idle drift moved from an SVG `<g>` transform (which re-rasterised the whole drawing at retina every frame) onto the `<svg>` element itself, with the parallax on a wrapping div, so every layer is a composited transform of a raster drawn once; the grid is its own svg so the line drawing itself does not repaint it. Headless Brave can't reproduce the lag (60fps before and after at 2556x1174); it is the iMac's retina raster cost.

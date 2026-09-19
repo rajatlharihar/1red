@@ -35,6 +35,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 type Service = {
   number: string;
+  eyebrow?: string;
   title: string;
   description: string;
   tags: string[];
@@ -62,18 +63,34 @@ const SEGMENT_VH = 82;
  * value already driving every other border on the card. Only mounts the
  * <video> element while its card is active — at most one video is ever
  * decoding/playing at a time across all six cards. */
+/** Desktop split (film right, copy left) from 1024px; a band across the top
+ *  below that. A JS breakpoint, since these are inline styles. */
+function useWide() {
+  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const apply = () => setWide(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+  return wide;
+}
+
 function ServiceVideoPanel({
   src,
   isActive,
   lift,
   reduceMotion,
+  wide,
 }: {
   src: string;
   isActive: boolean;
   lift: MotionValue<number>;
   reduceMotion: boolean;
+  wide: boolean;
 }) {
-  const scale = useTransform(lift, [0, -6], [1, 1.035]);
+  const scale = useTransform(lift, [0, -6], [1, 1.03]);
   const revealOpacity = useTransform(lift, [0, -6], [0, 1]);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -89,47 +106,46 @@ function ServiceVideoPanel({
     else v.addEventListener('canplay', attempt, { once: true });
   }, [isActive, src]);
 
+  /* The film is the card's whole right half, edge to edge, top to bottom;
+     on a narrow viewport it is the band across the top instead. The card
+     clips it (overflow hidden), so the hover scale never spills. */
   return (
-    <motion.div
-      className="w-full lg:w-[clamp(200px,25vw,340px)]"
-      style={{
-        position: 'relative',
-        flexShrink: 0,
-        height: 'clamp(150px, 30vh, 400px)',
-        borderRadius: 6,
-        border: '1px solid var(--tag-border)',
-        overflow: 'hidden',
-        background: 'rgba(10,10,10,0.04)',
-        scale: reduceMotion ? 1 : scale,
-      }}
+    <div
+      style={
+        wide
+          ? { position: 'absolute', top: 0, bottom: 0, right: 0, width: '46%', overflow: 'hidden', background: 'rgba(10,10,10,0.06)' }
+          : { position: 'relative', width: '100%', height: 'clamp(180px, 34vh, 360px)', flexShrink: 0, overflow: 'hidden', background: 'rgba(10,10,10,0.06)' }
+      }
     >
-      {isActive && (
-        <video
-          ref={videoRef}
-          key={src}
-          src={src}
-          muted
-          loop
-          autoPlay
-          playsInline
-          preload="auto"
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-        />
-      )}
+      <motion.div style={{ position: 'absolute', inset: 0, scale: reduceMotion ? 1 : scale }}>
+        {isActive && (
+          <video
+            ref={videoRef}
+            key={src}
+            src={src}
+            muted
+            loop
+            autoPlay
+            playsInline
+            preload="auto"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        )}
+      </motion.div>
+      {/* A hairline where the film meets the copy, in the card's own colour. */}
+      {wide && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 1, background: 'var(--tag-border)' }} />}
 
-      {/* Restrained VIEW reveal — opacity only, no zoom/rotation, driven off
-          the same lift value as the panel's own hover-scale above. */}
       {!reduceMotion && (
         <motion.div
           aria-hidden
           style={{
             position: 'absolute',
-            bottom: 10,
-            right: 10,
+            bottom: 16,
+            right: 16,
             display: 'flex',
             alignItems: 'center',
             gap: 4,
-            padding: '4px 8px',
+            padding: '6px 10px',
             borderRadius: 3,
             background: 'rgba(0,0,0,0.5)',
             color: '#fff',
@@ -140,7 +156,7 @@ function ServiceVideoPanel({
           <ArrowUpRight size={11} strokeWidth={2} />
         </motion.div>
       )}
-    </motion.div>
+    </div>
   );
 }
 
@@ -159,55 +175,67 @@ function CardContent({
   lift: MotionValue<number>;
   reduceMotion: boolean;
 }) {
+  const wide = useWide();
   return (
-    <div
-      style={{
-        position: 'relative',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: 'clamp(28px, 4.5vw, 68px)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <span
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: 'clamp(12px, 1vw, 14px)',
-            letterSpacing: '0.2em',
-            fontVariantNumeric: 'tabular-nums',
-            color: 'var(--fg)',
-            opacity: 0.55,
-          } as React.CSSProperties}
-        >
-          {service.number}
-        </span>
-        {/* Magnetic — nudged toward the cursor via the SAME pointer motion
-            values the card's own tilt uses (see ServiceCard), never a
-            separate whileHover animation fighting anything. */}
-        <motion.span style={{ color: 'var(--fg)', flexShrink: 0, x: arrowX, y: arrowY }}>
-          <ArrowUpRight size={24} strokeWidth={1.5} />
-        </motion.span>
-      </div>
+    <div style={{ position: 'relative', height: '100%', display: wide ? 'block' : 'flex', flexDirection: 'column' }}>
+      {service.video && <ServiceVideoPanel src={service.video} isActive={isActive} lift={lift} reduceMotion={reduceMotion} wide={wide} />}
 
-      {/* Title + description (left) sit beside the trailer (right) on
-          desktop; the trailer drops below the copy on narrow viewports so
-          it never squeezes into a cramped two-column layout.
-          `justify-content: space-between` matters here — the text column
-          is capped at maxWidth:780, so on wide cards flex-grow alone leaves
-          it short of the video panel with a stretch of unclaimed space
-          between them. This pushes that leftover space to the outsides
-          instead, so the video sits flush against the card's own right
-          edge rather than floating wherever flex-grow happened to stop. */}
-      <div className="flex flex-col lg:flex-row lg:items-center" style={{ flex: 1, justifyContent: 'space-between', gap: 'clamp(20px, 3vw, 48px)', minHeight: 0 }}>
-        <div style={{ flex: 1, minWidth: 0, maxWidth: 780, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      {/* The copy column: number and arrow at the top, the title and blurb
+          in the middle, the tags at the foot. On desktop it takes the left
+          54% beside the film; on a phone it sits under the film. */}
+      <div
+        style={{
+          ...(wide
+            ? { position: 'absolute' as const, top: 0, bottom: 0, left: 0, width: '54%' }
+            : { position: 'relative' as const, flex: 1, minHeight: 0 }),
+          display: 'flex',
+          flexDirection: 'column',
+          padding: 'clamp(24px, 4vw, 60px)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: 'clamp(12px, 1vw, 14px)',
+              letterSpacing: '0.2em',
+              fontVariantNumeric: 'tabular-nums',
+              color: 'var(--fg)',
+              opacity: 0.55,
+            } as React.CSSProperties}
+          >
+            {service.number}
+          </span>
+          {/* Magnetic — nudged toward the cursor via the SAME pointer motion
+              values the card's own tilt uses (see ServiceCard). */}
+          <motion.span style={{ color: 'var(--fg)', flexShrink: 0, x: arrowX, y: arrowY }}>
+            <ArrowUpRight size={24} strokeWidth={1.5} />
+          </motion.span>
+        </div>
+
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 'clamp(16px, 3vh, 40px)', paddingBottom: 'clamp(16px, 3vh, 40px)' }}>
+          {service.eyebrow && (
+            <span
+              style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 'clamp(10px, 0.8vw, 12px)',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: 'var(--fg)',
+                opacity: 0.55,
+                marginBottom: 'clamp(12px, 1.6vw, 20px)',
+              }}
+            >
+              {service.eyebrow}
+            </span>
+          )}
           <h2
             style={{
               fontFamily: 'var(--font-sans)',
-              fontSize: 'clamp(36px, 6vw, 92px)',
+              fontSize: 'clamp(34px, 4.6vw, 76px)',
               fontWeight: 800,
-              letterSpacing: '-0.03em',
-              lineHeight: 1.02,
+              letterSpacing: '-0.035em',
+              lineHeight: 1.0,
               margin: 0,
               color: 'var(--fg)',
             }}
@@ -217,10 +245,10 @@ function CardContent({
           <p
             style={{
               fontFamily: 'var(--font-sans)',
-              fontSize: 'clamp(14px, 1.35vw, 19px)',
+              fontSize: 'clamp(14px, 1.2vw, 18px)',
               lineHeight: 1.62,
-              maxWidth: 560,
-              marginTop: 'clamp(18px, 2.4vw, 30px)',
+              maxWidth: 520,
+              marginTop: 'clamp(16px, 2vw, 26px)',
               marginBottom: 0,
               color: 'var(--fg)',
               opacity: 0.72,
@@ -230,36 +258,27 @@ function CardContent({
           </p>
         </div>
 
-        {service.video && (
-          <ServiceVideoPanel
-            src={service.video}
-            isActive={isActive}
-            lift={lift}
-            reduceMotion={reduceMotion}
-          />
-        )}
-      </div>
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(8px, 0.9vw, 12px)' }}>
-        {service.tags.map((tag) => (
-          <span
-            key={tag}
-            style={{
-              fontFamily: 'var(--font-sans)',
-              fontSize: 'clamp(10px, 0.8vw, 12px)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              padding: 'clamp(7px, 0.7vw, 10px) clamp(12px, 1.2vw, 18px)',
-              border: '1px solid var(--tag-border)',
-              borderRadius: 3,
-              color: 'var(--fg)',
-              opacity: 0.85,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {tag}
-          </span>
-        ))}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(8px, 0.9vw, 12px)' }}>
+          {service.tags.map((tag) => (
+            <span
+              key={tag}
+              style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 'clamp(10px, 0.8vw, 12px)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                padding: 'clamp(7px, 0.7vw, 10px) clamp(12px, 1.2vw, 18px)',
+                border: '1px solid var(--tag-border)',
+                borderRadius: 3,
+                color: 'var(--fg)',
+                opacity: 0.85,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -292,19 +311,19 @@ function CardTechDetails({
 
   return (
     <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
-      <div style={{ position: 'absolute', top: '9%', right: '7%', width: 1, height: '38%', background: line }} />
-      <div style={{ position: 'absolute', top: '9%', right: '7%', width: 'clamp(28px, 5vw, 64px)', height: 1, background: line }} />
+      <div style={{ position: 'absolute', top: '9%', left: '48%', width: 1, height: '38%', background: line }} />
+      <div style={{ position: 'absolute', top: '9%', left: 'calc(48% - clamp(28px, 5vw, 64px))', width: 'clamp(28px, 5vw, 64px)', height: 1, background: line }} />
       {!reduceMotion && isActive && (
         <>
           <motion.span
             animate={{ y: [0, -16, 0], opacity: [0.12, 0.3, 0.12] }}
             transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ position: 'absolute', top: '32%', right: '16%', width: 4, height: 4, background: accent }}
+            style={{ position: 'absolute', top: '32%', left: '42%', width: 4, height: 4, background: accent }}
           />
           <motion.span
             animate={{ y: [0, 13, 0], opacity: [0.1, 0.22, 0.1] }}
             transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 1.6 }}
-            style={{ position: 'absolute', top: '58%', right: '22%', width: 3, height: 3, background: accent }}
+            style={{ position: 'absolute', top: '58%', left: '38%', width: 3, height: 3, background: accent }}
           />
         </>
       )}
@@ -415,7 +434,7 @@ function ServiceCard({
     <motion.div
       role="group"
       aria-roledescription="slide"
-      aria-label={`${service.title} — service ${index + 1} of 6`}
+      aria-label={`${service.title} — service ${index + 1}`}
       aria-hidden={isActive ? undefined : true}
       onPointerMove={handlePointerMove}
       onPointerEnter={handlePointerEnter}
