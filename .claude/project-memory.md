@@ -35,7 +35,7 @@ Routes, all rendered inside a shared `Layout` (`Navigation` + `<Outlet/>` + `Foo
 | `/work` | `WorkPage` → renders `Work` component | "Ideas Built Into Experiences" pinned box-assembly grid + "How We Build Great Work" process section |
 | `/work/:slug` | `WorkDetailPage` | Individual case study page |
 | `/services` | `ServicesPage` → renders `Services` component | Heading + 3D floating service-card environment (desktop) / plain list (mobile) |
-| `/studio` | `StudioPage` | UNKNOWN / NEEDS VERIFICATION — not inspected in depth this session |
+| `/studio` | `StudioPage` → `StudioProcess` | One composition: the process as a 3 × 3 print of red blocks with a hover caption strip (2026-09-20). No editorial copy. |
 | `/privacy` | `PrivacyPage` | UNKNOWN / NEEDS VERIFICATION — not inspected in depth this session |
 
 **Homepage section order** (from `src/app/pages/HomePage.tsx`, verified): `Hero` → `ThreeEnvironment` (the homepage 3D cube showcase, shares `activeIndex` state with `ProjectHUD`) → `ProjectHUD` → `FlashWork` → `WhatsNext`.

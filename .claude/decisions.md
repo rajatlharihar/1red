@@ -357,3 +357,21 @@ Chronological, most recent last. Each entry: date (where known — this project 
 **DECISION (2026-09-20):** The services roster is five cards, with Websites and UI/UX as one card led by the BMTC app film.
 **REASON:** Rajat: the studio's work is websites, ads, creative content, branding "and stuff"; UI/UX and web should be one card "with the video of the BMTC keep playing". Ads & Campaigns and Creative Content are the two that were missing; Creative Strategy is a way of working, not a card.
 **DO NOT:** Split web and UI/UX again, or shrink the film back into a thumbnail: the card is a split with the film full height.
+
+---
+
+**DECISION (2026-09-20, later):** The services roster is three cards: Websites & UI/UX, Brand Identity, Ads & Campaigns. Supersedes the five-card decision above.
+**REASON:** Rajat: Motion & Film and Creative Content "are not needed", Ads & Campaigns covers it. Claude's read, which he accepted: content is the same feed the campaigns run on, and motion is a medium every film on the other cards already shows. The dropped tags live on the campaigns card so the capability is still named.
+**DO NOT:** Bring either card back unprompted.
+
+---
+
+**DECISION (2026-09-20, later):** Our Process on /services is a flick carousel built on the apple-design skill's fluid-interface rules, not a pinned scroll story.
+**REASON:** Rajat asked for the next section to "take apple ui and design and craft a new creative"; of three directions offered (stacked sheets, flick carousel, scrubber) he picked the carousel. The rules that matter: track position is a motion value, never state; the settle always starts from the live value; velocity goes into the spring; the snap target comes from the projected landing point; bounce only on a flick.
+**DO NOT:** Replace the springs with CSS transitions or fixed-duration tweens on the track; they cannot be grabbed mid-flight.
+
+---
+
+**DECISION (2026-09-20, later):** /studio carries no editorial copy. It is one composition: the process as a 3 × 3 print of red blocks (`StudioProcess.tsx`), with stage copy only in a caption strip on hover/tap.
+**REASON:** Rajat: "we dont need any more yapology, replace all of it with the our process where its arranged like the image", with a collage reference (red blocks, cream sheet, horizon, tiny figures, ladder, wire). `Studio.tsx` (hero, beliefs, team, principles, rail, CTA) is deleted; git history has it.
+**NOTE:** The rough-edge filters here are on static rects that only animate opacity/scale once on entry, which is why the 2026-09-20 "no feTurbulence on anything that moves" rule does not bite. Keep it that way: no parallax on the blocks.

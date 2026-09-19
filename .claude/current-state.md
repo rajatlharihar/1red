@@ -1,9 +1,11 @@
 # Current State
 
 ## Last Updated
-2026-09-19
+2026-09-20
 
 ## Session Log: 2026-09-20
+
+- Later: services roster cut to three; Our Process on /services is a flick carousel (`OurProcess.tsx`); /studio is the process-as-a-print composition (`StudioProcess.tsx`, `Studio.tsx` deleted); Navigation footer observer gets a -1px bottom margin. See CHANGELOG 2026-09-20 (later) and decisions.md. Verified headless in Brave at 1440x900 and 390x844: flick lands on the next card, prev/next and arrow keys work, resize keeps the current card, studio hover swaps the caption, no page errors, `vite build` clean. Waiting on Rajat's review of the studio composition (figure placement, block sizes) and of the carousel's feel on the real trackpad.
 
 - **Deployed:** `main` pushed to GitHub at `ecb4a16` (25 commits since `76c1e5d`); https://1red.vercel.app serves the new bundle. Pending Rajat's live check of the bottom-of-page lag after the video-pause and composited-drift fixes.
 

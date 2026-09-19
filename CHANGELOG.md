@@ -6,6 +6,13 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-20 (later)
+
+- **Services roster cut to three** (`Services.tsx`): Websites & UI/UX, Brand Identity, Ads & Campaigns. Creative Content and Motion & Film dropped on Rajat's call; their tags (Social Content, Reels, Brand Motion) fold into Ads & Campaigns. `ServicesStack` derives everything from `services.length`, so no layout change was needed.
+- **Our Process rebuilt as a flick carousel** (`OurProcess.tsx`, on the apple-design rules). Five glass cards side by side on a track you hold: press feedback on pointer-down, 1:1 drag past an 8px hysteresis, release velocity handed to the spring, snap target chosen by momentum projection (decay 0.998), rubber-band past the ends, grab-and-reverse mid-flight, bounce only after a real flick. Prev/next buttons, arrow keys, horizontal trackpad wheel, and tap-to-go. Card width follows the viewport; the current card survives a resize. The pinned rail-and-stage version is gone.
+- **/studio is now one composition** (`StudioProcess.tsx`, replacing `Studio.tsx`, which is deleted): the process as a print, after a collage reference from Rajat. Nine red blocks in a 3 × 3 on a cream sheet with a horizon, rough misregistered edges (feTurbulence + feDisplacementMap on static rects), a black numeral on the five stage blocks, tiny ink figures, a balcony, a ladder, a wire that draws itself in, paper grain as a CSS overlay. Hover/tap/focus a stage block and its title and description show in the caption strip; that strip and one "Start a project" CTA are the only copy on the page. Hero editorial, beliefs, team, principles, rail, and the final CTA are gone (git history has them).
+- **Navigation**: the footer observer gets a `-1px` bottom root margin, so a page that is exactly 100vh (the new /studio) no longer hides the logo island at the top.
+
 ## 2026-09-20 (late)
 
 - **Services re-laid and re-rostered** (`Services.tsx`, `ServicesStack.tsx`). The takeover stack stays; each card is now a split: copy on the left 54% (number, arrow, eyebrow, title, blurb, tags), the film filling the right 46% edge to edge and top to bottom, playing the whole time the card is up (a band across the top on phones; a JS breakpoint, `useWide`, since the card is styled inline). Roster is five: Websites & UI/UX (web and product merged, on Rajat's call, carried by the BMTC app film `app-showcase.mp4`), Brand Identity, Ads & Campaigns, Creative Content, Motion & Film. Creative Strategy folded into the blurbs. Eyebrows added to the data (`eyebrow`).

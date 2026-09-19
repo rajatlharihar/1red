@@ -3,9 +3,11 @@ import { motion, useInView } from 'motion/react';
 import { ArrowUpRight } from 'lucide-react';
 import { ServicesStack } from './ServicesStack';
 
-/* Five disciplines. Websites and UI/UX are one thing here: the product and
+/* Three disciplines. Websites and UI/UX are one thing here: the product and
    the site are designed by the same hands, and the BMTC app film carries
-   the card. */
+   the card. Content and motion are not cards: content is the same feed the
+   campaigns run on, and motion is a medium that every film here already
+   shows, so both live as tags on Ads & Campaigns (Rajat, 2026-09-20). */
 const services = [
   {
     number: '01',
@@ -30,27 +32,9 @@ const services = [
     eyebrow: 'Performance',
     title: 'Ads & Campaigns',
     description:
-      'Creatives built to be measured. Static, motion and video ad sets, landing pages to match, and the iteration loop that keeps them earning.',
-    tags: ['Ad Creatives', 'Campaign Design', 'Landing Pages', 'Meta & Google', 'A/B Variants'],
+      'Creatives built to be measured. Static, motion and video ad sets, the feed and reels around them, landing pages to match, and the iteration loop that keeps them earning.',
+    tags: ['Ad Creatives', 'Social Content', 'Reels', 'Brand Motion', 'Landing Pages', 'Meta & Google', 'A/B Variants'],
     video: '/videos/terrabarn-socials.mp4',
-  },
-  {
-    number: '04',
-    eyebrow: 'Content',
-    title: 'Creative Content',
-    description:
-      'Feeds, reels, illustration and editorial that people actually stop for. Planned monthly, designed in your language, shipped on time.',
-    tags: ['Social Content', 'Reels', 'Illustration', 'Content Strategy', 'Feed Design'],
-    video: '/videos/Fg-01_3.mp4',
-  },
-  {
-    number: '05',
-    eyebrow: 'Motion',
-    title: 'Motion & Film',
-    description:
-      'Logo animation, product films, UI motion and launch videos. Stillness is forgettable; we make the brand move.',
-    tags: ['Brand Motion', 'Product Film', 'UI Animation', 'After Effects', 'Lottie'],
-    video: '/videos/ground-logo.mp4',
   },
 ];
 

@@ -169,7 +169,10 @@ export function Navigation() {
   useEffect(() => {
     const footer = document.querySelector('footer');
     if (!footer) return;
-    const io = new IntersectionObserver((e) => footerRaw.set(e[0].isIntersecting ? 1 : 0), { rootMargin: '-120px 0px 0px 0px' });
+    // Bottom margin -1px: a footer that merely touches the viewport's bottom
+    // edge (a page that is exactly 100vh, like /studio) counts as
+    // intersecting otherwise, and the island would hide at the top of it.
+    const io = new IntersectionObserver((e) => footerRaw.set(e[0].isIntersecting ? 1 : 0), { rootMargin: '-120px 0px -1px 0px' });
     io.observe(footer);
     return () => io.disconnect();
   }, [footerRaw, location.pathname]);
