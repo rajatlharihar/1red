@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-19 (night, fifth pass)
+
+- **Rings packed tight behind the "e"**: `AV_SPACING` 5 (was 10), `jz` jitter halved, `AV_TRAVEL` 28 (0.8 of the new cycle). From the "e" blocks the rings now step back by perspective in even steps and glide forward as one stack. The birth animation (rings rising out of the distance) is deleted: with the second ring ten units behind the first it read as a small separate cluster snapping in (Rajat: "a lot of gap ... it snaps and appears ... scale it according to camera proximity").
+
 ## 2026-09-19 (night, fourth pass)
 
 - **Rings come up out of the distance** rather than scaling in place: ring k starts `AV_BIRTH_DEPTH` (9) deeper and glides to its place over `AV_BIRTH_STEP` 0.012 per ring, `AV_BIRTH_LEN` 0.14 (30 / 0.006 / 0.05 first: Rajat, "too far ... a pop rather than a glide"), so it grows the way anything approaching does (Rajat: "scaling as the proximity").

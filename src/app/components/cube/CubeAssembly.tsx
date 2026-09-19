@@ -89,8 +89,10 @@ const SETTLE_END = 0.99;
  * ─────────────────────────────────────────────────────────────────────────── */
 /** Rings in the cycle: four cubes each, 28 slots for 27 cubes. */
 const AV_RANKS = 7;
-/** Depth between rings. */
-const AV_SPACING = 10;
+/** Depth between rings. Tight, so from the "e" blocks the rings step back
+ *  by perspective in even, small steps rather than the next ring sitting far
+ *  behind as a separate small cluster. */
+const AV_SPACING = 5;
 const AV_CYCLE = AV_RANKS * AV_SPACING;
 /** Where a ring wraps back to the far end. It has to be past the depth where
  *  a block's inner edge clears the frame, or a ring would vanish while still
@@ -125,7 +127,7 @@ const AV_TILT_TO = 0.34;
  *  is in its fade band when the run stops and the gather begins. The run is
  *  already moving at the hand-off (no hold): the "e" blocks are rushing
  *  outwards then, and the ring behind them has to be doing the same. */
-const AV_TRAVEL = 42;
+const AV_TRAVEL = 28;
 /** How the run eases: near-linear at the start, so the first ring keeps
  *  pace with the "e" blocks it continues, easing to a stop. */
 const AV_RUN_POW = 1.6;
@@ -133,15 +135,6 @@ const AV_RUN_POW = 1.6;
  *  the "e" at the hand-off, opens out to `AV_R_EXIT` over this stretch. */
 const AV_SPREAD_FROM = 0.0;
 const AV_SPREAD_TO = 0.46;
-/** Rings behind the first come up out of the distance one after another as
- *  the gap in the "e" opens, instead of all being there already: ring k
- *  starts `AV_BIRTH_DEPTH` deeper than its place and glides up to it over
- *  `AV_BIRTH_STEP * k` to `AV_BIRTH_STEP * k + AV_BIRTH_LEN`, so it grows the
- *  way anything approaching does. The first ring is the "e" blocks carrying
- *  on, so it is never moved. */
-const AV_BIRTH_STEP = 0.012;
-const AV_BIRTH_LEN = 0.14;
-const AV_BIRTH_DEPTH = 9;
 /** Blocks in the tunnel are far chunkier than the cubes in the finished box.
  *  They shrink to size on their flight to the box. */
 const AV_SIZE = 2.6;
@@ -291,7 +284,7 @@ function layout(): Piece[] {
         cy: c.cy,
         rank,
         jr: (hash(rank, 21) - 0.5) * 0.24,
-        jz: (hash(rank, 23) - 0.5) * 1.6,
+        jz: (hash(rank, 23) - 0.5) * 0.8,
         tilt: new THREE.Quaternion().setFromEuler(new THREE.Euler(0.26 * c.cy, 0.38 * c.cx, 0)),
         loopOut: 0.6 + hash(pieces.length, 31) * 0.8,
         loopSwing: (hash(pieces.length, 32) < 0.5 ? -1 : 1) * (0.6 + hash(pieces.length, 33) * 0.8),
@@ -500,11 +493,7 @@ export function CubeAssembly({
          it counts down as the tunnel runs and wraps a ring that has gone
          past the corners back out to the far end. */
       const phase = (((piece.rank * AV_SPACING + AV_PHASE0 - travel) % AV_CYCLE) + AV_CYCLE) % AV_CYCLE;
-      const born =
-        piece.rank === 0
-          ? 1
-          : easeInOutSine(smoothstep(AV_BIRTH_STEP * piece.rank, AV_BIRTH_STEP * piece.rank + AV_BIRTH_LEN, p));
-      const z = AV_Z_EXIT - phase + piece.jz - (1 - born) * AV_BIRTH_DEPTH;
+      const z = AV_Z_EXIT - phase + piece.jz;
       const rTight = AV_INNER + avSize / 2;
       // Opened by the scroll, and by nearness to the lens, whichever is more.
       const flare = smoothstep(AV_HANDOFF_Z, AV_Z_EXIT, z);

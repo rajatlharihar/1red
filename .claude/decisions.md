@@ -329,3 +329,9 @@ Chronological, most recent last. Each entry: date (where known — this project 
 **DECISION (2026-09-19, night, fourth pass):** The cube material skips tone mapping.
 **REASON:** With the cubes tumbling on their flights, a face turned at the room's bright panels overexposed and ACES took the red to cream (unchanged by env intensity or light strength, since the reflected radiance itself is the problem). Clipping keeps the hue. It also ends the `#F40013` compromise: the hand-off emissive is the mark's exact red.
 **SUPERSEDES:** the 2026-09-17 note on `LOGO_EMISSIVE` 0.89 and "do not chase #FF0000". The finished box is brighter than the old `#A0000C`; if Rajat wants the darker box back, lower `ENV` and the key light rather than re-enabling tone mapping.
+
+---
+
+**DECISION (2026-09-19, night, fifth pass):** The tunnel's rings are 5 units apart and all present from the hand-off; no ring is ever scaled or moved in to "appear".
+**REASON:** Rajat, three times over the evening: the cubes after the "e" must never pop; anything that appears has to be there already and grow by camera proximity. Rings 10 apart left the second ring as a small far cluster with a visible gap behind the "e" blocks, and every birth animation (scale-in, glide-in from deeper) read as a snap.
+**DO NOT:** Reintroduce a birth/appear animation for the rings, or widen the spacing. If the tunnel feels short, add ranks, not distance.
