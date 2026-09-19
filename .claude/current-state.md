@@ -5,6 +5,8 @@
 
 ## Session Log: 2026-09-20
 
+- **Deployed:** `main` pushed to GitHub at `ecb4a16` (25 commits since `76c1e5d`); https://1red.vercel.app serves the new bundle. Pending Rajat's live check of the bottom-of-page lag after the video-pause and composited-drift fixes.
+
 - Evening: placeholder lines behind the finished box (Rajat to supply copy), "Let's create" CTAs red with fill hover, footer email/watermark/nav-logo/overscroll changes. See CHANGELOG 2026-09-20 (evening). The custom letters are now in use for the footer watermark only (`StudioWord.tsx`); the sheet lacks H and I.
 - Rajat said the cube gather is "perfect ... just a little slowed"; unclear whether he wants it slower or finds it slow. Ask before touching the timing.
 
@@ -25,7 +27,7 @@
 
 Rajat stopped for the night and will pick this up next session. Nothing is mid-flight: the hand-off out of the hero is finished and verified.
 
-- **Not pushed.** `main` is committed locally up to `68b8b53`; https://1red.vercel.app is still serving `ce5cc8d`. Push with `git -c http.postBuffer=524288000 push` once he approves the hand-off. Never commit `pnpm-lock.yaml`, the placeholder `pnpm-workspace.yaml` edit or `Studio.glb.orig-backup`.
+- (Superseded 2026-09-20: pushed.) Push with `git -c http.postBuffer=524288000 push` once he approves the hand-off. Never commit `pnpm-lock.yaml`, the placeholder `pnpm-workspace.yaml` edit or `Studio.glb.orig-backup`.
 - **First thing to do:** have him scroll the hand-off and say whether it is approved, then push.
 - **Open, in the order he has raised them:** where section 2's text goes (copy is parked and unrendered in `cube/problemStates.ts`, he decides the layout); his custom letters as the site's display type (`../Assets/1red-custom-letters.svg`, parked, do not build with them unprompted); Illusdoodle vs "Illusdoodles"; the empty facade wall right of the hero door (he is ideating with friends, do not build unprompted); the pencil hatch texture and plane, still undecided.
 - Read the tunnel session log below plus decisions.md before touching the hand-off again: four versions of it were rejected and the reasons are all recorded.
