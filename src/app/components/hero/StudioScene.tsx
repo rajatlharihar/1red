@@ -207,7 +207,7 @@ export function StudioScene({
       // cyclorama; the mark is drawn after them (`renderOrder`).
       panel: new THREE.MeshBasicMaterial({ color: ROOM_LIT, toneMapped: false, depthTest: false, depthWrite: false }),
       panelLine: (() => {
-        const m = createInkLineMaterial();
+        const m = createInkLineMaterial(RED, 0.7);
         m.depthTest = false;
         m.depthWrite = false;
         m.transparent = true;
@@ -403,7 +403,7 @@ export function StudioScene({
       const k = lerp(PANEL_SCALE0, PANEL_SCALE, g);
       panelRef.current.scale.set(k, k, 1);
       panelRef.current.rotation.z = lerp(PANEL_TILT0, PANEL_TILT, g);
-      mats.panelLine.opacity = Math.min(1, g * 8);
+      mats.panelLine.opacity = Math.min(1, g * 4);
     }
 
     /* One turn, then scale through the counter of the "r". The zoom group's

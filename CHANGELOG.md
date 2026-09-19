@@ -6,6 +6,12 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-19 (night, second pass)
+
+- **Boom slower and visible**: p 0.85 to 0.94, quadratic ease-out, starting as a diamond already peeking out behind the mark (`PANEL_SCALE0` 0.7) and ending at 7.5x so the studio's side walls are cleared on a 2.2:1 frame by about p 0.905. Its edge is logo red at 0.7px.
+- **Tunnel moves with the "e" and diverges with the scroll**: no hold at the hand-off (the ring behind the parting blocks is already moving), the run covers 0.6 of a cycle (`AV_TRAVEL` 42, `AV_RUN_POW` 1.6) so rings pass the lens rarely, and the gap between the four arrays opens from tight-on-the-"e" to `AV_R_EXIT` over section p 0 to 0.42 (`AV_SPREAD_*`) as well as by nearness to the lens. Tilt eases in over 0.04 to 0.34.
+- **Gather as four streams**: slots are assigned by quadrant in the box's resting frame (`layout`), so each array folds into its own quarter of the box, the deepest ring's cube becoming the centre and the nearest ring's cubes the outer corners. The box no longer spins 1.5 turns underneath; it drifts the last 20° onto its resting angle (`DRIFT_Y`). Staging radius 3.3, flight 0.6 of the window, tiers compressed (`TIER_WINDOWS`) so the streams fold in together and the box is built by section p 0.87.
+
 ## 2026-09-19 (night)
 
 - **The boom.** Rajat: the white square should be "a small rhombus behind the one red logo that scales up as it rotates, like the boom effect", not the cyclorama face growing after the turn. The panel is now a 1 m square at the mark's centre that, from p 0.865 (right after the mark's turn) to `PANEL_TO` 0.935, scales from 0.05 to 5.6 and turns from 45° to −0.2 rad with a cubic ease-out (`panel` in `studioSequence.ts`). Pure white with an ink edge; drawn under the mark, over the studio.

@@ -115,17 +115,21 @@ const AV_PHASE0 = AV_Z_EXIT - AV_HANDOFF_Z;
 /** The blocks arrive square to the camera, like the flat "e" blocks, and
  *  take on their off-axis tilt over this stretch of the section as they
  *  travel, which is what turns them into boxes. */
-const AV_TILT_FROM = 0.01;
-const AV_TILT_TO = 0.22;
-/** The run waits out the fade-in (`gate`) and no longer. Any longer and
- *  blocks sit still while the "e" blocks are still rushing outwards, which
- *  breaks the move. Any shorter and the first ring has already swept past
- *  the corners before it is drawn, so its one big moment is never seen. */
-const AV_HOLD = 0.006;
-/** Depth covered during the approach: about a cycle and a half of rings
- *  streaming past. It stops clear of the wrap band, so no ring is mid-fade
- *  when the run stops and the gather begins. */
-const AV_TRAVEL = 102;
+const AV_TILT_FROM = 0.04;
+const AV_TILT_TO = 0.34;
+/** Depth covered during the approach: six tenths of a cycle, so rings pass
+ *  the lens rarely and the divergence carries the motion; chosen so no ring
+ *  is in its fade band when the run stops and the gather begins. The run is
+ *  already moving at the hand-off (no hold): the "e" blocks are rushing
+ *  outwards then, and the ring behind them has to be doing the same. */
+const AV_TRAVEL = 42;
+/** How the run eases: near-linear at the start, so the first ring keeps
+ *  pace with the "e" blocks it continues, easing to a stop. */
+const AV_RUN_POW = 1.6;
+/** The four arrays diverge with the scroll: the gap between them, tight on
+ *  the "e" at the hand-off, opens out to `AV_R_EXIT` over this stretch. */
+const AV_SPREAD_FROM = 0.0;
+const AV_SPREAD_TO = 0.42;
 /** Blocks in the tunnel are far chunkier than the cubes in the finished box.
  *  They shrink to size on their flight to the box. */
 const AV_SIZE = 2.6;
@@ -137,9 +141,9 @@ const avSizeFor = (aspect: number) => AV_SIZE * clamp01((aspect / 1.6 - 0.45) / 
 
 /** Staging radius in cube units: the box's bounding radius (√3 × 1.5) plus a
  *  cube's own, so a cube waiting there never touches the box. */
-const STAGE_R = 3.6;
+const STAGE_R = 3.3;
 /** Share of a cube's gather window spent flying; the rest is the slide. */
-const FLIGHT = 0.7;
+const FLIGHT = 0.6;
 /** Share of the gather window over which a tunnel block shrinks to a box cube. */
 const SHRINK = 0.3;
 /** Bounding radius of a unit cube, used for flight separation. */
@@ -151,6 +155,8 @@ const BACKDROP_DIST = 120;
 
 const REST_ROT_Y = -0.55;
 const REST_ROT_X = 0.42;
+/** Slow turn onto the resting angle over the section, radians per unit p. */
+const DRIFT_Y = 0.35;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -193,45 +199,75 @@ interface Piece {
 /* Build order: centre, then faces, edges, corners, each tier overlapping the
    last. The centre is home before any face starts its slide. */
 const TIER_WINDOWS = [
-  { from: 0, to: 0, len: 0.3 },
-  { from: 0.08, to: 0.33, len: 0.4 },
-  { from: 0.22, to: 0.5, len: 0.4 },
-  { from: 0.4, to: 0.58, len: 0.4 },
+  { from: 0, to: 0, len: 0.4 },
+  { from: 0.06, to: 0.2, len: 0.5 },
+  { from: 0.14, to: 0.34, len: 0.5 },
+  { from: 0.28, to: 0.48, len: 0.5 },
 ];
 
+/** Which of the four arrays each slot belongs to, and in which ring. Each
+ *  array folds into its own quarter of the box: a slot goes to the array
+ *  on the side of the screen it sits on once the box is at its resting
+ *  angle, with the deepest ring's cube becoming the centre and the nearest
+ *  ring's cubes the box's outer corners. Flights are then short and all
+ *  four streams converge at once, instead of cubes crossing the frame to
+ *  reach a slot on the far side. */
 function layout(): Piece[] {
   const slots: THREE.Vector3[] = [];
   for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) slots.push(new THREE.Vector3(x, y, z));
   const tierOf = (s: THREE.Vector3) => Math.abs(s.x) + Math.abs(s.y) + Math.abs(s.z);
+  const qRest = new THREE.Quaternion().setFromEuler(new THREE.Euler(REST_ROT_X, REST_ROT_Y, 0));
+  const corners = [
+    { cx: 1, cy: 1 },
+    { cx: -1, cy: 1 },
+    { cx: -1, cy: -1 },
+    { cx: 1, cy: -1 },
+  ];
+  // 27 cubes over 4 arrays of 7: the last array has one ring fewer.
+  const room = [7, 7, 7, 6];
+  const owner = new Array<number>(slots.length).fill(-1);
+  const scored: Array<{ slot: number; corner: number; score: number }> = [];
+  slots.forEach((slot, i) => {
+    const v = slot.clone().applyQuaternion(qRest);
+    corners.forEach((c, j) => scored.push({ slot: i, corner: j, score: v.x * c.cx + v.y * c.cy + hash(i, 13) * 0.01 }));
+  });
+  scored.sort((a, b) => b.score - a.score);
+  for (const e of scored) {
+    if (owner[e.slot] >= 0 || room[e.corner] === 0) continue;
+    owner[e.slot] = e.corner;
+    room[e.corner]--;
+  }
+
   const tierSeen = [0, 0, 0, 0];
   const tierSize = [1, 6, 12, 8];
-  const ordered = slots
-    .map((s, i) => ({ s, k: tierOf(s) + hash(i, 13) * 0.9 }))
-    .sort((a, b) => a.k - b.k)
-    .map((e) => e.s);
-
-  return ordered.map((slot, i) => {
-    const tier = tierOf(slot);
-    const ring = Math.floor(i / 4);
-    const cornerX = i % 4 === 0 || i % 4 === 3 ? 1 : -1;
-    const cornerY = i % 4 < 2 ? 1 : -1;
-    const w = TIER_WINDOWS[tier];
-    const k = tierSize[tier] > 1 ? tierSeen[tier] / (tierSize[tier] - 1) : 0;
-    tierSeen[tier]++;
-    return {
-      slot,
-      dir: tier === 0 ? new THREE.Vector3() : slot.clone().normalize(),
-      tier,
-      start: lerp(w.from, w.to, k),
-      len: w.len,
-      cx: cornerX,
-      cy: cornerY,
-      rank: ring,
-      jr: (hash(ring, 21) - 0.5) * 0.24,
-      jz: (hash(ring, 23) - 0.5) * 1.6,
-      tilt: new THREE.Quaternion().setFromEuler(new THREE.Euler(0.26 * cornerY, 0.38 * cornerX, 0)),
-    };
+  const pieces: Piece[] = [];
+  corners.forEach((c, j) => {
+    const mine = slots
+      .map((slot, i) => ({ slot, i }))
+      .filter((e) => owner[e.i] === j)
+      .sort((a, b) => tierOf(b.slot) - tierOf(a.slot) || hash(a.i, 17) - hash(b.i, 17));
+    // Nearest ring first, so rank 0 is the outermost tier.
+    mine.forEach(({ slot }, rank) => {
+      const tier = tierOf(slot);
+      const w = TIER_WINDOWS[tier];
+      const k = tierSize[tier] > 1 ? tierSeen[tier] / (tierSize[tier] - 1) : 0;
+      tierSeen[tier]++;
+      pieces.push({
+        slot,
+        dir: tier === 0 ? new THREE.Vector3() : slot.clone().normalize(),
+        tier,
+        start: lerp(w.from, w.to, k),
+        len: w.len,
+        cx: c.cx,
+        cy: c.cy,
+        rank,
+        jr: (hash(rank, 21) - 0.5) * 0.24,
+        jz: (hash(rank, 23) - 0.5) * 1.6,
+        tilt: new THREE.Quaternion().setFromEuler(new THREE.Euler(0.26 * c.cy, 0.38 * c.cx, 0)),
+      });
+    });
   });
+  return pieces;
 }
 
 /** The 12 edges of a unit cube, as corner index pairs into `CORNERS`. */
@@ -361,11 +397,12 @@ export function CubeAssembly({
     const frameW = 2 * CAM_Z * tanHalf * aspect;
     const unit = Math.min(0.85, frameW / 7.5);
     const settle = easeInOutCubic(clamp01((p - SETTLE_START) / (SETTLE_END - SETTLE_START)));
-    const spinY = REST_ROT_Y + p * Math.PI * 1.5;
-    const turns = Math.round((spinY - REST_ROT_Y) / (Math.PI * 2));
+    /* The box sits near its resting angle throughout, drifting the last
+       few degrees onto it: the four arrays fold into the quarters of the
+       box they face, which a spinning box would scramble. */
     _euler.set(
-      lerp(0.25 + Math.sin(p * 4) * 0.2, REST_ROT_X, settle) + pointerRef.current.y * 0.1,
-      lerp(spinY, REST_ROT_Y + turns * Math.PI * 2, settle) + pointerRef.current.x * 0.14,
+      REST_ROT_X + (1 - settle) * (Math.sin(p * 4) * 0.06 - 0.06) + pointerRef.current.y * 0.1,
+      REST_ROT_Y + (1 - settle) * (p - 1) * DRIFT_Y + pointerRef.current.x * 0.14,
       0
     );
     _qGroup.setFromEuler(_euler);
@@ -373,11 +410,12 @@ export function CubeAssembly({
     /* The tunnel is laid out in one reference frame and then scaled about the
        camera by `av`, so a phone sees the same tunnel as the iMac, smaller. */
     const av = unit / 0.85;
-    /* Fast the moment the mouth is open, then eased to a stop rather than
-       cut off: the gather is already underway by then, so the tunnel never
-       visibly halts and waits. */
-    const run = clamp01((p - AV_HOLD) / (APPROACH_END - AV_HOLD));
-    const travel = (1 - Math.pow(1 - run, 2.2)) * AV_TRAVEL;
+    /* Moving from the first frame, eased to a stop rather than cut off: the
+       gather is already underway by then, so the tunnel never visibly halts
+       and waits. */
+    const run = clamp01(p / APPROACH_END);
+    const travel = (1 - Math.pow(1 - run, AV_RUN_POW)) * AV_TRAVEL;
+    const spread = smoothstep(AV_SPREAD_FROM, AV_SPREAD_TO, p);
     const avSize = avSizeFor(aspect);
     /* Shift the whole frame up by however far the canvas sits below the
        viewport. Same full-frame size, so nothing is rescaled. */
@@ -419,7 +457,9 @@ export function CubeAssembly({
       const phase = (((piece.rank * AV_SPACING + AV_PHASE0 - travel) % AV_CYCLE) + AV_CYCLE) % AV_CYCLE;
       const z = AV_Z_EXIT - phase + piece.jz;
       const rTight = AV_INNER + avSize / 2;
-      const r = lerp(rTight, AV_R_EXIT, smoothstep(AV_HANDOFF_Z, AV_Z_EXIT, z)) + piece.jr;
+      // Opened by the scroll, and by nearness to the lens, whichever is more.
+      const flare = smoothstep(AV_HANDOFF_Z, AV_Z_EXIT, z);
+      const r = lerp(rTight, AV_R_EXIT, 1 - (1 - spread) * (1 - flare)) + piece.jr;
       _av.set(piece.cx * r, piece.cy * r, z);
       // Scale the whole tunnel about the camera, never about the origin.
       _av.set(_av.x * av, _av.y * av, CAM_Z + (_av.z - CAM_Z) * av);

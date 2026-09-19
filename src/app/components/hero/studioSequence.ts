@@ -135,14 +135,16 @@ export interface SequenceState {
  * tunnel in section 2 is behind the mark in turn. Eased out, so it leaps
  * and then settles: the "boom". */
 export const PANEL_SIDE = 1;
-export const PANEL_SCALE0 = 0.05;
-export const PANEL_SCALE = 5.6;
+/** Starts as a diamond just peeking out above and below the mark. */
+export const PANEL_SCALE0 = 0.7;
+export const PANEL_SCALE = 7.5;
 export const PANEL_TILT0 = Math.PI / 4;
 export const PANEL_TILT = -0.2;
-const PANEL_FROM = 0.865;
+const PANEL_FROM = 0.85;
 /** Hero progress from which the frame behind the mark is pure white. Section
- *  2 starts drawing here. */
-export const PANEL_TO = 0.935;
+ *  2 starts drawing here. The frame is covered well before (about 0.905);
+ *  the rest is the settle. */
+export const PANEL_TO = 0.94;
 
 export function sampleSequence(p: number): SequenceState {
   const t = clamp01(p);
@@ -202,7 +204,7 @@ export function sampleSequence(p: number): SequenceState {
   // pushes in they swing round and settle on the mark.
   const lampTurn = easeInOutSine(track(t, 0.47, 0.72));
 
-  const panel = 1 - Math.pow(1 - track(t, PANEL_FROM, PANEL_TO), 3);
+  const panel = 1 - Math.pow(1 - track(t, PANEL_FROM, PANEL_TO), 2);
 
   return { camX, camY, camZ, camRoll, lookX, lookY, lookZ, doorOffset, lights, logoSpin, logoZoom, lampTurn, panel };
 }

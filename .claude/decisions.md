@@ -317,3 +317,9 @@ Chronological, most recent last. Each entry: date (where known — this project 
 
 **DECISION (2026-09-19, night):** The boom is a 1 m white square at the mark's centre scaling 0.05 → 5.6 while turning 45° → −0.2 rad, cubic ease-out, p 0.865 → 0.935.
 **REASON:** Rajat: "a small rhombus behind the one red logo and it scales up as it rotates, like the boom effect". Starting at 0.05 means it is hidden behind the mark until it is already moving, so there is no pop.
+
+---
+
+**DECISION (2026-09-19, night, second pass):** The gather assigns slots by quadrant so each of the four arrays folds into its own quarter of the box, and the box does not spin while it builds.
+**REASON:** Rajat: the cubes "randomly appear" and the becoming was "not smooth". With slots handed out round-robin and the box spinning 1.5 turns, cubes crossed the frame to reach slots on the far side and the whole thing read as a scatter. Short flights on each cube's own side, all four streams at once, read as the tunnel closing into the box.
+**DO NOT:** Bring back the continuous `spinY` or a round-robin corner assignment. Keep `STAGE_R` ≥ 3.3 (a flying cube must clear the box's corners) and the run at `AV_TRAVEL` 42, chosen so no ring is in its fade band when the gather starts.
