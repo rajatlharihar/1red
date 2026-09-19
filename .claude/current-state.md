@@ -3,6 +3,10 @@
 ## Last Updated
 2026-09-19
 
+## Session Log: 2026-09-20
+
+- "Let's create" (`WhatsNext.tsx`) rebuilt as the pencil sheet: grid overlapping Selected Work, scroll-drawn continuous line with a line-figure, three parallax layers with idle drift. See CHANGELOG 2026-09-20. Waiting on Rajat's review of the drawing's composition and the figure. Tags/waveform/watermark removed on his "plenty" note; easy to restore from git if wanted.
+
 ## Session Log: 2026-09-19
 
 - Rajat's two notes on the hand-off: the zoom-to-tunnel was "not seamless" with "a glitch that keeps happening", and the array's turn into an angled jumble should go; the box should form out of the head-on tunnel view. Both done, see CHANGELOG 2026-09-19 and decisions.md.
