@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-19 (night, sixth pass)
+
+- **Rings come in from the sides**: rings behind the first start `AV_SLIDE_R` (5) further out along their corner's diagonal, deeper rings further, and ease into the stack by section p `AV_SLIDE_TO` 0.09, so they emerge from behind the departing "e" blocks as four chains sliding inward rather than being found already in place. The spread now begins at 0.1 so the two moves do not fight. Rajat: "some movement that those boxes are coming from the side".
+
 ## 2026-09-19 (night, fifth pass)
 
 - **Rings packed tight behind the "e"**: `AV_SPACING` 5 (was 10), `jz` jitter halved, `AV_TRAVEL` 28 (0.8 of the new cycle). From the "e" blocks the rings now step back by perspective in even steps and glide forward as one stack. The birth animation (rings rising out of the distance) is deleted: with the second ring ten units behind the first it read as a small separate cluster snapping in (Rajat: "a lot of gap ... it snaps and appears ... scale it according to camera proximity").

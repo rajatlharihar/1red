@@ -133,8 +133,14 @@ const AV_TRAVEL = 28;
 const AV_RUN_POW = 1.6;
 /** The four arrays diverge with the scroll: the gap between them, tight on
  *  the "e" at the hand-off, opens out to `AV_R_EXIT` over this stretch. */
-const AV_SPREAD_FROM = 0.0;
+const AV_SPREAD_FROM = 0.1;
 const AV_SPREAD_TO = 0.46;
+/** The rings behind the first come in from the sides as the "e" parts: each
+ *  starts `AV_SLIDE_R` further out along its corner's diagonal, the deeper
+ *  rings further still, and eases into the stack by `AV_SLIDE_TO`. Behind
+ *  the departing "e" blocks at first, so they emerge from under them. */
+const AV_SLIDE_R = 5;
+const AV_SLIDE_TO = 0.09;
 /** Blocks in the tunnel are far chunkier than the cubes in the finished box.
  *  They shrink to size on their flight to the box. */
 const AV_SIZE = 2.6;
@@ -178,6 +184,7 @@ const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 const smoothstep = (a: number, b: number, v: number) => {
   const t = clamp01((v - a) / (b - a));
   return t * t * (3 - 2 * t);
@@ -454,6 +461,7 @@ export function CubeAssembly({
     const run = clamp01(p / APPROACH_END);
     const travel = (1 - Math.pow(1 - run, AV_RUN_POW)) * AV_TRAVEL;
     const spread = smoothstep(AV_SPREAD_FROM, AV_SPREAD_TO, p);
+    const slideIn = 1 - easeOutCubic(clamp01(p / AV_SLIDE_TO));
     const avSize = avSizeFor(aspect);
     /* Shift the whole frame up by however far the canvas sits below the
        viewport. Same full-frame size, so nothing is rescaled. */
@@ -497,7 +505,8 @@ export function CubeAssembly({
       const rTight = AV_INNER + avSize / 2;
       // Opened by the scroll, and by nearness to the lens, whichever is more.
       const flare = smoothstep(AV_HANDOFF_Z, AV_Z_EXIT, z);
-      const r = lerp(rTight, AV_R_EXIT, 1 - (1 - spread) * (1 - flare)) + piece.jr;
+      const fromSide = piece.rank === 0 ? 0 : AV_SLIDE_R * slideIn * (0.5 + piece.rank / 12);
+      const r = lerp(rTight, AV_R_EXIT, 1 - (1 - spread) * (1 - flare)) + piece.jr + fromSide;
       _av.set(piece.cx * r, piece.cy * r, z);
       // Scale the whole tunnel about the camera, never about the origin.
       _av.set(_av.x * av, _av.y * av, CAM_Z + (_av.z - CAM_Z) * av);
