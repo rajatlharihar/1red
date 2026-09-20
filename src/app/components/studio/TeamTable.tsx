@@ -384,7 +384,6 @@ export function TeamTable() {
         aspectRatio: '1.45 / 1',
         background: CARD,
         border: `1px solid ${INK}`,
-        borderRadius: '3.2% / 4.6%',
         boxShadow: '0 30px 70px rgba(0,0,0,0.10), 0 6px 20px rgba(0,0,0,0.05)',
         transform: reduceMotion
           ? 'translate(-50%, -50%)'
