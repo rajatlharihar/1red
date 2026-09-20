@@ -165,78 +165,83 @@ export function ProblemCube() {
               gone; until then the canvas paints its own white for the mark
               to cut. */}
           <div ref={sheetRef} style={{ position: 'absolute', inset: 0, background: BG, opacity: reduceMotion ? 1 : 0 }}>
-            {/* The poster grid, high on the sheet; the box settles into the
-                lower right beside it. Everything rises out of masks or draws
-                along its own length as the box locks, on the lines' curve. */}
+            {/* The end state, after Rajat's own layout (.claude/refs/
+                cube-end-state-layout-rajat.png): one hairline across the
+                upper third, then one horizontal band: the headline
+                flush-left, the box centre-right, and the label in a light
+                weight immediately right of the box, centred on it. Lines
+                rise out of masks as the box locks; the rule draws. */}
+            <div
+              ref={ruleRef}
+              style={{
+                position: 'absolute',
+                left: '11%',
+                right: '11%',
+                top: wide ? '28vh' : '16vh',
+                height: 1,
+                background: 'rgba(10,10,10,0.35)',
+                transformOrigin: 'left center',
+                transform: reduceMotion ? 'none' : 'scaleX(0)',
+              }}
+            />
             <div
               aria-hidden={!reduceMotion}
               style={{
                 position: 'absolute',
-                left: 0,
-                right: 0,
-                top: wide ? 'clamp(6.5rem, 11vh, 9rem)' : '7.5rem',
-                padding: '0 clamp(1.5rem, 4vw, 5rem)',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
-                columnGap: 'clamp(12px, 1.5vw, 24px)',
-                rowGap: 'clamp(18px, 3vh, 36px)',
-                alignItems: 'start',
+                left: '11%',
+                top: wide ? '62vh' : '30vh',
+                transform: 'translateY(-50%)',
+                width: wide ? '44vw' : '78vw',
                 pointerEvents: 'none',
                 color: INK,
               }}
             >
-              <div style={{ gridColumn: wide ? '9 / span 4' : '1 / span 12', gridRow: wide ? 1 : 3, textAlign: 'left', overflow: 'hidden', alignSelf: 'start' }}>
-                <span
-                  ref={labelRef}
-                  style={{
-                    display: 'block',
-                    fontFamily: 'var(--font-sans)',
-                    fontSize: 10,
-                    fontWeight: 600,
-                    letterSpacing: '0.24em',
-                    textTransform: 'uppercase',
-                    lineHeight: 1.6,
-                    // On the headline's cap line: its top padding is the
-                    // headline's own half-leading at the grid's widest size.
-                    paddingTop: wide ? 'clamp(6px, 0.5vw, 10px)' : 0,
-                    transform: reduceMotion ? 'none' : 'translateY(110%)',
-                  }}
-                >
-                  {LABEL}
-                </span>
-              </div>
-              <div style={{ gridColumn: wide ? '1 / span 8' : '1 / span 12', gridRow: 1 }}>
-                {LINES.map((line, i) => (
-                  <div key={line} style={{ overflow: 'hidden' }}>
-                    <span
-                      ref={(el) => {
-                        lineRefs.current[i] = el;
-                      }}
-                      style={{
-                        display: 'block',
-                        fontSize: 'clamp(46px, 7.8vw, 138px)',
-                        fontWeight: 800,
-                        letterSpacing: '-0.045em',
-                        lineHeight: 0.94,
-                        transform: reduceMotion ? 'none' : 'translateY(110%)',
-                      }}
-                    >
-                      {line}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div
-                ref={ruleRef}
+              {LINES.map((line, i) => (
+                <div key={line} style={{ overflow: 'hidden' }}>
+                  <span
+                    ref={(el) => {
+                      lineRefs.current[i] = el;
+                    }}
+                    style={{
+                      display: 'block',
+                      fontSize: 'clamp(38px, 5.6vw, 92px)',
+                      fontWeight: 500,
+                      letterSpacing: '-0.03em',
+                      lineHeight: 1.0,
+                      transform: reduceMotion ? 'none' : 'translateY(110%)',
+                    }}
+                  >
+                    {line}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div
+              style={{
+                position: 'absolute',
+                ...(wide ? { left: '78%', top: '62vh', transform: 'translateY(-50%)' } : { left: '11%', top: '80vh' }),
+                overflow: 'hidden',
+                pointerEvents: 'none',
+              }}
+            >
+              <span
+                ref={labelRef}
                 style={{
-                  gridColumn: '1 / span 12',
-                  gridRow: 2,
-                  height: 1,
-                  background: INK,
-                  transformOrigin: 'left center',
-                  transform: reduceMotion ? 'none' : 'scaleX(0)',
+                  display: 'block',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: 'clamp(13px, 1.3vw, 20px)',
+                  fontWeight: 300,
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase',
+                  lineHeight: 1.3,
+                  color: INK,
+                  transform: reduceMotion ? 'none' : 'translateY(110%)',
                 }}
-              />
+              >
+                Every skill.
+                <br />
+                One collective.
+              </span>
             </div>
           </div>
           <div style={{ position: 'absolute', inset: 0 }}>

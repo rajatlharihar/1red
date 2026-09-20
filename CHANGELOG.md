@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 4, R10
+
+- **Cube end state to Rajat's layout** (`cube/ProblemCube.tsx`, `CubeAssembly.tsx`, after `.claude/refs/cube-end-state-layout-rajat.png`): a hairline across the upper third (28vh, 11% margins), then one band at 62vh: "Or hire / the whole box." flush-left at 500 weight, the box centre-right and smaller (camera backs off to CAM_Z + 4.5, shift 0.28 of the half-width), and "EVERY SKILL. / ONE COLLECTIVE." in 300 weight, uppercase, two lines, right of the box and centred on it. R6's label-on-cap-line and the grid layout are undone. Phone: rule 16vh, headline 30vh, box centred, label at 80vh.
+
 ## 2026-09-21 — round 3, R9
 
 - **The card is tossed in** (`studio/TeamTable.tsx`): from off the frame's top right and 700 px deep it comes in with 42° of spin and a decaying X/Y tumble, lands centred and settles with a damped bounce (a decaying 2.4 Hz sine on spin, depth and lift), all on one ease-out curve over the section's first 30%. The lid-flip is gone. Card up to 84vw / 118vh.
