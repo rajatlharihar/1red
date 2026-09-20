@@ -174,7 +174,7 @@ export function ProblemCube() {
                 position: 'absolute',
                 left: 0,
                 right: 0,
-                top: 'clamp(5.5rem, 9vh, 8rem)',
+                top: wide ? 'clamp(5.5rem, 9vh, 8rem)' : '7.5rem',
                 padding: '0 clamp(1.5rem, 4vw, 5rem)',
                 display: 'grid',
                 gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
