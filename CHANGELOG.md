@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-20 (night) — S3 into the team
+
+- **The forward move closes on the team film** (`studio/TeamZoom.tsx`, mounted after the grid on /studio): `public/videos/Fg-01_3.mp4` (line-art team, the mark glitching on a shirt; confirmed by frame) starts as a 30%-of-frame hairline tile in a perspective stage, grows to full-bleed by section p 0.68 on an eased depth curve (tile size and frame size are one quantity), the hairline going as it becomes the frame, then holds; 280vh pinned. "our team" in the heading face, italic, large, off-centre left, rises out of its mask over p 0.5 to 0.72. Clip plays muted, looped, only while on screen; `public/images/team-poster.jpg` is its poster and the reduced-motion still. `StudioPage` exports `STUDIO_AFTER_TEAM`, the slot for S4.
+
 ## 2026-09-20 (night) — S2 what we cover on /studio
 
 - **The camera's run-out lands on "What we cover"** (`ProcessSpace` takes an `arrival` node; `StudioPage` passes `<ServicesGrid still />`). The grid is drawn in the perspective stage behind every card, a little short of the screen plane (its depth is the camera's remaining run × `ARRIVAL_K` 0.087, so about 92% size when the last card clears) and settles onto the plane as the section unpins; on that frame the same grid in normal flow (`margin-top: -100vh`) takes over, pixel for pixel. It only becomes visible once the last card's projected size covers the frame both ways (`coverDepth`, measured from the card's real size, so a phone's taller card is handled), and every card's fill may only clear from behind that depth: what the clearing fill uncovers is never a switch. `ServicesGrid` gained `still` (no entrance motion, for a copy carried by the arrival). Reduced motion renders the grid after the list.
