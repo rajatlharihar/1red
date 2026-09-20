@@ -6,6 +6,11 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-20 (night) — H3 what we cover
+
+- **Services as a designed grid** (`ServicesGrid.tsx`, new, self-contained with its own data and optional heading row so it can be mounted on the Studio page for S2): twelve-column Swiss grid matching section 2's poster. Card 01 is the anchor, seven columns and both rows with its film on top; 02 and 03 share the five right columns, film beside copy; hairline rules divide cells, nothing boxed; one column with film first on a phone. Films play only while on screen. `Services.tsx` now mounts it with `heading={false}` under its own "Our Services" heading; the small label reads "What we cover". `ServicesStack.tsx` is no longer imported (kept on disk, in git if wanted).
+- Third card is **"Ads, Campaigns & Motion"** (eyebrow "Performance & motion"): copy and tags now cover 2D and 3D animation, logo and brand motion, alongside the ad sets.
+
 ## 2026-09-20 (night) — H2 cube line
 
 - **Section 2's end state is a Swiss poster** (`cube/ProblemCube.tsx`): headline "Or hire / the whole box." flush-left on eight of twelve columns at display size, label "Every skill. One collective." top-right in the site's small-caps label style, one hairline rule across the page under the headline. Lines and label rise out of masks on the existing `LINE_REVEAL` curve; the rule draws left to right over 0.88 to 0.99. Phone: headline full width, label under the rule.

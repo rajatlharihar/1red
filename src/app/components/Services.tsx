@@ -1,42 +1,7 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'motion/react';
 import { ArrowUpRight } from 'lucide-react';
-import { ServicesStack } from './ServicesStack';
-
-/* Three disciplines. Websites and UI/UX are one thing here: the product and
-   the site are designed by the same hands, and the BMTC app film carries
-   the card. Content and motion are not cards: content is the same feed the
-   campaigns run on, and motion is a medium that every film here already
-   shows, so both live as tags on Ads & Campaigns (Rajat, 2026-09-20). */
-const services = [
-  {
-    number: '01',
-    eyebrow: 'Web & product',
-    title: 'Websites & UI/UX',
-    description:
-      'The site and the product, designed as one. Research, flows and prototypes through to a build that is fast, responsive and made to convert.',
-    tags: ['Web Design', 'UI/UX', 'Prototyping', 'Design Systems', 'Webflow', 'E-commerce'],
-    video: '/videos/app-showcase.mp4',
-  },
-  {
-    number: '02',
-    eyebrow: 'Identity',
-    title: 'Brand Identity',
-    description:
-      'A mark, a voice and a visual language that hold together everywhere they appear. Logo systems, typography, guidelines: the whole kit.',
-    tags: ['Logo Design', 'Visual Identity', 'Brand Strategy', 'Typography', 'Art Direction'],
-    video: '/videos/apptile-logomotion.mp4',
-  },
-  {
-    number: '03',
-    eyebrow: 'Performance',
-    title: 'Ads & Campaigns',
-    description:
-      'Creatives built to be measured. Static, motion and video ad sets, the feed and reels around them, landing pages to match, and the iteration loop that keeps them earning.',
-    tags: ['Ad Creatives', 'Social Content', 'Reels', 'Brand Motion', 'Landing Pages', 'Meta & Google', 'A/B Variants'],
-    video: '/videos/terrabarn-socials.mp4',
-  },
-];
+import { ServicesGrid, services } from './ServicesGrid';
 
 export function Services() {
   const headingRef = useRef<HTMLDivElement>(null);
@@ -74,16 +39,15 @@ export function Services() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="text-xs tracking-[0.25em] uppercase"
             >
-              {services.length} Disciplines
+              What we cover
             </motion.span>
           </motion.div>
         </div>
       </div>
 
-      {/* Stacked service cards — full-bleed, breaks out of the max-w-5xl
-          text column since the spatial stack needs the full viewport width
-          to feel like an actual environment, not a cramped column. */}
-      <ServicesStack services={services} />
+      {/* The three disciplines as one grid, full-bleed; its own heading is
+          off here because this page has just introduced it. */}
+      <ServicesGrid heading={false} />
 
       {/* Bottom CTA strip — same constrained container as before */}
       <div className="max-w-5xl mx-auto px-6 lg:px-12">
