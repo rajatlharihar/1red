@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 5, R14
+
+- **Selected Work** (`FlashWork.tsx`, `data/projects.json`): headline one weight down (700); order is now Apptile, Yui, Illusdoodle, Ground, Terrabarn (renumbered); the three Behance cases are attached to their existing entries rather than duplicated (`behanceId` on Apptile 202820463, Yui 254011223, Illusdoodle 246821657): the desktop panel gets a "View on Behance" link beside "View case study", and the phone list embeds each case (`BehanceEmbed`, iframe mounted only within 400 px of the viewport, with the link beneath).
+
 ## 2026-09-21 — fast-scroll fixes (Rajat, direct)
 
 - **The grid's copy is there the moment it arrives** (`studio/ProcessSpace.tsx`): on a fast scroll the raw scroll left the pin while the glide was still catching up, so the frame unpinned and slid away under the arriving grid, cutting the text under the panels until the swap. The section now has an 80vh pinned tail like the home hero, the landing also counts when the raw scroll has left the pin, the stage copy is 140vh tall (scaled down in depth it ended short of the frame), and both copies swap by opacity so they stay rasterised and the reveal and the swap cost nothing on their frame. `Film` treats opacity as hidden too.

@@ -356,11 +356,11 @@ function StaticWorkList() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {projects.map((project) => (
-        <Link
-          key={project.number}
+        <div key={project.number} style={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+          <Link
           to={`/work/${project.id}`}
           className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
-          style={{ display: 'block', padding: '18px 0', borderBottom: '1px solid rgba(0,0,0,0.08)', textDecoration: 'none', color: 'rgb(10,10,10)' }}
+          style={{ display: 'block', padding: '18px 0', textDecoration: 'none', color: 'rgb(10,10,10)' }}
         >
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
@@ -379,8 +379,57 @@ function StaticWorkList() {
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, lineHeight: 1.6, opacity: 0.55, margin: '10px 0 0' }}>
             {project.overview}
           </p>
-        </Link>
+          </Link>
+          {project.behanceId && <BehanceEmbed id={project.behanceId} title={project.title} />}
+        </div>
       ))}
+    </div>
+  );
+}
+
+/** The project's Behance case, embedded lazily (the iframe only loads
+ *  once it is near the viewport), with the link out beneath it. */
+function BehanceEmbed({ id, title }: { id: string; title: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setNear(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: '400px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div ref={ref} style={{ padding: '0 0 18px' }}>
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '404 / 316', background: '#F2EFE8', overflow: 'hidden' }}>
+        {near && (
+          <iframe
+            src={`https://www.behance.net/embed/project/${id}?ilo0=1`}
+            title={`${title} on Behance`}
+            loading="lazy"
+            allowFullScreen
+            allow="clipboard-write"
+            referrerPolicy="strict-origin-when-cross-origin"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+          />
+        )}
+      </div>
+      <a
+        href={`https://www.behance.net/gallery/${id}`}
+        target="_blank"
+        rel="noreferrer"
+        style={{ display: 'inline-block', marginTop: 10, fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgb(10,10,10)', textDecoration: 'none', borderBottom: '1px solid rgba(10,10,10,0.35)', paddingBottom: 3 }}
+      >
+        View on Behance ↗
+      </a>
     </div>
   );
 }
@@ -516,7 +565,7 @@ export function FlashWork() {
             initial={{ y: '110%' }}
             animate={headingInView ? { y: 0 } : {}}
             transition={{ duration: 0.78, ease: EASE, delay: 0.05 }}
-            style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(36px, min(6vw, 9vh), 84px)', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.96, margin: 0, color: 'rgb(10,10,10)' }}
+            style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(36px, min(6vw, 9vh), 84px)', fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 0.96, margin: 0, color: 'rgb(10,10,10)' }}
           >
             Here's what<br />the box built.
           </motion.h2>
@@ -737,6 +786,31 @@ export function FlashWork() {
                 >
                   View Case Study <ArrowUpRight size={13} strokeWidth={2} />
                 </Link>
+                {projects[activeIndex].behanceId && (
+                  <a
+                    href={`https://www.behance.net/gallery/${projects[activeIndex].behanceId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      marginLeft: 22,
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: '0.16em',
+                      textTransform: 'uppercase',
+                      textDecoration: 'none',
+                      color: 'white',
+                      borderBottom: '1px solid rgba(255,255,255,0.45)',
+                      paddingBottom: 3,
+                    }}
+                  >
+                    View on Behance <ArrowUpRight size={13} strokeWidth={2} />
+                  </a>
+                )}
               </motion.div>
 
               <ExploreBadge x={badgeX} y={badgeY} hovered={badgeHovered} />

@@ -10,46 +10,20 @@
     "cubeface": "pz",
     "targetRotY": 0,
     "targetRotX": 0,
-    "behanceId": null,
+    "behanceId": "202820463",
     "overview": "A modular brand system built for scale. We unified identity, motion language, and digital presence across every surface — from app icons to investor decks.",
-    "deliverables": ["Logo System", "Brand Guidelines", "Typography Scale", "Motion Identity", "Digital Assets"],
+    "deliverables": [
+      "Logo System",
+      "Brand Guidelines",
+      "Typography Scale",
+      "Motion Identity",
+      "Digital Assets"
+    ],
     "result": "Brand recognition increased 3× in the first quarter post-launch."
   },
   {
-    "id": "terrabarn",
-    "number": "02",
-    "title": "Terrabarn",
-    "category": "Social Media",
-    "year": "2025",
-    "color": "#E8EDF2",
-    "video": "/videos/terrabarn-socials.mp4",
-    "cubeface": "px",
-    "targetRotY": -1.5707963,
-    "targetRotX": 0,
-    "behanceId": null,
-    "overview": "Strategic content architecture and scroll-stopping creative that built a loyal community from zero — through relentless consistency and on-brand storytelling.",
-    "deliverables": ["Content Strategy", "Ad Creatives", "Feed Design", "Monthly Reporting", "Community Playbook"],
-    "result": "Grew following by 18k in 6 months with a 9.4% average engagement rate."
-  },
-  {
-    "id": "ground",
-    "number": "03",
-    "title": "Ground",
-    "category": "Motion Graphics",
-    "year": "2026",
-    "color": "#EBF0E8",
-    "video": "/videos/ground-logo.mp4",
-    "cubeface": "nz",
-    "targetRotY": 3.1415926,
-    "targetRotX": 0,
-    "behanceId": null,
-    "overview": "Cinematic motion identity — animated brand assets, transitions, and social reels that made the brand impossible to ignore across every screen.",
-    "deliverables": ["Brand Animation System", "Social Reels", "Lottie Animations", "Intro/Outro Templates", "Motion Guidelines"],
-    "result": "Video content achieved 4× the reach of static posts within the first month."
-  },
-  {
     "id": "yui",
-    "number": "04",
+    "number": "02",
     "title": "Yui",
     "category": "UI/UX Design",
     "year": "2025",
@@ -60,12 +34,18 @@
     "targetRotX": 0,
     "behanceId": "254011223",
     "overview": "Human-centred product design from discovery to high-fidelity. We reduced friction at every touchpoint and created an experience users actually wanted to return to.",
-    "deliverables": ["User Research", "Wireframes", "Prototype System", "Design System", "Handoff Documentation"],
+    "deliverables": [
+      "User Research",
+      "Wireframes",
+      "Prototype System",
+      "Design System",
+      "Handoff Documentation"
+    ],
     "result": "User session duration increased by 62% and churn dropped by 28%."
   },
   {
     "id": "illusdoodle",
-    "number": "05",
+    "number": "03",
     "title": "Illusdoodle",
     "category": "Brand Strategy",
     "year": "2025",
@@ -75,9 +55,59 @@
     "cubeface": "py",
     "targetRotY": 0,
     "targetRotX": 1.5707963,
-    "behanceId": null,
+    "behanceId": "246821657",
     "overview": "Positioning framework and creative direction that gave a fast-growing creative studio a voice worth listening to — and a brand worth remembering.",
-    "deliverables": ["Positioning Framework", "Tone of Voice", "Creative Direction", "Brand Playbook", "Campaign Strategy"],
+    "deliverables": [
+      "Positioning Framework",
+      "Tone of Voice",
+      "Creative Direction",
+      "Brand Playbook",
+      "Campaign Strategy"
+    ],
     "result": "Secured two enterprise retainers within 90 days of brand relaunch."
+  },
+  {
+    "id": "ground",
+    "number": "04",
+    "title": "Ground",
+    "category": "Motion Graphics",
+    "year": "2026",
+    "color": "#EBF0E8",
+    "video": "/videos/ground-logo.mp4",
+    "cubeface": "nz",
+    "targetRotY": 3.1415926,
+    "targetRotX": 0,
+    "behanceId": null,
+    "overview": "Cinematic motion identity — animated brand assets, transitions, and social reels that made the brand impossible to ignore across every screen.",
+    "deliverables": [
+      "Brand Animation System",
+      "Social Reels",
+      "Lottie Animations",
+      "Intro/Outro Templates",
+      "Motion Guidelines"
+    ],
+    "result": "Video content achieved 4× the reach of static posts within the first month."
+  },
+  {
+    "id": "terrabarn",
+    "number": "05",
+    "title": "Terrabarn",
+    "category": "Social Media",
+    "year": "2025",
+    "color": "#E8EDF2",
+    "video": "/videos/terrabarn-socials.mp4",
+    "cubeface": "px",
+    "targetRotY": -1.5707963,
+    "targetRotX": 0,
+    "behanceId": null,
+    "overview": "Strategic content architecture and scroll-stopping creative that built a loyal community from zero — through relentless consistency and on-brand storytelling.",
+    "deliverables": [
+      "Content Strategy",
+      "Ad Creatives",
+      "Feed Design",
+      "Monthly Reporting",
+      "Community Playbook"
+    ],
+    "result": "Grew following by 18k in 6 months with a 9.4% average engagement rate."
   }
 ]
