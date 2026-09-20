@@ -12,7 +12,7 @@ import { ServicesGrid } from '../components/ServicesGrid';
 export function StudioPage() {
   return (
     <>
-      <ProcessSpace arrival={<ServicesGrid still />} />
+      <ProcessSpace arrival={(inert) => <ServicesGrid still inert={inert} />} />
       <TeamZoom />
       <TeamTable />
     </>

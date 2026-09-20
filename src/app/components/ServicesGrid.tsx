@@ -16,6 +16,7 @@ const INK = '#0A0A0A';
 const RULE = 'rgba(10,10,10,0.14)';
 const RED = '#EA3323';
 const RED_SOFT = '#FF5A4A';
+const SKY = '#F2EFE8';
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /* Websites and UI/UX are one thing here: the product and the site are
@@ -119,39 +120,37 @@ const label: React.CSSProperties = {
   color: INK,
 };
 
-function Copy({ s }: { s: (typeof services)[number] }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 22 }}>
-      <span style={label}>{s.eyebrow}</span>
-      <h3 style={{ margin: 0, fontSize: 'clamp(24px, 2.3vw, 38px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1.0, color: INK }}>{s.title}</h3>
-      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55, opacity: 0.6, maxWidth: '38ch', color: INK }}>{s.description}</p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', marginTop: 4 }}>
-        {s.tags.map((t) => (
-          <span key={t} style={{ ...label, letterSpacing: '0.14em', opacity: 0.5 }}>
-            {t}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /** A tall red panel in the process scene's language, the film in a window
  *  low on it, nothing over the red but the film. */
+/** A tall red panel in the process scene's language: the discipline's
+ *  label, name, line and tags on the red at the top, on an inner margin,
+ *  the film in a window beneath. */
 function RedPanel({ s, i, inert }: { s: (typeof services)[number]; i: number; inert: boolean }) {
   return (
-    <div style={{ position: 'relative', aspectRatio: '1 / 1.35' }}>
-      <svg viewBox="0 0 100 135" preserveAspectRatio="none" style={{ position: 'absolute', inset: '-2% -4%', width: '108%', height: '104%', overflow: 'visible' }}>
+    <div style={{ position: 'relative', aspectRatio: '1 / 1.5' }}>
+      <svg viewBox="0 0 100 150" preserveAspectRatio="none" style={{ position: 'absolute', inset: '-2% -4%', width: '108%', height: '104%', overflow: 'visible' }}>
         <defs>
           <filter id={`sg-rough-${i}`} x="-10%" y="-10%" width="120%" height="120%">
             <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed={11 + i} result="n" />
             <feDisplacementMap in="SourceGraphic" in2="n" scale="1.8" xChannelSelector="R" yChannelSelector="G" />
           </filter>
         </defs>
-        <rect x={4.5} y={3.5} width={92} height={128} fill={RED_SOFT} opacity={0.5} filter={`url(#sg-rough-${i})`} transform={`rotate(${i % 2 ? 0.5 : -0.5} 50 67)`} />
-        <rect x={4} y={3} width={92} height={128} fill={RED} filter={`url(#sg-rough-${i})`} transform={`rotate(${i % 2 ? -0.35 : 0.4} 50 67)`} />
+        <rect x={4.5} y={3.5} width={92} height={143} fill={RED_SOFT} opacity={0.5} filter={`url(#sg-rough-${i})`} transform={`rotate(${i % 2 ? 0.5 : -0.5} 50 75)`} />
+        <rect x={4} y={3} width={92} height={143} fill={RED} filter={`url(#sg-rough-${i})`} transform={`rotate(${i % 2 ? -0.35 : 0.4} 50 75)`} />
       </svg>
-      <div style={{ position: 'absolute', left: '11%', right: '11%', bottom: '8%', height: '58%', overflow: 'hidden', border: `1px solid ${INK}`, zIndex: 1 }}>
+      <div style={{ position: 'absolute', left: '10%', right: '10%', top: '7%', color: SKY, display: 'flex', flexDirection: 'column', gap: 10, zIndex: 2 }}>
+        <span style={{ ...label, color: SKY, opacity: 0.85 }}>{s.eyebrow}</span>
+        <h3 style={{ margin: 0, fontSize: 'clamp(22px, 2vw, 34px)', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.0 }}>{s.title}</h3>
+        <p style={{ margin: 0, fontSize: 'clamp(12px, 0.95vw, 15px)', lineHeight: 1.45, opacity: 0.9 }}>{s.description}</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
+          {s.tags.map((t) => (
+            <span key={t} style={{ ...label, color: SKY, letterSpacing: '0.14em', opacity: 0.7, fontSize: 9 }}>
+              {t}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div style={{ position: 'absolute', left: '10%', right: '10%', bottom: '6%', height: '34%', overflow: 'hidden', border: `1px solid ${INK}`, zIndex: 1 }}>
         <Film src={s.video} inert={inert} />
       </div>
     </div>
@@ -168,11 +167,11 @@ const rise = (i: number, still: boolean) =>
         transition: { duration: 0.8, delay: 0.08 * i, ease: EASE },
       };
 
-/** `heading` off where the page already introduces the block (the
- *  Services page); on for a standalone mount (the Studio page). `still`
- *  renders the settled state with no entrance motion and films that never
- *  play, for the copy the Studio arrival carries in the stage. */
-export function ServicesGrid({ heading = true, still = false }: { heading?: boolean; still?: boolean }) {
+/** `heading` off where the page already introduces the block; on for a
+ *  standalone mount (the Studio page). `still` renders the settled state
+ *  with no entrance motion; `inert` makes the films stills too, for the
+ *  copy the Studio arrival carries in the stage (the flow copy plays). */
+export function ServicesGrid({ heading = true, still = false, inert = false }: { heading?: boolean; still?: boolean; inert?: boolean }) {
   const wide = useWide();
   const [a, b, c] = services;
   const pad = 'clamp(1.5rem, 4vw, 5rem)';
@@ -197,8 +196,7 @@ export function ServicesGrid({ heading = true, still = false }: { heading?: bool
               borderBottom: !wide && i < 2 ? `1px solid ${RULE}` : 'none',
             }}
           >
-            <RedPanel s={s} i={i} inert={still} />
-            <Copy s={s} />
+            <RedPanel s={s} i={i} inert={inert} />
           </motion.div>
         ))}
       </div>

@@ -6,6 +6,11 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 5, R22
+
+- **"What we cover" content on the panels** (`ServicesGrid.tsx`): label, name, line and tags sit on the red at the top of each panel on a 10% margin, in the sky colour, as the process panels do; the film window is beneath (panels 1:1.5). The copy block under the panels is gone.
+- **The films play.** They were not: `still` also made the films inert, and both copies on /studio were `still`. `inert` is its own prop now, and `ProcessSpace` takes `arrival` as a render function, giving the stage copy `inert` and the flow copy playback. Verified in the browser: the three films' currentTime advances (0.5 s → 1.8 s over a second) and the frame pixels change; the stage copy stays a still.
+
 ## 2026-09-21 — round 5, R16
 
 - **Phone nav after Rajat's YUI site** (`Navigation.tsx`, yuiii.vercel.app at 390 wide): no panel. The trigger turns into a red X, and a column of round black buttons, one per destination with the current one red, drops from under it with a short stagger and lifts back on close. Phone process grid sat lower and smaller under a 34px heading so the two no longer overlap.

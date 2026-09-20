@@ -261,11 +261,11 @@ function useWide() {
   return wide;
 }
 
-/** `arrival`: the chapter that follows (S2, the services grid). It rides in
- *  at the end of the camera's run inside the stage, then the same element in
- *  normal flow takes over on the frame the section unpins, where the two
- *  coincide pixel for pixel. */
-export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
+/** `arrival`: the chapter that follows (S2, the services grid), as a
+ *  render function: the stage copy gets `inert` (films as stills), the flow
+ *  copy plays. It rides in at the end of the camera's run inside the stage,
+ *  then the flow copy takes over on the landing, where the two coincide. */
+export function ProcessSpace({ arrival }: { arrival?: (inert: boolean) => ReactNode }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
   const stageArrivalRef = useRef<HTMLDivElement>(null);
@@ -373,7 +373,7 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
     return (
       <>
         <StudioProcess />
-        {arrival && <div style={{ background: BG, paddingTop: '6rem' }}>{arrival}</div>}
+        {arrival && <div style={{ background: BG, paddingTop: '6rem' }}>{arrival(false)}</div>}
       </>
     );
   }
@@ -458,7 +458,7 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
               frame clips it. */}
           {arrival && (
             <div ref={stageArrivalRef} style={{ position: 'absolute', left: 0, right: 0, top: 0, minHeight: '140vh', background: BG, zIndex: 1, opacity: 0, willChange: 'transform, opacity' }}>
-              <ArrivalFrame>{arrival}</ArrivalFrame>
+              <ArrivalFrame>{arrival(true)}</ArrivalFrame>
             </div>
           )}
         </div>
@@ -469,7 +469,7 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
           still-pinned frame through the tail. */}
       {arrival && (
         <div ref={flowArrivalRef} style={{ position: 'relative', zIndex: 2, marginTop: `-${100 + TAIL_VH}vh`, background: BG, opacity: 0 }}>
-          <ArrivalFrame>{arrival}</ArrivalFrame>
+          <ArrivalFrame>{arrival(false)}</ArrivalFrame>
         </div>
       )}
     </section>
