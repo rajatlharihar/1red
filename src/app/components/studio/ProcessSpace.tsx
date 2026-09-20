@@ -3,23 +3,29 @@ import { useReducedMotion } from 'motion/react';
 import { process } from '../../data/process';
 import { glide, subscribeGlide } from '../scrollGlide';
 import { StudioProcess } from '../StudioProcess';
+import { CUSTOM_DIGITS } from './customDigits';
 
 /* ─── The process, in depth ────────────────────────────────────────────────
  * The scene is the studio's own print (StudioProcess.tsx, after the
- * reference in .claude/refs/process-3d-space-red-panels-ref.png): tall red
- * panels in a pale room, small ink figures walking about them, a ladder, a
- * scribble on the ground. Here it stands up in space: five panels, one per
- * step, along the camera axis; scroll drives the camera forward on the
- * shared glide, steering onto each panel and passing it, and the next is
- * already in view beyond. After the fifth the camera runs on into open
- * space, and the next chapter arrives (`arrival`, see below).
+ * reference in .claude/refs/process-3d-space-red-panels-ref.png): a 3 x 3
+ * grid of tall red panels seen head-on in a pale room, small ink figures
+ * about them, a ladder, scribbles on the ground. Here the grid has depth
+ * by number: panel 01 stands nearest the lens, 02 a little further, and so
+ * on to 05, with blank panels filling the other four slots. Scroll drives
+ * the camera straight in on the shared glide, so the panels arrive and
+ * pass in order, 01 first; 05 is the centre slot, and the camera passes
+ * through it into the next chapter (`arrival`).
  *
  * Built in CSS 3D rather than a canvas: the panels carry type, and type
  * stays crisp under a transform where a texture would not. A `perspective`
  * container is the lens; each panel is placed at its own depth and the
- * browser does the projection (scale = P / (P + depth)). The floor is one
- * plane laid flat through the screen plane, so the horizon sits at the
- * lens's own height and everything standing on it recedes correctly.
+ * browser does the projection (scale = P / (P + depth)). The grid reads as
+ * a grid at the opening shot because every panel's world size and offset
+ * are scaled by its own opening depth, so their projections line up.
+ *
+ * Performance: nothing that moves per frame carries a filter. The panels'
+ * rough edges are static wobbly paths from a seeded PRNG; the figures are
+ * plain paths; per frame only transforms and opacities change.
  * ────────────────────────────────────────────────────────────────────────── */
 
 const INK = '#0A0A0A';
@@ -28,7 +34,6 @@ const RED_SOFT = '#FF5A4A';
 const BG = '#FFFFFF';
 const SKY = '#F2EFE8';
 const FLOOR = '#E9E6DE';
-const RULE = 'rgba(10,10,10,0.18)';
 
 /** Scroll per step, plus the pinned viewport. */
 const STEP_VH = 120;
@@ -36,41 +41,63 @@ const SECTION_VH = STEP_VH * process.length + 100;
 
 /** The lens: CSS perspective distance in px. */
 const P = 1200;
-/** Depth between one card and the next, px. */
+/** Depth between one numbered panel and the next, px. */
 const D = 1200;
-/** Lateral offset of a panel in WORLD units (share of the viewport width)
- *  at its own depth, alternating left/right. `SIDE_NEAR` is where the
- *  camera leaves it as it passes: just beside the axis, so the panel
- *  brushes past the lens rather than being run through head-on. */
-const SIDE = 0.55;
-const SIDE_NEAR = 0.16;
-/** Where the floor meets the screen plane, as a share of the frame's
- *  height. The horizon is at 50%: the lens looks level. */
-const FLOOR_Y = 0.8;
-/** Camera depth at which the first card is still approaching (start) and
- *  how far past the last card's plane the camera runs on (end). */
+/** Camera depth at the opening shot (panel 01 is this far ahead) and how
+ *  far past the last panel's plane the camera runs on. */
 const START_Z = -1.3 * D;
 const RUN_OUT = 1.0 * D;
 const TRAVEL = (process.length - 1) * D + P + RUN_OUT - START_Z;
-/** Section progress at which the camera has crossed the last card: S2's
+/** Section progress at which the camera has crossed the last panel: S2's
  *  cue. From here to 1 the frame is open space. */
 export const EXIT_P = ((process.length - 1) * D + P - START_Z) / TRAVEL;
-/** The next chapter waits at the end of the run: it is drawn in the stage
- *  a little short of the screen plane (about 92% size) as the last card
- *  clears, and settles onto it as the section unpins. Its depth is the
- *  camera's remaining run scaled by this, so it eases in rather than
- *  rushing up from half size. */
+/** The next chapter is drawn in the stage a little short of the screen
+ *  plane (about 92% size) as the last panel clears, and settles onto it as
+ *  the section unpins. */
 const ARRIVAL_K = 0.087;
 
+/** Where the floor meets the screen plane, as a share of the frame's
+ *  height. The horizon is at 50%: the lens looks level. */
+const FLOOR_Y = 0.8;
+
 /** A panel fades between these depths (negative: past the screen plane,
- *  toward the lens at -P) and is dropped just before the lens. */
+ *  toward the lens at −P) and is dropped just before the lens. */
 const FADE_FROM = -0.86 * P;
 const FADE_TO = -0.97 * P;
 /** The panel's red clears earlier, once it has grown past the frame, so
- *  what is beyond is seen through it rather than a red stretch; its type
- *  goes only at the very end. */
+ *  what is beyond is seen through it rather than a red stretch. */
 const FILL_FROM = -0.3 * P;
 const FILL_TO = -0.65 * P;
+
+/* ── The grid ───────────────────────────────────────────────────────────
+ * Nine slots, columns −1/0/+1 and rows −1/0/+1, as they read at the
+ * opening shot: `COL` and `ROW` are the slot pitch as shares of the frame's
+ * width and height, `OPEN_W` a panel's projected width then. Numbered
+ * panels take the print's stage slots, 05 at the centre so the camera
+ * passes through it; blanks fill the rest at half-step depths. */
+const COL = 0.115;
+const ROW = 0.3;
+const OPEN_W = 0.064;
+const ASPECT = 2.4;
+type Slot = { col: number; row: number; step?: number; z: number };
+const SLOTS: Slot[] = [
+  { col: -1, row: -1, step: 0, z: 0 },
+  { col: 1, row: 0, step: 1, z: D },
+  { col: -1, row: 0, step: 2, z: 2 * D },
+  { col: 1, row: 1, step: 3, z: 3 * D },
+  { col: 0, row: 0, step: 4, z: 4 * D },
+  { col: 0, row: -1, z: 0.5 * D },
+  { col: 1, row: -1, z: 1.5 * D },
+  { col: -1, row: 1, z: 2.5 * D },
+  { col: 0, row: 1, z: 3.5 * D },
+];
+/** Scale factor that makes a panel at opening depth `z − START_Z` project
+ *  like one on the screen plane. */
+const openK = (z: number) => 1 + (z - START_Z) / P;
+
+/* The heading row leaves upward over this window of progress. */
+const HEAD_FROM = 0.05;
+const HEAD_TO = 0.16;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (a: number, b: number, v: number) => {
@@ -78,7 +105,148 @@ const smooth = (a: number, b: number, v: number) => {
   return t * t * (3 - 2 * t);
 };
 
-/** Landscape cards from 768px; a phone gets a taller, near-full-width card. */
+/* ── Drawing, all static ─────────────────────────────────────────────── */
+
+function rng(seed: number) {
+  let n = seed * 9301 + 49297;
+  return () => ((n = (n * 9301 + 49297) % 233280) / 233280);
+}
+
+/** A panel's edge as the print has it: a rectangle whose sides wander a
+ *  little, in a 100 x 240 box. Two of them, offset, make the double pass. */
+function roughRect(seed: number, inset: number, j: number) {
+  const r = rng(seed);
+  const pts: Array<[number, number]> = [];
+  const x0 = inset;
+  const x1 = 100 - inset;
+  const y0 = inset;
+  const y1 = 240 - inset;
+  const along = (a: [number, number], b: [number, number], n: number) => {
+    for (let i = 0; i < n; i++) {
+      const t = i / n;
+      pts.push([a[0] + (b[0] - a[0]) * t + (r() - 0.5) * j, a[1] + (b[1] - a[1]) * t + (r() - 0.5) * j]);
+    }
+  };
+  along([x0, y0], [x1, y0], 4);
+  along([x1, y0], [x1, y1], 9);
+  along([x1, y1], [x0, y1], 4);
+  along([x0, y1], [x0, y0], 9);
+  return 'M' + pts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join('L') + 'Z';
+}
+const EDGES = SLOTS.map((_, i) => ({ a: roughRect(31 + i, 4, 2.4), b: roughRect(53 + i, 2, 3.2) }));
+
+/* Ink silhouettes from the print: 20 units tall, feet at the origin. */
+const FIGURE_STAND = 'M-2.3-16.5h4.6v8.2h-1.3V0h-1.4v-7.4h-0.4V0h-1.4v-8.3h-0.1z';
+const FIGURE_WALK = 'M-2.3-16.5h4.6v8.2l1.6 8.3h-1.5l-1.7-6.4L-0.6 0h-1.5l0.7-8.3h-0.9z';
+function Figure({ x, y, walk = false, scale = 1, flip = false }: { x: number; y: number; walk?: boolean; scale?: number; flip?: boolean }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${flip ? -scale : scale} ${scale})`}>
+      <ellipse cx={-6} cy={0.6} rx={7.5} ry={1.4} fill={INK} opacity={0.32} transform="skewX(-38)" />
+      <circle cx={0} cy={-19.5} r={2.3} fill={INK} />
+      <path d={walk ? FIGURE_WALK : FIGURE_STAND} fill={INK} />
+    </g>
+  );
+}
+
+/* Who stands where, per slot, in a 200-wide frame whose x = 100 is the
+   panel's centre and y = 100 its foot. */
+const CROWDS: Array<Array<{ x: number; y: number; walk?: boolean; scale?: number; flip?: boolean }>> = [
+  [{ x: 62, y: 104, walk: true, scale: 1.1 }, { x: 128, y: 98, scale: 0.9 }],
+  [{ x: 148, y: 106, walk: true, flip: true, scale: 1.15 }, { x: 88, y: 96, scale: 0.85 }, { x: 104, y: 99, scale: 0.85 }],
+  [{ x: 40, y: 108, walk: true, scale: 1.2 }, { x: 130, y: 100, scale: 0.9 }],
+  [{ x: 70, y: 104, scale: 1 }, { x: 84, y: 105, walk: true, scale: 1 }, { x: 150, y: 97, scale: 0.8, flip: true }],
+  [{ x: 120, y: 106, walk: true, flip: true, scale: 1.15 }, { x: 56, y: 98, scale: 0.9 }],
+  [{ x: 110, y: 102, scale: 0.9 }],
+  [],
+  [{ x: 160, y: 104, walk: true, scale: 1 }],
+  [{ x: 44, y: 100, scale: 0.85, flip: true }],
+];
+const SCRIBBLES = [
+  'M20 112 q30 -8 60 2 t70 -4',
+  'M120 116 q20 -10 50 -2 q10 4 30 -6',
+  'M10 118 q40 6 80 -6 q30 -8 70 4 q10 2 30 -4',
+  'M150 110 q-40 8 -90 0',
+  'M30 114 q30 -12 60 0 t60 -2 q12 4 34 -8',
+  '',
+  'M60 114 q40 -6 80 2',
+  '',
+  'M20 110 q50 10 100 -4',
+];
+
+/** One of Rajat's numerals, from the sheet, at a given height. */
+function Digit({ n, height, stroke }: { n: number; height: string; stroke: string }) {
+  const g = CUSTOM_DIGITS[n];
+  return (
+    <svg viewBox={`${g.x0} ${g.y0} ${g.w} ${g.h}`} style={{ height, width: 'auto', display: 'block', overflow: 'visible' }} fill="none" stroke={stroke} strokeWidth={14} strokeLinejoin="round">
+      {g.paths.map((d, i) => (
+        <path key={i} d={d} />
+      ))}
+    </svg>
+  );
+}
+
+function Panel({ slot, i, wide, panelRef }: { slot: Slot; i: number; wide: boolean; panelRef: (el: HTMLDivElement | null) => void }) {
+  const step = slot.step != null ? process[slot.step] : null;
+  const k = openK(slot.z);
+  const w = `${(OPEN_W * k * 100).toFixed(2)}vw`;
+  const left = slot.col <= 0; // caption reads on the panel's right
+  return (
+    <div style={{ position: 'relative', width: w, aspectRatio: `1 / ${ASPECT}` }}>
+      <div ref={panelRef} style={{ position: 'absolute', inset: 0, willChange: 'opacity' }}>
+        <svg viewBox="0 0 100 240" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible' }}>
+          <path d={EDGES[i].b} fill={RED_SOFT} opacity={0.5} />
+          <path d={EDGES[i].a} fill={RED} />
+        </svg>
+        {step && (
+          <div style={{ position: 'absolute', left: '10%', top: '5%', height: '20%', display: 'flex', gap: '4%' }}>
+            {step.number.split('').map((ch, j) => (
+              <Digit key={j} n={Number(ch)} height="100%" stroke={SKY} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* The crowd, the ladder on 04, the scribble: on the ground at the
+          panel's foot, spilling either side of it. */}
+      <svg viewBox="0 0 200 130" style={{ position: 'absolute', left: '-50%', bottom: '-11%', width: '200%', height: 'auto', overflow: 'visible', pointerEvents: 'none' }}>
+        {SCRIBBLES[i] && <path d={SCRIBBLES[i]} fill="none" stroke={INK} strokeWidth={0.9} strokeLinecap="round" />}
+        {slot.step === 3 && (
+          <g stroke={INK} strokeWidth={0.9} fill="none" transform="translate(74 10)">
+            <line x1={0} y1={0} x2={-6} y2={92} />
+            <line x1={14} y1={0} x2={8} y2={92} />
+            {[10, 22, 34, 46, 58, 70, 82].map((y) => (
+              <line key={y} x1={-y / 15} y1={y} x2={14 - y / 15} y2={y + 0.5} />
+            ))}
+          </g>
+        )}
+        {CROWDS[i].map((f, j) => (
+          <Figure key={j} {...f} />
+        ))}
+      </svg>
+
+      {step && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '6%',
+            ...(left ? { left: '115%' } : { right: '115%', textAlign: 'right' }),
+            // Sized to the panel, so it scales with it in depth.
+            width: `calc(${w} * 1.6)`,
+            color: INK,
+            fontSize: `calc(${w} * 0.075)`,
+          }}
+        >
+          <span style={{ display: 'block', fontFamily: 'var(--font-sans)', fontSize: '0.55em', fontWeight: 600, letterSpacing: '0.24em', textTransform: 'uppercase', color: RED, marginBottom: '0.8em' }}>
+            Step {step.number}
+          </span>
+          <h3 style={{ margin: 0, fontSize: '2.2em', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.96 }}>{step.title}</h3>
+          <p style={{ margin: '0.7em 0 0', fontSize: wide ? '0.8em' : '0.9em', lineHeight: 1.5, opacity: 0.65 }}>{step.description}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function useWide() {
   const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches);
   useEffect(() => {
@@ -97,6 +265,7 @@ function useWide() {
  *  coincide pixel for pixel. */
 export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
   const wrapRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
   const stageArrivalRef = useRef<HTMLDivElement>(null);
   const flowArrivalRef = useRef<HTMLDivElement>(null);
   const wide = useWide();
@@ -110,50 +279,50 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
       const el = wrapRef.current;
       if (!el) return;
       const top = el.getBoundingClientRect().top + glide.raw;
-      const scrollable = (SECTION_VH / 100 - 1) * window.innerHeight;
+      const vh = window.innerHeight;
+      const vw = window.innerWidth;
+      const scrollable = (SECTION_VH / 100 - 1) * vh;
       if (scrollable <= 0) return;
       const p = clamp01((glide.y - top) / scrollable);
       const camZ = START_Z + p * TRAVEL;
-      const vw = window.innerWidth;
-      /* A panel covers the whole frame from this depth on (its projected
-         size exceeds the viewport both ways). Its fill may only clear from
-         behind that point, so what it uncovers is never a switch. */
-      const first = panelRefs.current[0];
-      const coverDepth = first
-        ? P / Math.max(vw / first.offsetWidth, window.innerHeight / first.offsetHeight) - P
-        : FILL_FROM;
+
+      if (headRef.current) {
+        const t = smooth(HEAD_FROM, HEAD_TO, p);
+        headRef.current.style.transform = `translate3d(0, ${(-t * 120).toFixed(2)}%, 0)`;
+        headRef.current.style.opacity = (1 - t).toFixed(3);
+      }
+
+      /* The last panel (05, centre slot) covers the whole frame from this
+         depth on. Its fill may only clear from behind that point, so what it
+         uncovers is never a switch. */
+      const last = panelRefs.current[4];
+      const coverDepth = last ? P / Math.max(vw / last.offsetWidth, vh / last.offsetHeight) - P : FILL_FROM;
       const fillFrom = Math.min(FILL_FROM, coverDepth - 0.05 * P);
       if (stageArrivalRef.current && flowArrivalRef.current) {
         const depth = (TRAVEL + START_Z - camZ) * ARRIVAL_K;
         const landed = p >= 1;
-        // Only there once the last panel has the frame covered: it is what
-        // the panel's clearing fill reveals.
-        const lastDepth = (process.length - 1) * D - camZ;
+        const lastDepth = SLOTS[4].z - camZ;
         stageArrivalRef.current.style.transform = `translate3d(0, 0, ${(-depth).toFixed(1)}px)`;
         stageArrivalRef.current.style.visibility = !landed && lastDepth <= coverDepth ? 'visible' : 'hidden';
         flowArrivalRef.current.style.visibility = landed ? 'visible' : 'hidden';
       }
+
       groupRefs.current.forEach((group, i) => {
         const panel = panelRefs.current[i];
         if (!group || !panel) return;
-        const depth = i * D - camZ;
+        const slot = SLOTS[i];
+        const depth = slot.z - camZ;
         if (depth < FADE_TO) {
           group.style.visibility = 'hidden';
           return;
         }
         group.style.visibility = 'visible';
-        // Out to the side while waiting, in beside the axis as it becomes
-        // the one in front: the camera steers onto each panel in turn.
-        const sign = i % 2 === 0 ? -1 : 1;
-        const side = sign * vw * (SIDE_NEAR + (SIDE - SIDE_NEAR) * smooth(0.15 * D, 1.0 * D, depth));
-        group.style.transform = `translate(-50%, -100%) translate3d(${side.toFixed(1)}px, 0, ${(-depth).toFixed(1)}px)`;
+        const k = openK(slot.z);
+        const x = slot.col * COL * vw * k;
+        const y = slot.row * ROW * vh * k;
+        group.style.transform = `translate(-50%, -50%) translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${(-depth).toFixed(1)}px)`;
         group.style.opacity = (1 - smooth(FADE_FROM, FADE_TO, depth)).toFixed(3);
-        const fill = 1 - smooth(fillFrom, Math.min(FILL_TO, fillFrom - 0.3 * P), depth);
-        panel.style.opacity = fill.toFixed(3);
-        // Depth cue: a panel in the queue is drawn a little lighter and
-        // comes up to full red as it arrives.
-        const near = 1 - smooth(0.3 * D, 2.2 * D, depth);
-        panel.style.filter = `saturate(${(0.7 + 0.3 * near).toFixed(3)}) brightness(${(1.12 - 0.12 * near).toFixed(3)})`;
+        panel.style.opacity = (1 - smooth(fillFrom, Math.min(FILL_TO, fillFrom - 0.3 * P), depth)).toFixed(3);
       });
     });
   }, [reduceMotion]);
@@ -171,21 +340,9 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
   return (
     <section style={{ position: 'relative', background: SKY, color: INK }}>
       <div ref={wrapRef} style={{ height: `${SECTION_VH}vh`, position: 'relative' }}>
-        <div
-          style={{
-            position: 'sticky',
-            top: 0,
-            height: '100vh',
-            overflow: 'hidden',
-            perspective: `${P}px`,
-            perspectiveOrigin: '50% 50%',
-            background: SKY,
-          }}
-        >
+        <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', perspective: `${P}px`, perspectiveOrigin: '50% 50%', background: SKY }}>
           {/* The floor: one plane laid flat through the screen plane at
-              FLOOR_Y, long enough both ways that neither edge ever shows.
-              Plain colour, so it needs no motion of its own: the things
-              standing on it carry the travel. */}
+              FLOOR_Y, long enough both ways that neither edge ever shows. */}
           <div
             style={{
               position: 'absolute',
@@ -195,31 +352,30 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
               height: 24000,
               background: FLOOR,
               transform: 'translate(-50%, -50%) rotateX(90deg)',
-              transformOrigin: '50% 50%',
               zIndex: 0,
             }}
           />
-          {process.map((s, i) => (
+
+          {SLOTS.map((slot, i) => (
             <div
-              key={s.number}
+              key={i}
               ref={(el) => {
                 groupRefs.current[i] = el;
               }}
               style={{
                 position: 'absolute',
                 left: '50%',
-                top: `${FLOOR_Y * 100}%`,
-                // Nearer panels paint over farther ones. The camera always
-                // passes them in order, so DOM stacking can do the sorting
-                // (a preserve-3d stage cannot: overflow: hidden flattens it).
-                zIndex: process.length - i + 1,
+                top: '50%',
+                // Nearer panels paint over farther ones; DOM stacking sorts
+                // them, since overflow: hidden rules out a preserve-3d stage.
+                zIndex: 20 - Math.round(slot.z / (D / 2)),
                 willChange: 'transform, opacity',
                 visibility: 'hidden',
               }}
             >
               <Panel
-                step={s}
-                index={i}
+                slot={slot}
+                i={i}
                 wide={wide}
                 panelRef={(el) => {
                   panelRefs.current[i] = el;
@@ -227,20 +383,48 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
               />
             </div>
           ))}
-          {arrival && (
-            <div
-              ref={stageArrivalRef}
+
+          {/* The heading row, over the opening shot; it leaves upward as
+              the first panel comes. */}
+          <div
+            ref={headRef}
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: 'clamp(6.5rem, 11vh, 9rem)',
+              padding: '0 clamp(1.5rem, 4vw, 5rem)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+              rowGap: 'clamp(14px, 2.4vh, 28px)',
+              alignItems: 'start',
+              zIndex: 30,
+              pointerEvents: 'none',
+              willChange: 'transform, opacity',
+            }}
+          >
+            <h2 style={{ gridColumn: wide ? '1 / span 8' : '1 / span 12', margin: 0, fontSize: 'clamp(40px, 6.4vw, 112px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 0.94 }}>
+              Our process
+            </h2>
+            <span
               style={{
-                position: 'absolute',
-                inset: 0,
-                overflow: 'hidden',
-                background: BG,
-                // Behind every panel: the last one passes over it, and its
-                // clearing fill is what first shows it.
-                zIndex: 1,
-                willChange: 'transform',
+                gridColumn: wide ? '9 / span 4' : '1 / span 12',
+                fontFamily: 'var(--font-sans)',
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: '0.24em',
+                textTransform: 'uppercase',
+                lineHeight: 1.6,
+                paddingTop: wide ? 'clamp(6px, 0.5vw, 10px)' : 0,
               }}
             >
+              How we work, in five steps
+            </span>
+            <div style={{ gridColumn: '1 / span 12', height: 1, background: INK }} />
+          </div>
+
+          {arrival && (
+            <div ref={stageArrivalRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: BG, zIndex: 1, willChange: 'transform' }}>
               <ArrivalFrame>{arrival}</ArrivalFrame>
             </div>
           )}
@@ -258,141 +442,4 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
 /** Same top padding in the stage and in flow, so the swap is seamless. */
 function ArrivalFrame({ children }: { children: ReactNode }) {
   return <div style={{ paddingTop: 'clamp(5.5rem, 12vh, 9rem)' }}>{children}</div>;
-}
-
-/* ── The panel and what stands about it ────────────────────────────────── */
-
-/* Ink silhouettes from the print (StudioProcess.tsx): 20 units tall, feet
-   at the origin. */
-const FIGURE_STAND = 'M-2.3-16.5h4.6v8.2h-1.3V0h-1.4v-7.4h-0.4V0h-1.4v-8.3h-0.1z';
-const FIGURE_WALK = 'M-2.3-16.5h4.6v8.2l1.6 8.3h-1.5l-1.7-6.4L-0.6 0h-1.5l0.7-8.3h-0.9z';
-
-function Figure({ x, y, walk = false, scale = 1, flip = false }: { x: number; y: number; walk?: boolean; scale?: number; flip?: boolean }) {
-  return (
-    <g transform={`translate(${x} ${y}) scale(${flip ? -scale : scale} ${scale})`}>
-      <ellipse cx={-6} cy={0.6} rx={7.5} ry={1.4} fill={INK} opacity={0.32} transform="skewX(-38)" />
-      <circle cx={0} cy={-19.5} r={2.3} fill={INK} />
-      <path d={walk ? FIGURE_WALK : FIGURE_STAND} fill={INK} />
-    </g>
-  );
-}
-
-/* Who stands where, per step, in a 200-wide frame whose x = 100 is the
-   panel's centre and y = 100 its foot. Walkers step in place. */
-const CROWDS: Array<Array<{ x: number; y: number; walk?: boolean; scale?: number; flip?: boolean }>> = [
-  [{ x: 62, y: 104, walk: true, scale: 1.1 }, { x: 128, y: 98, scale: 0.9 }],
-  [{ x: 148, y: 106, walk: true, flip: true, scale: 1.15 }, { x: 88, y: 96, scale: 0.85 }, { x: 104, y: 99, scale: 0.85 }],
-  [{ x: 40, y: 108, walk: true, scale: 1.2 }, { x: 130, y: 100, scale: 0.9 }],
-  [{ x: 70, y: 104, scale: 1 }, { x: 84, y: 105, walk: true, scale: 1 }, { x: 150, y: 97, scale: 0.8, flip: true }],
-  [{ x: 120, y: 106, walk: true, flip: true, scale: 1.15 }, { x: 56, y: 98, scale: 0.9 }],
-];
-
-/* Scribbles on the ground by each panel, in the same frame. */
-const SCRIBBLES = [
-  'M20 112 q30 -8 60 2 t70 -4',
-  'M120 116 q20 -10 50 -2 q10 4 30 -6',
-  'M10 118 q40 6 80 -6 q30 -8 70 4 q10 2 30 -4',
-  'M150 110 q-40 8 -90 0',
-  'M30 114 q30 -12 60 0 t60 -2 q12 4 34 -8',
-];
-
-function Panel({
-  step,
-  index,
-  wide,
-  panelRef,
-}: {
-  step: (typeof process)[number];
-  index: number;
-  wide: boolean;
-  panelRef: (el: HTMLDivElement | null) => void;
-}) {
-  const left = index % 2 === 0; // the panel stands left of the axis; its caption reads on the right
-  const w = wide ? 'min(18vw, 31vh)' : '44vw';
-  return (
-    <div style={{ position: 'relative', width: w, aspectRatio: '1 / 2.4' }}>
-      {/* The red: two passes with a roughened edge, as on the print. */}
-      <div ref={panelRef} style={{ position: 'absolute', inset: 0, willChange: 'opacity' }}>
-        <svg viewBox="0 0 100 240" preserveAspectRatio="none" style={{ position: 'absolute', inset: '-3% -6%', width: '112%', height: '106%', overflow: 'visible' }}>
-          <defs>
-            <filter id={`ps-rough-${index}`} x="-10%" y="-10%" width="120%" height="120%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed={7 + index} result="n" />
-              <feDisplacementMap in="SourceGraphic" in2="n" scale="2.2" xChannelSelector="R" yChannelSelector="G" />
-            </filter>
-          </defs>
-          <rect x={6} y={8} width={100} height={228} fill={RED_SOFT} opacity={0.5} filter={`url(#ps-rough-${index})`} transform={`rotate(${index % 2 ? 0.5 : -0.6} 56 122)`} />
-          <rect x={5} y={7} width={100} height={228} fill={RED} filter={`url(#ps-rough-${index})`} transform={`rotate(${index % 2 ? -0.4 : 0.5} 55 121)`} />
-        </svg>
-        <span
-          aria-hidden
-          style={{
-            position: 'absolute',
-            left: '8%',
-            top: '4%',
-            fontFamily: 'var(--font-sans)',
-            fontSize: wide ? 'clamp(64px, 9vw, 180px)' : '22vw',
-            fontWeight: 800,
-            letterSpacing: '-0.06em',
-            lineHeight: 0.8,
-            color: 'transparent',
-            WebkitTextStroke: `clamp(1px, 0.12vw, 2px) ${SKY}`,
-          }}
-        >
-          {step.number}
-        </span>
-      </div>
-
-      {/* The crowd, the ladder on 04, the scribble: on the ground at the
-          panel's foot, spilling either side of it. */}
-      <svg
-        viewBox="0 0 200 130"
-        style={{ position: 'absolute', left: '-50%', bottom: '-11%', width: '200%', height: 'auto', overflow: 'visible', pointerEvents: 'none' }}
-      >
-        <path d={SCRIBBLES[index]} fill="none" stroke={INK} strokeWidth={0.9} strokeLinecap="round" />
-        {index === 3 && (
-          <g stroke={INK} strokeWidth={0.9} fill="none" transform="translate(74 10)">
-            <line x1={0} y1={0} x2={-6} y2={92} />
-            <line x1={14} y1={0} x2={8} y2={92} />
-            {[10, 22, 34, 46, 58, 70, 82].map((y) => (
-              <line key={y} x1={-y / 15} y1={y} x2={14 - y / 15} y2={y + 0.5} />
-            ))}
-          </g>
-        )}
-        {[[36, 118], [170, 122], [12, 126]].map(([x, y], k) => (
-          <circle key={k} cx={x + index * 3} cy={y} r={0.8} fill={INK} />
-        ))}
-        {CROWDS[index].map((f, k) => (
-          <Figure key={k} x={f.x} y={f.y} walk={f.walk} scale={f.scale} flip={f.flip} />
-        ))}
-      </svg>
-
-      {/* The step, in ink beside the panel's foot. */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '6%',
-          ...(left ? { left: '112%' } : { right: '112%', textAlign: 'right' }),
-          width: wide ? 'clamp(220px, 26vw, 420px)' : '46vw',
-          color: INK,
-        }}
-      >
-        <span
-          style={{
-            display: 'block',
-            fontFamily: 'var(--font-sans)',
-            fontSize: wide ? 'clamp(10px, 0.8vw, 13px)' : 10,
-            fontWeight: 600,
-            letterSpacing: '0.24em',
-            textTransform: 'uppercase',
-            color: RED,
-            marginBottom: '0.8em',
-          }}
-        >
-          Step {step.number}
-        </span>
-        <h3 style={{ margin: 0, fontSize: wide ? 'clamp(28px, 3.4vw, 64px)' : '9vw', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.96 }}>{step.title}</h3>
-        <p style={{ margin: '0.7em 0 0', fontSize: wide ? 'clamp(13px, 1vw, 17px)' : 13, lineHeight: 1.5, opacity: 0.65 }}>{step.description}</p>
-      </div>
-    </div>
-  );
 }

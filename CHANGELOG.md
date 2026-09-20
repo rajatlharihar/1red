@@ -6,6 +6,13 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 3, R7
+
+- **Process scene rebuilt as the 3 x 3 grid with depth by number** (`studio/ProcessSpace.tsx`): nine slots seen head-on at the opening shot (each panel's world size and offset scaled by its own opening depth, so their projections line up as the print's grid), numbered panels at the print's stage slots with 01 nearest and 05 in the centre slot furthest, four blank red panels at half-step depths between; the camera goes straight in on the glide, so they arrive and pass in order, and 05 covers the frame for the arrival reveal as before. Figures, ladder on 04, dots and scribbles kept. Captions are sized to their panel, so they scale with it.
+- **"Our process" heading row** over the opening shot (Swiss row: display headline, "How we work, in five steps" label on column 9, rule), leaving upward over p 0.05 to 0.16 as the first panel comes.
+- **Numerals in Rajat's letters** (`studio/customDigits.ts`): digits 0 to 9 lifted from `Assets/1red-custom-letters.svg` by bounding box on the sheet's bottom row (verified by render: 0 1 2 3 4 5 6 7 8 9, then the two glyphs of "10"), drawn outlined in the sky colour on the red. Not Outfit.
+- **Performance:** no filters on anything that moves: the roughened edges are static wobbly paths from a seeded PRNG (two passes as on the print); figures are plain paths; per frame only transforms and opacities change; nine groups in the DOM. Headless Brave at 1440x900 @2x scrolling through the section: before, run 1 median 66.6 ms / p95 133 ms / max 200 ms; after, median 33.3 / p95 33.4 / max 33.5 (run 0 both 16.7 / 33.3).
+
 ## 2026-09-21 — round 3, R6
 
 - **Cube poster finesse** (`cube/ProblemCube.tsx`, `CubeAssembly.tsx`): the label sits on column 9 of the twelve, left-aligned on the headline's cap line, instead of floating right; headline 46 to 138 px at 7.8vw, leading 0.94, tracking −0.045em; the row gap between headline and rule opened to 18 to 36 px; the box settles a touch lower (`BOX_DROP_WIDE` 1.1). Material untouched: Rajat had called the box perfect.
