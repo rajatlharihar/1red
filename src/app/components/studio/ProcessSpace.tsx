@@ -216,9 +216,8 @@ function Panel({ slot, i, wide, panelRef }: { slot: Slot; i: number; wide: boole
                 panel on a 10% margin (Rajat), sized to the panel so they
                 scale with it in depth. */}
             <div style={{ height: `calc(${w} * 0.42)`, display: 'flex', gap: '4%', marginBottom: '0.9em' }}>
-              {step.number.split('').map((ch, j) => (
-                <Digit key={j} n={Number(ch)} height="100%" fill={SKY} />
-              ))}
+              {/* Plain 1 to 5, no leading zero (Rajat). */}
+              <Digit n={slot.step! + 1} height="100%" fill={SKY} />
             </div>
             <h3 style={{ margin: 0, fontSize: '1.9em', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 0.98 }}>{step.title}</h3>
             <p style={{ margin: '0.7em 0 0', fontSize: '1em', lineHeight: 1.4, opacity: 0.9 }}>{step.description}</p>
@@ -289,10 +288,20 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
       if (scrollable <= 0) return;
       const p = clamp01((glide.y - top) / scrollable);
       const camZ = START_Z + p * TRAVEL;
-      /* Landed when the glide is there, or when the raw scroll has already
-         left the pin (then the frame is moving and only the flow copy is in
-         the right place). */
-      const landed = p >= 1 || glide.raw >= top + scrollable + (TAIL_VH / 100) * vh;
+      /* The landing. The stage copy is placed by the glide, the flow copy
+         by the raw scroll, and on a fast scroll the raw runs ahead. So once
+         the glide has arrived (p = 1) the stage copy is carried up by the
+         glide's own overshoot (landing − glide.y) as if it were already in
+         the document, and the flow copy takes over only on a frame where
+         the glide has caught up with the raw scroll (the two then coincide
+         to the pixel), or at the latest when the pin lets go. Going back
+         below p = 1 hands it back to the stage. */
+      const landingY = top + scrollable;
+      const caughtUp = Math.abs(glide.y - glide.raw) < 1;
+      const unpinned = glide.raw >= landingY + (TAIL_VH / 100) * vh;
+      let landed = landedRef.current;
+      if (p < 1) landed = false;
+      else if (caughtUp || unpinned) landed = true;
 
       if (headRef.current) {
         const t = smooth(HEAD_FROM, HEAD_TO, p);
@@ -309,7 +318,8 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
       if (stageArrivalRef.current && flowArrivalRef.current) {
         const depth = (TRAVEL + START_Z - camZ) * ARRIVAL_K;
         const lastDepth = SLOTS[4].z - camZ;
-        stageArrivalRef.current.style.transform = `translate3d(0, 0, ${(-depth).toFixed(1)}px)`;
+        const carry = p >= 1 ? landingY - glide.y : 0;
+        stageArrivalRef.current.style.transform = `translate3d(0, ${carry.toFixed(1)}px, ${(-depth).toFixed(1)}px)`;
         /* Shown and hidden by opacity, not visibility: both copies stay
            rasterised, so the reveal under the last panel and the swap at
            the landing cost nothing on the frame they happen. */
@@ -453,8 +463,12 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
           )}
         </div>
       </div>
+      {/* Pulled up by the frame AND the tail, so its top is exactly where
+          the pinned frame's top is on the landing frame (p = 1): the two
+          copies then coincide, and the flow copy scrolls on over the
+          still-pinned frame through the tail. */}
       {arrival && (
-        <div ref={flowArrivalRef} style={{ position: 'relative', zIndex: 2, marginTop: '-100vh', background: BG, opacity: 0 }}>
+        <div ref={flowArrivalRef} style={{ position: 'relative', zIndex: 2, marginTop: `-${100 + TAIL_VH}vh`, background: BG, opacity: 0 }}>
           <ArrivalFrame>{arrival}</ArrivalFrame>
         </div>
       )}

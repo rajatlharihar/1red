@@ -6,6 +6,11 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 5, R18 and R21
+
+- **The bump at the hand-off is gone** (`studio/ProcessSpace.tsx`). Recorded the grid heading's screen position per frame across the landing: it jumped 451 px on the swap frame. Two causes: the flow copy hung off the wrapper's end, which the 80vh tail had moved (now pulled up by frame + tail, so its top is the pinned frame's top at p = 1); and the stage copy is placed by the glide while the flow copy is placed by the raw scroll, which runs ahead on a fast scroll (a 268 px jump). Now, once the glide has arrived, the stage copy is carried up by the glide's own overshoot as if it were in the document, and the flow copy takes over only on a frame where the glide has caught up with the raw scroll (or when the pin lets go). Re-recorded: 108.9 → 108.0 → 86.9 → 66.2 px, continuous.
+- **Numerals are plain 1 to 5** on the panels, no leading zero.
+
 ## 2026-09-21 — round 5, R17
 
 - **Grid by number** (`studio/ProcessSpace.tsx`): row one 01, 02, blank; row two 03, 04, blank; row three blank, blank, 05; depth by number kept. Since 05 is no longer the centre slot, the camera pans onto it over its approach (2.2D to 0.35D out), so it is still passed head-on, covers the frame and reveals the next chapter as before. Phone: its own grid (panels 22vw, pitch 30vw x 27vh, sat 7vh low under the heading) so the composition reads on a 390 screen; the wide/portrait split is by aspect in both the frame loop and the markup.
