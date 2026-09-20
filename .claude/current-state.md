@@ -3,6 +3,10 @@
 ## Last Updated
 2026-09-20
 
+## Session Log: 2026-09-21 (round 2, hub-directed)
+
+- R1 /services removed; R2 Selected Work intro "Here's what the box built."; R3 process scene rebuilt as the red-panel print in 3D (`studio/ProcessSpace.tsx`, reusing `StudioProcess.tsx`'s figures and palette); R4 `ServicesGrid` as three red panels; R5 table card flips up, fixed swapping captions, flipbook rank. See CHANGELOG 2026-09-21. All local, NOT pushed.
+
 ## Session Log: 2026-09-20
 
 - Night (scrollytelling brief, task H1, hub imac-74): hero statement on the wall, see CHANGELOG 2026-09-20 (night). Verified headless Brave 1440x900 and 390x844 at p 0 / 0.05 / 0.10 / 0.16 / 0.24, no page errors, `vite build` clean. H2 (cube line + Swiss poster end state) done the same night, see CHANGELOG. H3 (services as a grid, `ServicesGrid.tsx`) done too. Hub (imac-74) makes all picks for 1Red now; S1 and S2 done on /studio (`studio/ProcessSpace.tsx` with the `arrival` grid); S3 (`studio/TeamZoom.tsx`) and S4 (`studio/TeamTable.tsx`) done: the brief is complete, all local commits, NOT pushed; Rajat has not yet seen any of it on the real trackpad.

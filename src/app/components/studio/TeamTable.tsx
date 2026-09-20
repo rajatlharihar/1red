@@ -23,9 +23,10 @@ const BG = '#FFFFFF';
 
 const SECTION_VH = 400;
 const P = 1200;
-/** The card starts this deep (about half size) and settles flat by ARRIVE_P. */
-const START_DEPTH = P;
+/** The card flips up from edge-on (lying away from the lens) to face-up
+ *  over this share of the section, eased, then the pan takes over. */
 const ARRIVE_P = 0.26;
+const FLIP_FROM = 88; // degrees about the card's horizontal axis
 /** The pan runs over this window; the rest is the end hold. */
 const PAN_FROM = 0.3;
 const PAN_TO = 0.94;
@@ -36,9 +37,23 @@ const VIEW_H = 560;
 const PIC_W = 4000;
 const TABLE = { x: 260, y: 200, w: 3080, h: 170, r: 60 };
 
-const LINE_A = "Don't worry.";
-const LINE_B = "The whole table's on it.";
-const LINE_END = 'Handled.';
+/* The words are a fixed caption on the card, not strung along the pan, so
+   a fast scroll still lands on the closing line. One caption per stretch of
+   the table; each swap is a quick eased cut. Main line chosen from five,
+   the report has the rest. */
+const CAPTIONS: Array<{ at: number; text: string; red?: boolean }> = [
+  { at: 0, text: 'Everyone you need, at one table.' },
+  { at: 0.14, text: 'Web and UI/UX at this end.' },
+  { at: 0.34, text: 'Brand, two seats down.' },
+  { at: 0.52, text: '2D and 3D, mid-table.' },
+  { at: 0.68, text: 'Motion, right here.' },
+  { at: 0.84, text: 'Ads, at the far end.' },
+  { at: 0.97, text: "Don't worry. The whole table's on it.", red: true },
+];
+/** The corner rank runs like a flipbook while the page scrolls and
+ *  settles back to the card's own rank when it stops. */
+const RANKS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '◆', '♠', '♥', '♣'];
+const RANK_STEP_PX = 36;
 
 /** Seats along the table; `label` is what that seat does (from the
  *  disciplines in ServicesGrid). Top seats face down, bottom seats face up. */
@@ -72,6 +87,7 @@ const smooth = (a: number, b: number, v: number) => {
   return t * t * (3 - 2 * t);
 };
 const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
 /* ── Hand-drawn, not iconed ──────────────────────────────────────────────
  * The reference is a pen sketch: nothing on it is a clean shape. So every
@@ -188,7 +204,6 @@ function tablePath(r: () => number) {
 
 function Picture() {
   const label = { fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 600, letterSpacing: '0.24em', fill: INK } as const;
-  const line = { fontFamily: 'var(--font-sans)', fontSize: 96, fontWeight: 800, letterSpacing: '-0.04em', fill: INK } as const;
   const r = rng(7);
   const table = tablePath(r);
   const table2 = tablePath(rng(11));
@@ -234,23 +249,13 @@ function Picture() {
           {s.label!.toUpperCase()}
         </text>
       ))}
-      {/* The line, written along the tabletop. */}
-      <text x={TABLE.x + 120} y={TABLE.y + TABLE.h * 0.68} style={line}>
-        {LINE_A}
-      </text>
-      <text x={1560} y={TABLE.y + TABLE.h * 0.68} style={line}>
-        {LINE_B}
-      </text>
-      <text x={TABLE.x + TABLE.w + 60} y={TABLE.y + TABLE.h * 0.68} style={{ ...line, fill: RED }}>
-        {LINE_END}
-      </text>
     </svg>
   );
 }
 
 /** The red index, as on the reference: the rank and a diamond, mirrored
  *  in the opposite corner. The rank is 1, for the one collective. */
-function Index({ flip }: { flip?: boolean }) {
+function Index({ flip, rankRef }: { flip?: boolean; rankRef: (el: HTMLSpanElement | null) => void }) {
   return (
     <div
       style={{
@@ -269,7 +274,7 @@ function Index({ flip }: { flip?: boolean }) {
         letterSpacing: '-0.04em',
       }}
     >
-      <span>1</span>
+      <span ref={rankRef} style={{ minWidth: '1.2em', textAlign: 'center' }}>1</span>
       <span style={{ fontSize: '0.8em' }}>◆</span>
     </div>
   );
@@ -280,7 +285,12 @@ export function TeamTable() {
   const cardRef = useRef<HTMLDivElement>(null);
   const windowRef = useRef<HTMLDivElement>(null);
   const picRef = useRef<HTMLDivElement>(null);
+  const captionRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const rankRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const rank = useRef({ lastY: 0, acc: 0, i: 0, timer: 0 });
   const reduceMotion = useReducedMotion() ?? false;
+
+  const setRank = (text: string) => rankRefs.current.forEach((el) => el && (el.textContent = text));
 
   useEffect(() => {
     if (reduceMotion) return;
@@ -292,13 +302,43 @@ export function TeamTable() {
       if (scrollable <= 0) return;
       const p = clamp01((glide.y - top) / scrollable);
       if (cardRef.current) {
-        const depth = START_DEPTH * (1 - easeInOutSine(clamp01(p / ARRIVE_P)));
-        cardRef.current.style.transform = `translate(-50%, -50%) translate3d(0, 0, ${(-depth).toFixed(1)}px)`;
+        const t = easeOutCubic(clamp01(p / ARRIVE_P));
+        const deg = FLIP_FROM * (1 - t);
+        cardRef.current.style.transform = `translate(-50%, -50%) translateY(${((1 - t) * 14).toFixed(2)}vh) rotateX(${deg.toFixed(2)}deg)`;
       }
+      let panT = 0;
       if (windowRef.current && picRef.current) {
         const run = picRef.current.scrollWidth - windowRef.current.clientWidth;
-        const t = easeInOutSine(smooth(PAN_FROM, PAN_TO, p));
-        picRef.current.style.transform = `translate3d(${(-run * t).toFixed(1)}px, 0, 0)`;
+        panT = easeInOutSine(smooth(PAN_FROM, PAN_TO, p));
+        picRef.current.style.transform = `translate3d(${(-run * panT).toFixed(1)}px, 0, 0)`;
+      }
+      // The caption for this stretch of the table; the rest are hidden.
+      let live = 0;
+      CAPTIONS.forEach((c, i) => {
+        if (panT >= c.at) live = i;
+      });
+      captionRefs.current.forEach((el, i) => {
+        if (!el) return;
+        const on = i === live;
+        el.style.opacity = on ? '1' : '0';
+        el.style.transform = on ? 'translateY(0)' : 'translateY(0.35em)';
+      });
+      // The rank flips with the scroll and settles when it stops.
+      const r = rank.current;
+      const dy = Math.abs(glide.y - r.lastY);
+      r.lastY = glide.y;
+      if (dy > 0.5) {
+        r.acc += dy;
+        if (r.acc >= RANK_STEP_PX) {
+          r.acc = 0;
+          r.i = (r.i + 1) % RANKS.length;
+          setRank(RANKS[r.i]);
+        }
+        window.clearTimeout(r.timer);
+        r.timer = window.setTimeout(() => {
+          r.i = 0;
+          setRank(RANKS[0]);
+        }, 160);
       }
     });
   }, [reduceMotion]);
@@ -316,16 +356,54 @@ export function TeamTable() {
         border: `1px solid ${INK}`,
         borderRadius: '3.2% / 4.6%',
         boxShadow: '0 30px 70px rgba(0,0,0,0.10), 0 6px 20px rgba(0,0,0,0.05)',
-        transform: reduceMotion ? 'translate(-50%, -50%)' : `translate(-50%, -50%) translate3d(0, 0, ${-START_DEPTH}px)`,
+        transform: reduceMotion ? 'translate(-50%, -50%)' : `translate(-50%, -50%) translateY(14vh) rotateX(${FLIP_FROM}deg)`,
+        transformOrigin: '50% 50%',
+        backfaceVisibility: 'hidden',
         willChange: 'transform',
         overflow: 'hidden',
       }}
     >
-      <Index />
-      <Index flip />
+      <Index rankRef={(el) => (rankRefs.current[0] = el)} />
+      <Index flip rankRef={(el) => (rankRefs.current[1] = el)} />
+      {/* The caption, fixed on the card under the picture. */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '9%',
+          right: '9%',
+          bottom: '9%',
+          height: '2.2em',
+          fontFamily: 'var(--font-sans)',
+          fontSize: 'clamp(18px, 2.6vw, 44px)',
+          fontWeight: 800,
+          letterSpacing: '-0.04em',
+          lineHeight: 1,
+          color: INK,
+        }}
+      >
+        {CAPTIONS.map((c, i) => (
+          <span
+            key={c.text}
+            ref={(el) => {
+              captionRefs.current[i] = el;
+            }}
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              color: c.red ? RED : INK,
+              opacity: reduceMotion ? (i === 0 ? 1 : 0) : i === 0 ? 1 : 0,
+              transition: 'opacity 0.22s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+            }}
+          >
+            {c.text}
+          </span>
+        ))}
+      </div>
       {/* The window onto the picture: the picture is wider than the card
           and pans behind it. */}
-      <div ref={windowRef} style={{ position: 'absolute', left: '9%', right: '9%', top: '10%', bottom: '10%', overflow: 'hidden' }}>
+      <div ref={windowRef} style={{ position: 'absolute', left: '9%', right: '9%', top: '9%', bottom: '24%', overflow: 'hidden' }}>
         <div ref={picRef} style={{ height: '100%', width: `${(PIC_W / VIEW_W) * 100}%`, willChange: 'transform' }}>
           <Picture />
         </div>

@@ -6,6 +6,12 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 2, R5
+
+- **The card flips up** (`studio/TeamTable.tsx`): after the team hold the film keeps growing past the frame and thins out (`TeamZoom` EXIT_P 0.82, depth to −0.4P, opacity gone by p 1), and the card comes up from edge-on (rotateX 88°, lying away from the lens, 14vh low) to face-up over the section's first 26%, ease-out, in the perspective stage. No arrival from depth any more.
+- **Fixed caption instead of words along the table:** a caption band on the card under the picture, one line per stretch of the pan, each swap a quick eased cut (0.22s opacity, 0.3s lift), so a fast scroll still lands on the closing line. Opening "Everyone you need, at one table."; seats "Web and UI/UX at this end." / "Brand, two seats down." / "2D and 3D, mid-table." / "Motion, right here." / "Ads, at the far end."; closing, in red, "Don't worry. The whole table's on it." The tabletop text is gone; the seat role labels in the picture stay.
+- **Flipbook rank:** both corner indexes cycle 1 to 10, J Q K A and the four suits, one step per 36 px of glide travel while the page moves, and settle back to 1 when it stops (160 ms).
+
 ## 2026-09-21 — round 2, R4
 
 - **"What we cover" as three red panels** (`ServicesGrid.tsx`): under the Swiss heading row, three tall red panels (1:1.35, two roughened passes like the process scene's) on the twelve-column grid, four columns each with hairlines between; each holds its film in a hairline window low on the red with the big outlined numeral in the sky colour over the top, and eyebrow, name, line and tags in ink beneath. One column on a phone. The anchor-plus-two layout is gone.
