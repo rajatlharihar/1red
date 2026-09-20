@@ -29,8 +29,8 @@ const INK = '#0A0A0A';
 /** The answer to the wall's question. Set as a Swiss poster: headline
  *  flush-left over two lines, a small label top-right, one hairline rule
  *  under the headline, and the box settling bottom-right off-centre. */
-const LINES = ['Or hire', 'the whole box.'];
-const LABEL = 'Every skill. One collective.';
+const LINES = ['Or build it', 'with the whole box.'];
+const LABEL = 'Every skill. One collective. Built with you.';
 /** Section progress over which each line rises out of its mask; the label
  *  rides with the first line, the rule draws after the second. */
 const LINE_REVEAL: Array<[number, number]> = [
@@ -204,7 +204,7 @@ export function ProblemCube() {
                     }}
                     style={{
                       display: 'block',
-                      fontSize: 'clamp(38px, 5.6vw, 92px)',
+                      fontSize: 'clamp(34px, 4.8vw, 80px)',
                       fontWeight: 500,
                       letterSpacing: '-0.03em',
                       lineHeight: 1.0,
@@ -219,7 +219,7 @@ export function ProblemCube() {
             <div
               style={{
                 position: 'absolute',
-                ...(wide ? { left: '82%', top: '62vh', transform: 'translateY(-50%)' } : { left: '11%', top: '80vh' }),
+                ...(wide ? { left: '84%', top: '62vh', transform: 'translateY(-50%)' } : { left: '11%', top: '80vh' }),
                 overflow: 'hidden',
                 pointerEvents: 'none',
               }}
@@ -241,6 +241,8 @@ export function ProblemCube() {
                 Every skill.
                 <br />
                 One collective.
+                <br />
+                Built with you.
               </span>
             </div>
           </div>

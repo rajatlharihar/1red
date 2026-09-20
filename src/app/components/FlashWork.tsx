@@ -565,9 +565,9 @@ export function FlashWork() {
             animate={headingInView ? { y: 0 } : {}}
             transition={{ duration: 0.78, ease: EASE, delay: 0.05 }}
             // Identical to the cube poster's headline (ProblemCube): 500, -0.03em, leading 1.
-            style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(38px, 5.6vw, 92px)', fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.0, margin: 0, color: 'rgb(10,10,10)' }}
+            style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(34px, 4.8vw, 80px)', fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.0, margin: 0, color: 'rgb(10,10,10)' }}
           >
-            Here's what<br />the box built.
+            Here's what<br />we built together.
           </motion.h2>
         </div>
         <div className="overflow-hidden" style={{ flexShrink: 0, paddingTop: '0.5em' }}>

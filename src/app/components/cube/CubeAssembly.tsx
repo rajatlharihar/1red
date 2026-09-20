@@ -200,7 +200,7 @@ const BOX_DROP_WIDE = 1.0;
 /** ...and to the right on a wide frame, into the poster's empty lower-right
  *  column beside the headline: the camera slides left by this share of the
  *  frame's half-width at the box's depth. A portrait frame keeps it centred. */
-const BOX_SHIFT = 0.29;
+const BOX_SHIFT = 0.34;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;

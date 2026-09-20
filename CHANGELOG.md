@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — R25 collaborative copy
+
+- Wall: "Still briefing five agencies for one job?" (fitter re-run with the new breaks: three lines at 1440x900, four on a phone). Cube: "Or build it / with the whole box." with the label "Every skill. / One collective. / Built with you." centred on the box. Selected Work intro: "Here's what we built together." Scroll cue unchanged. To keep the cube headline on two lines beside the bigger box, both headlines are clamp(34px, 4.8vw, 80px) and the box sits at shift 0.34 with the label at 84%.
+
 ## 2026-09-21 — R23 and R24
 
 - **R23a, no dead scroll before the card** (`studio/TeamZoom.tsx`, `TeamTable.tsx`): the film's section is 300vh (full-bleed at 0.45, hold to 0.62, then the pass-through to the end), and the card's section now starts 180vh before the film's ends (a transparent frame above it), rising over its first 20%: the card comes up through the film 45vh after it goes full-bleed, the film thinning out behind it. Nothing pops.
