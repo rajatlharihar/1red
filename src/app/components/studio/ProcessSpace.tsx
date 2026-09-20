@@ -203,24 +203,18 @@ function Panel({ slot, i, panelRef }: { slot: Slot; i: number; panelRef: (el: HT
           <path d={EDGES[i].a} fill={RED} />
         </svg>
         {step && (
-          <>
-            <div style={{ position: 'absolute', left: '10%', top: '5%', height: '20%', display: 'flex', gap: '4%' }}>
+          <div style={{ position: 'absolute', left: '10%', right: '10%', top: '5%', color: SKY, fontSize: `calc(${w} * 0.07)` }}>
+            {/* Number, title and the line, together at the top of the
+                panel on a 10% margin (Rajat), sized to the panel so they
+                scale with it in depth. */}
+            <div style={{ height: `calc(${w} * 0.42)`, display: 'flex', gap: '4%', marginBottom: '0.9em' }}>
               {step.number.split('').map((ch, j) => (
                 <Digit key={j} n={Number(ch)} height="100%" fill={SKY} />
               ))}
             </div>
-            {/* The step, set small on the red itself, on a 10% margin
-                inside the panel, so it reads on every panel as it arrives
-                rather than colliding at the feet. Sized to the panel, so
-                it scales with it in depth. */}
-            <div style={{ position: 'absolute', left: '10%', right: '10%', bottom: '8%', color: SKY, fontSize: `calc(${w} * 0.07)` }}>
-              <span style={{ display: 'block', fontFamily: 'var(--font-sans)', fontSize: '0.7em', fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', opacity: 0.85, marginBottom: '0.9em' }}>
-                Step {step.number}
-              </span>
-              <h3 style={{ margin: 0, fontSize: '1.9em', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 0.98 }}>{step.title}</h3>
-              <p style={{ margin: '0.8em 0 0', fontSize: '1em', lineHeight: 1.4, opacity: 0.9 }}>{step.description}</p>
-            </div>
-          </>
+            <h3 style={{ margin: 0, fontSize: '1.9em', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 0.98 }}>{step.title}</h3>
+            <p style={{ margin: '0.7em 0 0', fontSize: '1em', lineHeight: 1.4, opacity: 0.9 }}>{step.description}</p>
+          </div>
         )}
       </div>
 

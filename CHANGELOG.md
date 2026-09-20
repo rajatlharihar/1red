@@ -6,6 +6,11 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 5, R19 and R20
+
+- **Step content at the top of each panel** (`studio/ProcessSpace.tsx`): numeral, title and one-liner together on the panel's top 10% margin, not at the foot.
+- **Team card has sharp corners** (`studio/TeamTable.tsx`): no border radius.
+
 ## 2026-09-21 — round 5, R15
 
 - **Bigger settled box** (`CubeAssembly.tsx`, `ProblemCube.tsx`): the camera backs off less (CAM_Z + 2.6, was + 4.5), shift 0.3, label at 81%; the box fills the band between headline and label, R10's layout kept.
