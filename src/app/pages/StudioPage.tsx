@@ -1,9 +1,18 @@
 import { ProcessSpace } from '../components/studio/ProcessSpace';
+import { ServicesGrid } from '../components/ServicesGrid';
 
-/* /studio opens with the process in depth (brief S1); the later chapters
-   (what we cover, the team) follow as they are built. The print version
-   (StudioProcess.tsx) and the older editorial page (Studio.tsx) are on
-   disk / in git history if any of it is wanted back. */
+/* /studio: the process in depth (S1), whose camera runs on into "What we
+   cover" (S2, the same grid the Services page uses). S3, the zoom into the
+   team film, mounts after the grid: see `STUDIO_AFTER_SERVICES`. The print
+   version (StudioProcess.tsx) and the older editorial page (Studio.tsx) are
+   on disk / in git history if any of it is wanted back. */
+export const STUDIO_AFTER_SERVICES = 'studio-after-services';
+
 export function StudioPage() {
-  return <ProcessSpace />;
+  return (
+    <>
+      <ProcessSpace arrival={<ServicesGrid still />} />
+      <div id={STUDIO_AFTER_SERVICES} style={{ height: '20vh', background: '#FFFFFF' }} />
+    </>
+  );
 }

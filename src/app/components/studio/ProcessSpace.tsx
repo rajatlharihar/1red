@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { process } from '../../data/process';
 import { glide, subscribeGlide } from '../scrollGlide';
@@ -47,6 +47,12 @@ const TRAVEL = (process.length - 1) * D + P + RUN_OUT - START_Z;
 /** Section progress at which the camera has crossed the last card: S2's
  *  cue. From here to 1 the frame is open space. */
 export const EXIT_P = ((process.length - 1) * D + P - START_Z) / TRAVEL;
+/** The next chapter waits at the end of the run: it is drawn in the stage
+ *  a little short of the screen plane (about 92% size) as the last card
+ *  clears, and settles onto it as the section unpins. Its depth is the
+ *  camera's remaining run scaled by this, so it eases in rather than
+ *  rushing up from half size. */
+const ARRIVAL_K = 0.087;
 
 /** A card fades between these depths (negative: past the screen plane,
  *  toward the lens at -P) and is dropped just before the lens. */
@@ -78,8 +84,14 @@ function useWide() {
   return wide;
 }
 
-export function ProcessSpace() {
+/** `arrival`: the chapter that follows (S2, the services grid). It rides in
+ *  at the end of the camera's run inside the stage, then the same element in
+ *  normal flow takes over on the frame the section unpins, where the two
+ *  coincide pixel for pixel. */
+export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
   const wrapRef = useRef<HTMLDivElement>(null);
+  const stageArrivalRef = useRef<HTMLDivElement>(null);
+  const flowArrivalRef = useRef<HTMLDivElement>(null);
   const wide = useWide();
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const reduceMotion = useReducedMotion() ?? false;
@@ -95,6 +107,24 @@ export function ProcessSpace() {
       const p = clamp01((glide.y - top) / scrollable);
       const camZ = START_Z + p * TRAVEL;
       const vw = window.innerWidth;
+      /* A card covers the whole frame from this depth on (its projected
+         size exceeds the viewport both ways). Its fill may only clear from
+         behind that point, so what it uncovers is never a switch. */
+      const first = cardRefs.current[0];
+      const coverDepth = first
+        ? P / Math.max(vw / first.offsetWidth, window.innerHeight / first.offsetHeight) - P
+        : FILL_FROM;
+      const fillFrom = Math.min(FILL_FROM, coverDepth - 0.05 * P);
+      if (stageArrivalRef.current && flowArrivalRef.current) {
+        const depth = (TRAVEL + START_Z - camZ) * ARRIVAL_K;
+        const landed = p >= 1;
+        // Only there once the last card has the frame covered: it is what
+        // the card's clearing fill reveals.
+        const lastDepth = (process.length - 1) * D - camZ;
+        stageArrivalRef.current.style.transform = `translate3d(0, 0, ${(-depth).toFixed(1)}px)`;
+        stageArrivalRef.current.style.visibility = !landed && lastDepth <= coverDepth ? 'visible' : 'hidden';
+        flowArrivalRef.current.style.visibility = landed ? 'visible' : 'hidden';
+      }
       cardRefs.current.forEach((card, i) => {
         if (!card) return;
         const depth = i * D - camZ;
@@ -108,7 +138,7 @@ export function ProcessSpace() {
         const side = (i % 2 === 0 ? -1 : 1) * SIDE * vw * smooth(0.15 * D, 1.0 * D, depth);
         card.style.transform = `translate(-50%, -50%) translate3d(${side.toFixed(1)}px, 0, ${(-depth).toFixed(1)}px)`;
         card.style.opacity = (1 - smooth(FADE_FROM, FADE_TO, depth)).toFixed(3);
-        card.style.backgroundColor = `rgba(255,255,255,${(1 - smooth(FILL_FROM, FILL_TO, depth)).toFixed(3)})`;
+        card.style.backgroundColor = `rgba(255,255,255,${(1 - smooth(fillFrom, Math.min(FILL_TO, fillFrom - 0.3 * P), depth)).toFixed(3)})`;
         // Depth cue: a card in the queue is drawn lighter, hairline and ink
         // both, and comes up to full strength as it arrives.
         const near = 1 - smooth(0.3 * D, 2 * D, depth);
@@ -126,6 +156,7 @@ export function ProcessSpace() {
             <Card step={s} />
           </div>
         ))}
+        {arrival && <div style={{ marginTop: '6rem' }}>{arrival}</div>}
       </section>
     );
   }
@@ -171,10 +202,37 @@ export function ProcessSpace() {
               <Card step={s} />
             </div>
           ))}
+          {arrival && (
+            <div
+              ref={stageArrivalRef}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                overflow: 'hidden',
+                background: BG,
+                // Behind every card: the last one passes over it, and its
+                // clearing fill is what first shows it.
+                zIndex: 0,
+                willChange: 'transform',
+              }}
+            >
+              <ArrivalFrame>{arrival}</ArrivalFrame>
+            </div>
+          )}
         </div>
       </div>
+      {arrival && (
+        <div ref={flowArrivalRef} style={{ position: 'relative', zIndex: 2, marginTop: '-100vh', background: BG, visibility: 'hidden' }}>
+          <ArrivalFrame>{arrival}</ArrivalFrame>
+        </div>
+      )}
     </section>
   );
+}
+
+/** Same top padding in the stage and in flow, so the swap is seamless. */
+function ArrivalFrame({ children }: { children: ReactNode }) {
+  return <div style={{ paddingTop: 'clamp(5.5rem, 12vh, 9rem)' }}>{children}</div>;
 }
 
 /** The number is the graphic: an outlined red numeral at display scale in

@@ -136,16 +136,21 @@ function Copy({ s, big }: { s: (typeof services)[number]; big?: boolean }) {
   );
 }
 
-const rise = (i: number) => ({
-  initial: { opacity: 0, y: 22 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-80px' },
-  transition: { duration: 0.8, delay: 0.08 * i, ease: EASE },
-});
+const rise = (i: number, still: boolean) =>
+  still
+    ? {}
+    : {
+        initial: { opacity: 0, y: 22 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once: true, margin: '-80px' },
+        transition: { duration: 0.8, delay: 0.08 * i, ease: EASE },
+      };
 
 /** `heading` off where the page already introduces the block (the
- *  Services page); on for a standalone mount (the Studio page). */
-export function ServicesGrid({ heading = true }: { heading?: boolean }) {
+ *  Services page); on for a standalone mount (the Studio page). `still`
+ *  renders the settled state with no entrance motion, for a copy that is
+ *  being carried by something else's motion (the Studio arrival). */
+export function ServicesGrid({ heading = true, still = false }: { heading?: boolean; still?: boolean }) {
   const wide = useWide();
   const [a, b, c] = services;
   const pad = 'clamp(1.5rem, 4vw, 5rem)';
@@ -166,7 +171,7 @@ export function ServicesGrid({ heading = true }: { heading?: boolean }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gridTemplateRows: 'auto auto' }}>
           {/* 01: the anchor cell, seven columns, both rows. */}
           <motion.div
-            {...rise(0)}
+            {...rise(0, still)}
             style={{ gridColumn: '1 / span 7', gridRow: '1 / span 2', display: 'flex', flexDirection: 'column', borderRight: `1px solid ${RULE}` }}
           >
             <div style={{ aspectRatio: '16 / 10', overflow: 'hidden' }}>
@@ -181,7 +186,7 @@ export function ServicesGrid({ heading = true }: { heading?: boolean }) {
           {[b, c].map((s, i) => (
             <motion.div
               key={s.number}
-              {...rise(i + 1)}
+              {...rise(i + 1, still)}
               style={{
                 gridColumn: '8 / span 5',
                 gridRow: i + 1,
@@ -202,7 +207,7 @@ export function ServicesGrid({ heading = true }: { heading?: boolean }) {
       ) : (
         <div>
           {services.map((s, i) => (
-            <motion.div key={s.number} {...rise(i)} style={{ padding: '24px 0 32px', borderBottom: i < 2 ? `1px solid ${RULE}` : 'none' }}>
+            <motion.div key={s.number} {...rise(i, still)} style={{ padding: '24px 0 32px', borderBottom: i < 2 ? `1px solid ${RULE}` : 'none' }}>
               <div style={{ aspectRatio: '16 / 10', overflow: 'hidden', marginBottom: 20 }}>
                 <Film src={s.video} />
               </div>
