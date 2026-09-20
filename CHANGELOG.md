@@ -6,6 +6,11 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — fast-scroll fixes (Rajat, direct)
+
+- **The grid's copy is there the moment it arrives** (`studio/ProcessSpace.tsx`): on a fast scroll the raw scroll left the pin while the glide was still catching up, so the frame unpinned and slid away under the arriving grid, cutting the text under the panels until the swap. The section now has an 80vh pinned tail like the home hero, the landing also counts when the raw scroll has left the pin, the stage copy is 140vh tall (scaled down in depth it ended short of the frame), and both copies swap by opacity so they stay rasterised and the reveal and the swap cost nothing on their frame. `Film` treats opacity as hidden too.
+- **The team film holds longer** (`studio/TeamZoom.tsx`): 420vh pinned; full-bleed from p 0.42, hold to 0.86, words in over 0.34 to 0.5; the clip is on screen for about 185vh of scroll instead of 56.
+
 ## 2026-09-21 — scroll-back smoothness (Rajat, direct)
 
 - **Our process and What we cover are smooth in both directions** (`studio/ProcessSpace.tsx`, `ServicesGrid.tsx`). Two causes on the way back up: (1) a passed panel was `visibility: hidden` and re-showing it near the lens cost a full re-raster, a 130 to 150 ms hitch at about 70% of the section; passed panels are now held at the fade-out depth at opacity 0 instead, so the layer only ever changes transform and opacity. (2) At the hand-off going backwards the stage copy's still films took over from the playing ones on their first frame, a visible jump; on that frame each still is now seeked to the frame its film is on (the film pauses there, hidden, and resumes from it when the page lands again); stage films preload `auto` so the seek has data. Reverse profile (headless Brave 1440x900 @2x): hand-off 16.7 ms median / 16.8 max, process 16.7 / 16.8 (was max 150), forward unchanged at 16.7 throughout.

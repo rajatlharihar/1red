@@ -76,7 +76,7 @@ function Film({ src, style, inert = false }: { src: string; style?: React.CSSPro
     if (!v || inert) return;
     let onScreen = false;
     const sync = () => {
-      const shown = onScreen && v.checkVisibility?.({ visibilityProperty: true }) !== false;
+      const shown = onScreen && v.checkVisibility?.({ visibilityProperty: true, opacityProperty: true }) !== false;
       if (shown) v.play().catch(() => {});
       else v.pause();
     };

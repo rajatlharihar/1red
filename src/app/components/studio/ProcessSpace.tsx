@@ -38,6 +38,11 @@ const FLOOR = '#E9E6DE';
 /** Scroll per step, plus the pinned viewport. */
 const STEP_VH = 120;
 const SECTION_VH = STEP_VH * process.length + 100;
+/** Extra pinned scroll after the landing, as the home hero has: on a fast
+ *  scroll the glide is still catching up when the raw scroll reaches the
+ *  end, and without this the frame unpins and slides away under the
+ *  arriving grid before the swap. */
+const TAIL_VH = 80;
 
 /** The lens: CSS perspective distance in px. */
 const P = 1200;
@@ -280,6 +285,10 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
       if (scrollable <= 0) return;
       const p = clamp01((glide.y - top) / scrollable);
       const camZ = START_Z + p * TRAVEL;
+      /* Landed when the glide is there, or when the raw scroll has already
+         left the pin (then the frame is moving and only the flow copy is in
+         the right place). */
+      const landed = p >= 1 || glide.raw >= top + scrollable + (TAIL_VH / 100) * vh;
 
       if (headRef.current) {
         const t = smooth(HEAD_FROM, HEAD_TO, p);
@@ -295,11 +304,13 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
       const fillFrom = Math.min(FILL_FROM, coverDepth - 0.05 * P);
       if (stageArrivalRef.current && flowArrivalRef.current) {
         const depth = (TRAVEL + START_Z - camZ) * ARRIVAL_K;
-        const landed = p >= 1;
         const lastDepth = SLOTS[4].z - camZ;
         stageArrivalRef.current.style.transform = `translate3d(0, 0, ${(-depth).toFixed(1)}px)`;
-        stageArrivalRef.current.style.visibility = !landed && lastDepth <= coverDepth ? 'visible' : 'hidden';
-        flowArrivalRef.current.style.visibility = landed ? 'visible' : 'hidden';
+        /* Shown and hidden by opacity, not visibility: both copies stay
+           rasterised, so the reveal under the last panel and the swap at
+           the landing cost nothing on the frame they happen. */
+        stageArrivalRef.current.style.opacity = !landed && lastDepth <= coverDepth ? '1' : '0';
+        flowArrivalRef.current.style.opacity = landed ? '1' : '0';
         /* Scrolling back: the flow copy's films have been playing, the
            stage copy's are stills. On the frame the stage takes over, seek
            each still to the frame its film is on, so nothing jumps; the
@@ -349,7 +360,7 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
 
   return (
     <section style={{ position: 'relative', background: SKY, color: INK }}>
-      <div ref={wrapRef} style={{ height: `${SECTION_VH}vh`, position: 'relative' }}>
+      <div ref={wrapRef} style={{ height: `${SECTION_VH + TAIL_VH}vh`, position: 'relative' }}>
         <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', perspective: `${P}px`, perspectiveOrigin: '50% 50%', background: SKY }}>
           {/* The floor: one plane laid flat through the screen plane at
               FLOOR_Y, long enough both ways that neither edge ever shows. */}
@@ -420,15 +431,19 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
             </h2>
           </div>
 
+          {/* Taller than the frame on purpose: scaled down a little in
+              depth it would otherwise end short of the frame's bottom and
+              cut the copy under the panels until the landing. The sticky
+              frame clips it. */}
           {arrival && (
-            <div ref={stageArrivalRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: BG, zIndex: 1, willChange: 'transform' }}>
+            <div ref={stageArrivalRef} style={{ position: 'absolute', left: 0, right: 0, top: 0, minHeight: '140vh', background: BG, zIndex: 1, opacity: 0, willChange: 'transform, opacity' }}>
               <ArrivalFrame>{arrival}</ArrivalFrame>
             </div>
           )}
         </div>
       </div>
       {arrival && (
-        <div ref={flowArrivalRef} style={{ position: 'relative', zIndex: 2, marginTop: '-100vh', background: BG, visibility: 'hidden' }}>
+        <div ref={flowArrivalRef} style={{ position: 'relative', zIndex: 2, marginTop: '-100vh', background: BG, opacity: 0 }}>
           <ArrivalFrame>{arrival}</ArrivalFrame>
         </div>
       )}
