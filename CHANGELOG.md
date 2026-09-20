@@ -6,6 +6,11 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — R28 project pages
+
+- **Selected Work shows three** (`data/projects.json`, `FlashWork.tsx`): Apptile, Yui, Illusdoodle; Ground and Terrabarn carry `hidden: true` and stay in the data. Rows are links to the project's page (hover brings its visual up, as the click used to); the phone list shows each project's first plate as a thumbnail (`thumb`). The list's Behance embeds are gone (the project page carries the presentation). The intro headline is clamp(32px, 4.1vw, 68px) so "we made together." holds on two lines in its column.
+- **Project pages are the Behance presentation** (`pages/WorkDetailPage.tsx` rewritten): number, category, year, title, one line; then the plates stacked at full content width, each easing up as it enters the view, the first two eager and the rest lazy; "View on Behance" and the next project at the end; back link to `/#work`; scroll to top on arrival. The plates are Rajat's own project modules pulled from his Behance projects (the 1400-wide webp Behance serves, in page order) into `public/work/<slug>/` (Apptile 13, Yui 15, Illusdoodle 10; 6.9 MB total), listed in `data/workImages.json`. Click-verified all three from the home rows: right URL, top of page, all plates, button, back link, no errors.
+
 ## 2026-09-21 — R26 and R27
 
 - **Final copy:** wall "Got an idea that needs every skill?" (refitted: three lines desktop, four phone), cube "Collab with / the whole box." with "Every skill. / One collective. / Yours too.", intro "Here's what we made together."

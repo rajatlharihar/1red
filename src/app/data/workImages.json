@@ -1,0 +1,46 @@
+{
+  "apptile": [
+    "/work/apptile/01.webp",
+    "/work/apptile/02.webp",
+    "/work/apptile/03.webp",
+    "/work/apptile/04.webp",
+    "/work/apptile/05.webp",
+    "/work/apptile/06.webp",
+    "/work/apptile/07.webp",
+    "/work/apptile/08.webp",
+    "/work/apptile/09.webp",
+    "/work/apptile/10.webp",
+    "/work/apptile/11.webp",
+    "/work/apptile/12.webp",
+    "/work/apptile/13.webp"
+  ],
+  "yui": [
+    "/work/yui/01.webp",
+    "/work/yui/02.webp",
+    "/work/yui/03.webp",
+    "/work/yui/04.webp",
+    "/work/yui/05.webp",
+    "/work/yui/06.webp",
+    "/work/yui/07.webp",
+    "/work/yui/08.webp",
+    "/work/yui/09.webp",
+    "/work/yui/10.webp",
+    "/work/yui/11.webp",
+    "/work/yui/12.webp",
+    "/work/yui/13.webp",
+    "/work/yui/14.webp",
+    "/work/yui/15.webp"
+  ],
+  "illusdoodle": [
+    "/work/illusdoodle/01.webp",
+    "/work/illusdoodle/02.webp",
+    "/work/illusdoodle/03.webp",
+    "/work/illusdoodle/04.webp",
+    "/work/illusdoodle/05.webp",
+    "/work/illusdoodle/06.webp",
+    "/work/illusdoodle/07.webp",
+    "/work/illusdoodle/08.webp",
+    "/work/illusdoodle/09.webp",
+    "/work/illusdoodle/10.webp"
+  ]
+}

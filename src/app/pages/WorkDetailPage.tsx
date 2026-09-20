@@ -1,355 +1,160 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { ArrowLeft, ArrowRight, ArrowUpRight } from 'lucide-react';
 import projectsData from '../data/projects.json';
+import workImages from '../data/workImages.json';
 
-/* ─── Case study detail — /work/:slug ──────────────────────────────────────
- * Reads from `projects.json`, the single source of truth. This page
- * previously carried its OWN hardcoded copy of every project (a third
- * competing definition alongside projects.json and FlashWork's local
- * array), and linked back to `/work` — a route that redirects home, so the
- * only exit was a dead end.
- *
- * Narrative order matches the brief's proof structure:
- *   WHO/WHAT → THE THINKING (overview) → THE EXECUTION (deliverables) → RESULT
- *
- * RESULT is deliberately NOT rendered yet. `projects.json` carries a
- * `result` string per project containing specific performance claims
- * ("3× brand recognition", "+18k following, 9.4% engagement"), but those
- * have never been displayed anywhere in the live site and are unverified —
- * possibly leftover copy from the original Figma export. Publishing an
- * unverified metric as client proof is a materially bigger claim than
- * leaving it buried, so it stays off until each one is confirmed. See
- * ResultSlot below — enabling it is a one-line change per project.
+/* ─── A project's own page ─────────────────────────────────────────────────
+ * Presented the way Rajat presents it on Behance (R28): the title, its
+ * category and year and one line at the top, then the presentation images
+ * stacked at full content width one after another, and "View on Behance"
+ * at the end. The images are his own project modules, fetched from his
+ * Behance projects into public/work/<slug>/ (1400 wide webp, in order,
+ * listed in data/workImages.json). Each image eases up into place as it
+ * comes into view; nothing pops. Below the fold they load lazily.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const EASE = [0.22, 1, 0.36, 1] as const;
 const RED = '#EA3323';
+const INK = 'rgb(10,10,10)';
+const EASE = [0.22, 1, 0.36, 1] as const;
 
-type Project = (typeof projectsData)[0];
+type Project = (typeof projectsData)[0] & { hidden?: boolean };
+const IMAGES = workImages as Record<string, string[]>;
 
-/* Set a project's id to `true` here once its `result` metric in
-   projects.json has been verified as a real, publishable client outcome. */
-const VERIFIED_RESULTS: Record<string, boolean> = {
-  apptile: false,
-  terrabarn: false,
-  ground: false,
-  yui: false,
-  illusdoodle: false,
+/** The projects that are shown: the hidden ones stay in the data. */
+const shown = (projectsData as Project[]).filter((p) => !p.hidden);
+
+const label: React.CSSProperties = {
+  fontFamily: 'var(--font-sans)',
+  fontSize: 11,
+  fontWeight: 600,
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
 };
 
-function eyebrow(text: string) {
+function Plate({ src, alt, i, reduceMotion }: { src: string; alt: string; i: number; reduceMotion: boolean }) {
   return (
-    <span
-      style={{
-        fontFamily: 'var(--font-sans)',
-        fontSize: 10,
-        fontWeight: 600,
-        letterSpacing: '0.28em',
-        textTransform: 'uppercase',
-        opacity: 0.4,
-      }}
+    <motion.figure
+      initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-8% 0px' }}
+      transition={{ duration: 0.9, ease: EASE }}
+      style={{ margin: 0 }}
     >
-      {text}
-    </span>
+      <img
+        src={src}
+        alt={alt}
+        loading={i < 2 ? 'eager' : 'lazy'}
+        decoding="async"
+        style={{ display: 'block', width: '100%', height: 'auto', background: '#F2EFE8' }}
+      />
+    </motion.figure>
   );
 }
 
 export function WorkDetailPage() {
   const { slug } = useParams();
-  const project = projectsData.find((p) => p.id === slug) as Project | undefined;
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const project = (projectsData as Project[]).find((p) => p.id === slug);
+  const reduceMotion = useReducedMotion() ?? false;
 
-  // Same retry-safe play trigger used for every other lazy video in this
-  // codebase (ThreeEnvironment, ServicesStack, FlashWork).
   useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    const attempt = () => v.play().catch(() => {});
-    if (v.readyState >= 2) attempt();
-    else v.addEventListener('canplay', attempt, { once: true });
-  }, [project?.video]);
+    window.scrollTo(0, 0);
+  }, [slug]);
 
-  // Unknown slug → home, rather than rendering a "details coming soon"
-  // shell that reads as a broken page.
+  // Unknown slug → home, rather than a broken shell.
   if (!project) return <Navigate to="/" replace />;
 
-  const index = projectsData.findIndex((p) => p.id === project.id);
-  const next = projectsData[(index + 1) % projectsData.length];
-  const showResult = VERIFIED_RESULTS[project.id] && project.result;
+  const images = IMAGES[project.id] ?? [];
+  const index = shown.findIndex((p) => p.id === project.id);
+  const next = shown[(index + 1) % shown.length];
+  const behance = project.behanceId ? `https://www.behance.net/gallery/${project.behanceId}` : null;
 
   return (
-    <main style={{ minHeight: '100vh', background: '#fff', paddingBottom: 'clamp(5rem, 10vh, 8rem)' }}>
-      <div
-        style={{
-          maxWidth: 1100,
-          margin: '0 auto',
-          padding: 'clamp(8rem, 16vh, 12rem) clamp(1.5rem, 4vw, 5rem) 0',
-        }}
-      >
+    <main style={{ minHeight: '100vh', background: '#fff', paddingBottom: 'clamp(5rem, 10vh, 8rem)', color: INK }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(7rem, 14vh, 10rem) clamp(1.5rem, 4vw, 5rem) 0' }}>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}>
           <Link
-            to="/"
+            to="/#work"
             className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              fontFamily: 'var(--font-sans)',
-              fontSize: 11,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              textDecoration: 'none',
-              color: 'rgb(10,10,10)',
-              opacity: 0.5,
-              marginBottom: 'clamp(2rem, 5vh, 3.5rem)',
-            }}
+            style={{ ...label, display: 'inline-flex', alignItems: 'center', gap: 8, letterSpacing: '0.14em', textDecoration: 'none', color: INK, opacity: 0.5, marginBottom: 'clamp(2rem, 5vh, 3.5rem)' }}
           >
-            <ArrowLeft size={13} strokeWidth={2} /> Back to OneRed
+            <ArrowLeft size={13} strokeWidth={2} /> Selected work
           </Link>
         </motion.div>
 
-        {/* ── Identity ── */}
+        {/* ── Identity: number, category, year, title, one line ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE, delay: 0.04 }}
           style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}
         >
-          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 600, letterSpacing: '0.2em', color: RED, fontVariantNumeric: 'tabular-nums' }}>
-            {project.number}
-          </span>
+          <span style={{ ...label, color: RED, fontVariantNumeric: 'tabular-nums' }}>{project.number}</span>
           <span aria-hidden style={{ width: 6, height: 6, background: RED }} />
-          {eyebrow(`${project.category} — ${project.year}`)}
+          <span style={{ ...label, opacity: 0.55 }}>
+            {project.category} — {project.year}
+          </span>
         </motion.div>
-
         <div style={{ overflow: 'hidden' }}>
           <motion.h1
             initial={{ y: '110%' }}
             animate={{ y: 0 }}
             transition={{ duration: 0.8, ease: EASE, delay: 0.08 }}
-            style={{
-              fontFamily: 'var(--font-sans)',
-              fontWeight: 800,
-              fontSize: 'clamp(48px, 9vw, 118px)',
-              lineHeight: 0.98,
-              letterSpacing: '-0.04em',
-              margin: 0,
-            }}
+            style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: 'clamp(48px, 9vw, 118px)', lineHeight: 0.98, letterSpacing: '-0.04em', margin: 0 }}
           >
             {project.title}
           </motion.h1>
         </div>
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: EASE, delay: 0.18 }}
+          style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(16px, 1.4vw, 20px)', lineHeight: 1.55, maxWidth: '56ch', margin: 'clamp(1.25rem, 3vh, 2rem) 0 0', opacity: 0.65 }}
+        >
+          {project.overview}
+        </motion.p>
       </div>
 
-      {/* ── The work itself ── */}
-      {(project.video || project.image) && (
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
-          style={{
-            maxWidth: 1100,
-            margin: 'clamp(2.5rem, 6vh, 4rem) auto 0',
-            padding: '0 clamp(1.5rem, 4vw, 5rem)',
-          }}
-        >
-          <div
-            style={{
-              position: 'relative',
-              aspectRatio: '16 / 9',
-              borderRadius: 20,
-              overflow: 'hidden',
-              background: project.color || 'rgba(10,10,10,0.04)',
-              boxShadow: '0 30px 64px rgba(234,51,35,0.12), 0 6px 20px rgba(0,0,0,0.07)',
-            }}
-          >
-            {project.video ? (
-              <video
-                ref={videoRef}
-                src={project.video}
-                muted
-                loop
-                autoPlay
-                playsInline
-                preload="metadata"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
-            ) : (
-              <img
-                src={project.image}
-                alt={project.title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
-            )}
-          </div>
-        </motion.div>
-      )}
+      {/* ── The presentation, plate after plate ── */}
+      <div style={{ maxWidth: 1100, margin: 'clamp(2.5rem, 6vh, 4rem) auto 0', padding: '0 clamp(1.5rem, 4vw, 5rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.2vw, 18px)' }}>
+        {images.map((src, i) => (
+          <Plate key={src} src={src} alt={`${project.title}, ${i + 1} of ${images.length}`} i={i} reduceMotion={reduceMotion} />
+        ))}
+        {images.length === 0 && project.video && (
+          <video src={project.video} muted loop autoPlay playsInline preload="metadata" style={{ width: '100%', display: 'block', aspectRatio: '16 / 9', objectFit: 'cover' }} />
+        )}
+      </div>
 
-      {/* ── The Behance case, big, when there is one (Apptile, Yui,
-             Illusdoodle): the project presented as it is on Behance, at
-             full content width, with the link out beneath. ── */}
-      {project.behanceId && (
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: EASE, delay: 0.3 }}
-          style={{ maxWidth: 1100, margin: 'clamp(2rem, 5vh, 3.5rem) auto 0', padding: '0 clamp(1.5rem, 4vw, 5rem)' }}
-        >
-          <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#F2EFE8', overflow: 'hidden' }}>
-            <iframe
-              src={`https://www.behance.net/embed/project/${project.behanceId}?ilo0=1`}
-              title={`${project.title} on Behance`}
-              loading="lazy"
-              allowFullScreen
-              allow="clipboard-write"
-              referrerPolicy="strict-origin-when-cross-origin"
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
-            />
-          </div>
+      {/* ── Out to Behance, and on to the next ── */}
+      <div style={{ maxWidth: 1100, margin: 'clamp(3rem, 7vh, 5rem) auto 0', padding: '0 clamp(1.5rem, 4vw, 5rem)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 24, borderTop: '1px solid rgba(10,10,10,0.12)', paddingTop: 'clamp(2rem, 4vh, 3rem)' }}>
+        {behance ? (
           <a
-            href={`https://www.behance.net/gallery/${project.behanceId}`}
+            href={behance}
             target="_blank"
             rel="noreferrer"
             className="btn-corners"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              marginTop: 18,
-              padding: '12px 22px',
-              background: RED,
-              color: 'white',
-              fontFamily: 'var(--font-sans)',
-              fontSize: 12,
-              fontWeight: 600,
-              letterSpacing: '0.16em',
-              textTransform: 'uppercase',
-              textDecoration: 'none',
-            }}
+            style={{ ...label, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 24px', background: RED, color: 'white', fontSize: 12, letterSpacing: '0.16em', textDecoration: 'none' }}
           >
             View on Behance <ArrowUpRight size={14} strokeWidth={2} />
           </a>
-        </motion.div>
-      )}
-
-      {/* ── The thinking + the execution ── */}
-      <div
-        className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr]"
-        style={{
-          maxWidth: 1100,
-          margin: '0 auto',
-          padding: 'clamp(3rem, 7vh, 5rem) clamp(1.5rem, 4vw, 5rem) 0',
-          gap: 'clamp(2.5rem, 5vw, 5rem)',
-        }}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.7, ease: EASE }}
-        >
-          {eyebrow('The Thinking')}
-          <p
-            style={{
-              fontFamily: 'var(--font-sans)',
-              fontSize: 'clamp(17px, 1.7vw, 23px)',
-              fontWeight: 400,
-              lineHeight: 1.62,
-              letterSpacing: '-0.01em',
-              margin: '18px 0 0',
-              color: 'rgb(10,10,10)',
-            }}
+        ) : (
+          <span />
+        )}
+        {next && next.id !== project.id && (
+          <Link
+            to={`/work/${next.id}`}
+            className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
+            style={{ display: 'inline-flex', alignItems: 'baseline', gap: 12, textDecoration: 'none', color: INK }}
           >
-            {project.overview}
-          </p>
-
-          {showResult && (
-            <div style={{ marginTop: 'clamp(2rem, 4vh, 3rem)' }}>
-              {eyebrow('The Result')}
-              <p
-                style={{
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: 'clamp(19px, 2vw, 27px)',
-                  fontWeight: 700,
-                  lineHeight: 1.4,
-                  letterSpacing: '-0.02em',
-                  margin: '18px 0 0',
-                  color: RED,
-                }}
-              >
-                {project.result}
-              </p>
-            </div>
-          )}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
-        >
-          {eyebrow('What We Delivered')}
-          <ul style={{ listStyle: 'none', padding: 0, margin: '18px 0 0' }}>
-            {project.deliverables.map((d) => (
-              <li
-                key={d}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '13px 0',
-                  borderBottom: '1px solid rgba(0,0,0,0.07)',
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: 14,
-                  color: 'rgb(10,10,10)',
-                }}
-              >
-                <span aria-hidden style={{ width: 5, height: 5, background: RED, flexShrink: 0 }} />
-                {d}
-              </li>
-            ))}
-          </ul>
-        </motion.div>
-      </div>
-
-      {/* ── Next project — keeps the visitor inside the proof chapter ── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-40px' }}
-        transition={{ duration: 0.6, ease: EASE }}
-        style={{
-          maxWidth: 1100,
-          margin: 'clamp(4rem, 9vh, 7rem) auto 0',
-          padding: '0 clamp(1.5rem, 4vw, 5rem)',
-        }}
-      >
-        <Link
-          to={`/work/${next.id}`}
-          className="group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
-          style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            justifyContent: 'space-between',
-            gap: 20,
-            paddingTop: 'clamp(1.5rem, 3vh, 2.2rem)',
-            borderTop: '1px solid rgba(0,0,0,0.1)',
-            textDecoration: 'none',
-            color: 'rgb(10,10,10)',
-          }}
-        >
-          <span style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {eyebrow('Next Project')}
-            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}>
+            <span style={{ ...label, opacity: 0.5 }}>Next</span>
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(22px, 2.4vw, 34px)', fontWeight: 800, letterSpacing: '-0.03em' }}>
               {next.title}
             </span>
-          </span>
-          <ArrowRight size={26} strokeWidth={1.8} color={RED} style={{ flexShrink: 0, alignSelf: 'center' }} />
-        </Link>
-      </motion.div>
+            <ArrowRight size={18} strokeWidth={2} color={RED} />
+          </Link>
+        )}
+      </div>
     </main>
   );
 }

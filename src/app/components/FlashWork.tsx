@@ -54,7 +54,9 @@ const grainOverlayStyle: React.CSSProperties = {
    unused in projects.json. Reading from the shared file instead lets each
    project actually argue for itself, and gives every row a real case-study
    destination via its `id`. */
-const projects = projectsData;
+/* Only the projects Rajat is showing for now (R28: Apptile, Yui,
+   Illusdoodle); the others stay in the data with `hidden`. */
+const projects = projectsData.filter((p) => !(p as { hidden?: boolean }).hidden);
 const WORK_COUNT = projects.length;
 
 /* Shared by the list rows and the visual, which lines up with the headline
@@ -108,10 +110,13 @@ function ProjectRow({
   const underlineScale = useTransform(closeness, [0, 1], [0.08, 1]);
   const underlineOpacity = useTransform(closeness, [0, 1], [0.14, 1]);
 
+  // A row is a link to the project's own page (Rajat, R28); hovering it
+  // brings its visual up in the panel, as the click used to.
   return (
-    <button
-      type="button"
-      onClick={() => onJump(index)}
+    <Link
+      to={`/work/${project.id}`}
+      onMouseEnter={() => onJump(index)}
+      onFocus={() => onJump(index)}
       className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
       style={{
         display: 'block',
@@ -121,6 +126,8 @@ function ProjectRow({
         border: 'none',
         padding: `${ROW_PAD_Y} 0`,
         cursor: 'pointer',
+        textDecoration: 'none',
+        color: 'inherit',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16 }}>
@@ -177,7 +184,7 @@ function ProjectRow({
           opacity: underlineOpacity,
         }}
       />
-    </button>
+    </Link>
   );
 }
 
@@ -361,6 +368,14 @@ function StaticWorkList() {
           className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
           style={{ display: 'block', padding: '18px 0', textDecoration: 'none', color: 'rgb(10,10,10)' }}
         >
+          {(project as { thumb?: string }).thumb && (
+            <img
+              src={(project as { thumb?: string }).thumb}
+              alt=""
+              loading="lazy"
+              style={{ display: 'block', width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', marginBottom: 14, background: '#F2EFE8' }}
+            />
+          )}
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
               <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, opacity: 0.4 }}>{project.number}.</span>
@@ -379,56 +394,8 @@ function StaticWorkList() {
             {project.overview}
           </p>
           </Link>
-          {project.behanceId && <BehanceEmbed id={project.behanceId} title={project.title} />}
         </div>
       ))}
-    </div>
-  );
-}
-
-/** The project's Behance case, embedded lazily (the iframe only loads
- *  once it is near the viewport), with the link out beneath it. */
-function BehanceEmbed({ id, title }: { id: string; title: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [near, setNear] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) {
-          setNear(true);
-          io.disconnect();
-        }
-      },
-      { rootMargin: '400px' }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-  return (
-    <div ref={ref} style={{ padding: '0 0 18px' }}>
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '404 / 316', background: '#F2EFE8', overflow: 'hidden' }}>
-        {near && (
-          <iframe
-            src={`https://www.behance.net/embed/project/${id}?ilo0=1`}
-            title={`${title} on Behance`}
-            loading="lazy"
-            allowFullScreen
-            allow="clipboard-write"
-            referrerPolicy="strict-origin-when-cross-origin"
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
-          />
-        )}
-      </div>
-      <a
-        href={`https://www.behance.net/gallery/${id}`}
-        target="_blank"
-        rel="noreferrer"
-        style={{ display: 'inline-block', marginTop: 10, fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgb(10,10,10)', textDecoration: 'none', borderBottom: '1px solid rgba(10,10,10,0.35)', paddingBottom: 3 }}
-      >
-        View on Behance ↗
-      </a>
     </div>
   );
 }
@@ -565,7 +532,7 @@ export function FlashWork() {
             animate={headingInView ? { y: 0 } : {}}
             transition={{ duration: 0.78, ease: EASE, delay: 0.05 }}
             // Identical to the cube poster's headline (ProblemCube): 500, -0.03em, leading 1.
-            style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(34px, 4.8vw, 80px)', fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.0, margin: 0, color: 'rgb(10,10,10)' }}
+            style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(32px, 4.1vw, 68px)', fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.0, margin: 0, color: 'rgb(10,10,10)' }}
           >
             Here's what<br />we made together.
           </motion.h2>
