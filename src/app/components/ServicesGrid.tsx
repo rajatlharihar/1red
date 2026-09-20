@@ -2,20 +2,22 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 
 /* ─── What we cover ────────────────────────────────────────────────────────
- * The three disciplines as one designed grid, not a stack. Same Swiss grid
- * as section 2's poster: twelve columns, hairline rules, small-caps labels,
- * flush-left type. The first card is the anchor: seven columns wide and the
- * full height, its film filling the cell. The other two share the remaining
- * five columns, one above the other, film on top. Rules divide the cells;
- * nothing is boxed. On a phone the three stack in one column, each with its
- * film first.
+ * The three disciplines as one poster. Same Swiss row as section 2's
+ * end state up top (headline flush-left, label right, one rule), then three
+ * tall red panels on a twelve-column grid, echoing the process scene's
+ * panels: each holds its film in a window low on the red with a big
+ * outlined numeral over the top, and its name, line and tags in ink beneath.
+ * Hairlines divide the columns; nothing is boxed. One column on a phone.
  *
  * Self-contained on purpose: it carries its own data and heading row so it
- * can be lifted onto the Studio page unchanged (brief S2).
+ * mounts on the Studio page unchanged (brief S2).
  * ────────────────────────────────────────────────────────────────────────── */
 
 const INK = '#0A0A0A';
 const RULE = 'rgba(10,10,10,0.14)';
+const RED = '#EA3323';
+const RED_SOFT = '#FF5A4A';
+const SKY = '#F2EFE8';
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /* Websites and UI/UX are one thing here: the product and the site are
@@ -105,32 +107,58 @@ const label: React.CSSProperties = {
   color: INK,
 };
 
-function Copy({ s, big }: { s: (typeof services)[number]; big?: boolean }) {
+function Copy({ s }: { s: (typeof services)[number] }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span style={label}>{s.eyebrow}</span>
-        <span style={{ ...label, opacity: 0.45 }}>{s.number}</span>
-      </div>
-      <h3
-        style={{
-          margin: 0,
-          fontSize: big ? 'clamp(30px, 3.6vw, 56px)' : 'clamp(24px, 2.2vw, 34px)',
-          fontWeight: 800,
-          letterSpacing: '-0.04em',
-          lineHeight: 1.0,
-          color: INK,
-        }}
-      >
-        {s.title}
-      </h3>
-      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55, opacity: 0.6, maxWidth: big ? '34ch' : '40ch', color: INK }}>{s.description}</p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 22 }}>
+      <span style={label}>{s.eyebrow}</span>
+      <h3 style={{ margin: 0, fontSize: 'clamp(24px, 2.3vw, 38px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1.0, color: INK }}>{s.title}</h3>
+      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55, opacity: 0.6, maxWidth: '38ch', color: INK }}>{s.description}</p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', marginTop: 4 }}>
         {s.tags.map((t) => (
           <span key={t} style={{ ...label, letterSpacing: '0.14em', opacity: 0.5 }}>
             {t}
           </span>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/** A tall red panel in the process scene's language, the film in a window
+ *  low on it, the numeral outlined over the top in the sky colour. */
+function RedPanel({ s, i }: { s: (typeof services)[number]; i: number }) {
+  return (
+    <div style={{ position: 'relative', aspectRatio: '1 / 1.35' }}>
+      <svg viewBox="0 0 100 135" preserveAspectRatio="none" style={{ position: 'absolute', inset: '-2% -4%', width: '108%', height: '104%', overflow: 'visible' }}>
+        <defs>
+          <filter id={`sg-rough-${i}`} x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed={11 + i} result="n" />
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="1.8" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+        <rect x={4.5} y={3.5} width={92} height={128} fill={RED_SOFT} opacity={0.5} filter={`url(#sg-rough-${i})`} transform={`rotate(${i % 2 ? 0.5 : -0.5} 50 67)`} />
+        <rect x={4} y={3} width={92} height={128} fill={RED} filter={`url(#sg-rough-${i})`} transform={`rotate(${i % 2 ? -0.35 : 0.4} 50 67)`} />
+      </svg>
+      <span
+        aria-hidden
+        style={{
+          position: 'absolute',
+          left: '7%',
+          top: '4%',
+          fontFamily: 'var(--font-sans)',
+          fontSize: 'clamp(72px, 9vw, 170px)',
+          fontWeight: 800,
+          letterSpacing: '-0.06em',
+          lineHeight: 0.8,
+          color: 'transparent',
+          WebkitTextStroke: `clamp(1px, 0.12vw, 2px) ${SKY}`,
+          zIndex: 2,
+        }}
+      >
+        {s.number}
+      </span>
+      <div style={{ position: 'absolute', left: '11%', right: '11%', bottom: '8%', height: '58%', overflow: 'hidden', border: `1px solid ${INK}`, zIndex: 1 }}>
+        <Film src={s.video} />
       </div>
     </div>
   );
@@ -167,55 +195,23 @@ export function ServicesGrid({ heading = true, still = false }: { heading?: bool
         </span>
       </div>
 
-      {wide ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gridTemplateRows: 'auto auto' }}>
-          {/* 01: the anchor cell, seven columns, both rows. */}
+      <div style={{ display: 'grid', gridTemplateColumns: wide ? 'repeat(12, minmax(0, 1fr))' : '1fr', columnGap: 0 }}>
+        {services.map((s, i) => (
           <motion.div
-            {...rise(0, still)}
-            style={{ gridColumn: '1 / span 7', gridRow: '1 / span 2', display: 'flex', flexDirection: 'column', borderRight: `1px solid ${RULE}` }}
+            key={s.number}
+            {...rise(i, still)}
+            style={{
+              gridColumn: wide ? `${i * 4 + 1} / span 4` : '1',
+              padding: wide ? `clamp(28px, 3vw, 48px) ${i === 2 ? 0 : 'clamp(20px, 2vw, 36px)'} clamp(36px, 4vw, 64px) ${i === 0 ? 0 : 'clamp(20px, 2vw, 36px)'}` : '28px 0 36px',
+              borderLeft: wide && i > 0 ? `1px solid ${RULE}` : 'none',
+              borderBottom: !wide && i < 2 ? `1px solid ${RULE}` : 'none',
+            }}
           >
-            <div style={{ aspectRatio: '16 / 10', overflow: 'hidden' }}>
-              <Film src={a.video} />
-            </div>
-            <div style={{ padding: '28px 36px 40px 0' }}>
-              <Copy s={a} big />
-            </div>
+            <RedPanel s={s} i={i} />
+            <Copy s={s} />
           </motion.div>
-
-          {/* 02 and 03 share the five right columns, film on top of each. */}
-          {[b, c].map((s, i) => (
-            <motion.div
-              key={s.number}
-              {...rise(i + 1, still)}
-              style={{
-                gridColumn: '8 / span 5',
-                gridRow: i + 1,
-                display: 'grid',
-                gridTemplateColumns: '2fr 3fr',
-                gap: 24,
-                padding: '24px 0 32px 32px',
-                borderBottom: i === 0 ? `1px solid ${RULE}` : 'none',
-              }}
-            >
-              <div style={{ aspectRatio: '4 / 5', overflow: 'hidden' }}>
-                <Film src={s.video} />
-              </div>
-              <Copy s={s} />
-            </motion.div>
-          ))}
-        </div>
-      ) : (
-        <div>
-          {services.map((s, i) => (
-            <motion.div key={s.number} {...rise(i, still)} style={{ padding: '24px 0 32px', borderBottom: i < 2 ? `1px solid ${RULE}` : 'none' }}>
-              <div style={{ aspectRatio: '16 / 10', overflow: 'hidden', marginBottom: 20 }}>
-                <Film src={s.video} />
-              </div>
-              <Copy s={s} />
-            </motion.div>
-          ))}
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 }

@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 2, R4
+
+- **"What we cover" as three red panels** (`ServicesGrid.tsx`): under the Swiss heading row, three tall red panels (1:1.35, two roughened passes like the process scene's) on the twelve-column grid, four columns each with hairlines between; each holds its film in a hairline window low on the red with the big outlined numeral in the sky colour over the top, and eyebrow, name, line and tags in ink beneath. One column on a phone. The anchor-plus-two layout is gone.
+
 ## 2026-09-21 — round 2, R3
 
 - **The process scene is the red-panel print, stood up in space** (`studio/ProcessSpace.tsx` rebuilt; the white cards are gone). Rajat asked where the design went: it was `StudioProcess.tsx`, the 3x3 print built on 2026-09-20 from the same reference, which S1 had unmounted. Now: a pale room (sky `#F2EFE8`, one floor plane laid flat through the screen plane at 80% height, so the horizon sits at the lens's own height), five tall red panels (1:2.4, two roughened passes as on the print) standing on the floor 1200 px apart, alternating left/right; the camera steers onto each and brushes past it beside the axis (the red clears just before the lens; queued panels are drawn a little paler). Each panel carries a big outlined numeral in the sky colour; step label, title and one-liner stand in ink beside its foot. The print's ink figures (some walking in place), a ladder on 04, dots and a scribble on the ground at every panel, all in the stage so they recede with it. The ServicesGrid arrival is unchanged. Reduced motion mounts the print itself.
