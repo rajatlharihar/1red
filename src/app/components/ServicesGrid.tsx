@@ -5,9 +5,8 @@ import { motion } from 'motion/react';
  * The three disciplines as one poster. Same Swiss row as section 2's
  * end state up top (headline flush-left, label right, one rule), then three
  * tall red panels on a twelve-column grid, echoing the process scene's
- * panels: each holds its film in a window low on the red with a big
- * outlined numeral over the top, and its name, line and tags in ink beneath.
- * Hairlines divide the columns; nothing is boxed. One column on a phone.
+ * panels: each holds its film in a window low on the red, and its name,
+ * line and tags in ink beneath. Nothing is boxed. One column on a phone.
  *
  * Self-contained on purpose: it carries its own data and heading row so it
  * mounts on the Studio page unchanged (brief S2).
@@ -17,7 +16,6 @@ const INK = '#0A0A0A';
 const RULE = 'rgba(10,10,10,0.14)';
 const RED = '#EA3323';
 const RED_SOFT = '#FF5A4A';
-const SKY = '#F2EFE8';
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /* Websites and UI/UX are one thing here: the product and the site are
@@ -125,7 +123,7 @@ function Copy({ s }: { s: (typeof services)[number] }) {
 }
 
 /** A tall red panel in the process scene's language, the film in a window
- *  low on it, the numeral outlined over the top in the sky colour. */
+ *  low on it, nothing over the red but the film. */
 function RedPanel({ s, i }: { s: (typeof services)[number]; i: number }) {
   return (
     <div style={{ position: 'relative', aspectRatio: '1 / 1.35' }}>
@@ -139,24 +137,6 @@ function RedPanel({ s, i }: { s: (typeof services)[number]; i: number }) {
         <rect x={4.5} y={3.5} width={92} height={128} fill={RED_SOFT} opacity={0.5} filter={`url(#sg-rough-${i})`} transform={`rotate(${i % 2 ? 0.5 : -0.5} 50 67)`} />
         <rect x={4} y={3} width={92} height={128} fill={RED} filter={`url(#sg-rough-${i})`} transform={`rotate(${i % 2 ? -0.35 : 0.4} 50 67)`} />
       </svg>
-      <span
-        aria-hidden
-        style={{
-          position: 'absolute',
-          left: '7%',
-          top: '4%',
-          fontFamily: 'var(--font-sans)',
-          fontSize: 'clamp(72px, 9vw, 170px)',
-          fontWeight: 800,
-          letterSpacing: '-0.06em',
-          lineHeight: 0.8,
-          color: 'transparent',
-          WebkitTextStroke: `clamp(1px, 0.12vw, 2px) ${SKY}`,
-          zIndex: 2,
-        }}
-      >
-        {s.number}
-      </span>
       <div style={{ position: 'absolute', left: '11%', right: '11%', bottom: '8%', height: '58%', overflow: 'hidden', border: `1px solid ${INK}`, zIndex: 1 }}>
         <Film src={s.video} />
       </div>
@@ -187,12 +167,9 @@ export function ServicesGrid({ heading = true, still = false }: { heading?: bool
     <div style={{ padding: `0 ${pad}`, color: INK }}>
       {/* Heading row: label right, rule beneath, the same as the poster. */}
       <div style={{ display: heading ? 'grid' : 'none', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', alignItems: 'end', paddingBottom: 18, borderBottom: `1px solid ${INK}` }}>
-        <h2 style={{ gridColumn: '1 / span 8', margin: 0, fontSize: 'clamp(40px, 6.4vw, 112px)', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.96 }}>
+        <h2 style={{ gridColumn: '1 / span 12', margin: 0, fontSize: 'clamp(40px, 6.4vw, 112px)', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.96 }}>
           What we cover
         </h2>
-        <span style={{ ...label, gridColumn: wide ? '10 / span 3' : '1 / span 12', textAlign: wide ? 'right' : 'left', marginTop: wide ? 0 : 18 }}>
-          Three disciplines. One team.
-        </span>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: wide ? 'repeat(12, minmax(0, 1fr))' : '1fr', columnGap: 0 }}>
@@ -203,7 +180,6 @@ export function ServicesGrid({ heading = true, still = false }: { heading?: bool
             style={{
               gridColumn: wide ? `${i * 4 + 1} / span 4` : '1',
               padding: wide ? `clamp(28px, 3vw, 48px) ${i === 2 ? 0 : 'clamp(20px, 2vw, 36px)'} clamp(36px, 4vw, 64px) ${i === 0 ? 0 : 'clamp(20px, 2vw, 36px)'}` : '28px 0 36px',
-              borderLeft: wide && i > 0 ? `1px solid ${RULE}` : 'none',
               borderBottom: !wide && i < 2 ? `1px solid ${RULE}` : 'none',
             }}
           >

@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 3, R8
+
+- **"What we cover" pared back** (`ServicesGrid.tsx`): the "Three disciplines. One team." label, the outlined numerals on the panels and the hairline column lines are gone (we do far more than three). Heading row, the three red panels with their films, and the ink copy beneath stay.
+
 ## 2026-09-21 — round 3, R7
 
 - **Process scene rebuilt as the 3 x 3 grid with depth by number** (`studio/ProcessSpace.tsx`): nine slots seen head-on at the opening shot (each panel's world size and offset scaled by its own opening depth, so their projections line up as the print's grid), numbered panels at the print's stage slots with 01 nearest and 05 in the centre slot furthest, four blank red panels at half-step depths between; the camera goes straight in on the glide, so they arrive and pass in order, and 05 covers the frame for the arrival reveal as before. Figures, ladder on 04, dots and scribbles kept. Captions are sized to their panel, so they scale with it.
