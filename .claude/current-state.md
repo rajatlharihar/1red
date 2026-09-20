@@ -5,7 +5,7 @@
 
 ## Session Log: 2026-09-20
 
-- Night (scrollytelling brief, task H1, hub imac-74): hero statement on the wall, see CHANGELOG 2026-09-20 (night). Verified headless Brave 1440x900 and 390x844 at p 0 / 0.05 / 0.10 / 0.16 / 0.24, no page errors, `vite build` clean. Awaiting hub/Rajat review; next task is H2 (cube line), handed out by the hub.
+- Night (scrollytelling brief, task H1, hub imac-74): hero statement on the wall, see CHANGELOG 2026-09-20 (night). Verified headless Brave 1440x900 and 390x844 at p 0 / 0.05 / 0.10 / 0.16 / 0.24, no page errors, `vite build` clean. H2 (cube line + Swiss poster end state) done the same night, see CHANGELOG. Hub (imac-74) makes all picks for 1Red now; next is H3.
 
 - Later: services roster cut to three; Our Process on /services is a flick carousel (`OurProcess.tsx`); /studio is the process-as-a-print composition (`StudioProcess.tsx`, `Studio.tsx` deleted); Navigation footer observer gets a -1px bottom margin. See CHANGELOG 2026-09-20 (later) and decisions.md. Verified headless in Brave at 1440x900 and 390x844: flick lands on the next card, prev/next and arrow keys work, resize keeps the current card, studio hover swaps the caption, no page errors, `vite build` clean. Waiting on Rajat's review of the studio composition (figure placement, block sizes) and of the carousel's feel on the real trackpad.
 

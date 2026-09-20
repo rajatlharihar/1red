@@ -196,6 +196,11 @@ const DRIFT_Y = 0.35;
 /** How far the camera rises as the box settles, so the box sits lower in
  *  the frame under the copy (world units). */
 const BOX_DROP = 0.3;
+const BOX_DROP_WIDE = 1.0;
+/** ...and to the right on a wide frame, into the poster's empty lower-right
+ *  column beside the headline: the camera slides left by this share of the
+ *  frame's half-width at the box's depth. A portrait frame keeps it centred. */
+const BOX_SHIFT = 0.34;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -636,9 +641,15 @@ export function CubeAssembly({
        the mark's occluder can hide it along with the cubes. */
     if (backdrop.current) backdrop.current.position.z = cam.position.z - BACKDROP_DIST;
 
-    cam.position.z = lerp(CAM_Z, CAM_Z - 0.7, settle);
-    // The box settles lower in the frame, clear of the copy above it.
-    cam.position.y = BOX_DROP * settle;
+    /* The box settles lower in the frame, under the rule and clear of the
+       headline. On a wide frame it also backs off a little and slides to
+       the right, into the poster's empty lower-right; a portrait frame
+       keeps it centred and closer. */
+    const wide = aspect >= 1;
+    cam.position.z = lerp(CAM_Z, wide ? CAM_Z + 1.0 : CAM_Z - 0.7, settle);
+    cam.position.y = (wide ? BOX_DROP_WIDE : BOX_DROP) * settle;
+    const halfW = cam.position.z * TAN_HALF * aspect;
+    cam.position.x = wide ? -BOX_SHIFT * halfW * settle : 0;
   });
 
   return (

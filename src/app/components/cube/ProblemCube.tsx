@@ -26,13 +26,18 @@ import { glide, subscribeGlide } from '../scrollGlide';
 const SECTION_VH = 490;
 const BG = '#FFFFFF';
 const INK = '#0A0A0A';
-/** Placeholder copy behind the finished box, one line rising after the
- *  other as the box locks. Rajat will replace the words. */
-const LINES = ['Ideas take shape.', 'Block by block.'];
+/** The answer to the wall's question. Set as a Swiss poster: headline
+ *  flush-left over two lines, a small label top-right, one hairline rule
+ *  under the headline, and the box settling bottom-right off-centre. */
+const LINES = ['Or hire', 'the whole box.'];
+const LABEL = 'Every skill. One collective.';
+/** Section progress over which each line rises out of its mask; the label
+ *  rides with the first line, the rule draws after the second. */
 const LINE_REVEAL: Array<[number, number]> = [
   [0.8, 0.9],
   [0.85, 0.95],
 ];
+const RULE_REVEAL: [number, number] = [0.88, 0.99];
 const smooth = (a: number, b: number, v: number) => {
   const t = Math.max(0, Math.min(1, (v - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -49,6 +54,18 @@ export function ProblemCube() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const lineRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const labelRef = useRef<HTMLSpanElement>(null);
+  const ruleRef = useRef<HTMLDivElement>(null);
+  // The grid: headline on eight of twelve columns beside the label on a
+  // wide frame; on a phone the headline takes the full width and the label
+  // sits under the rule, clear of the nav.
+  const [wide, setWide] = useState(() => window.matchMedia('(min-width: 768px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const apply = () => setWide(mq.matches);
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
   const progressRef = useRef(0);
   /** The hero's own progress at this scroll position, unclamped, so the
    *  canvas can place the mark where the hero has it and know when the
@@ -107,6 +124,13 @@ export function ProblemCube() {
         const t = smooth(LINE_REVEAL[i][0], LINE_REVEAL[i][1], p);
         el.style.transform = `translateY(${((1 - t) * 110).toFixed(2)}%)`;
       });
+      if (labelRef.current) {
+        const t = smooth(LINE_REVEAL[0][0], LINE_REVEAL[0][1], p);
+        labelRef.current.style.transform = `translateY(${((1 - t) * 110).toFixed(2)}%)`;
+      }
+      if (ruleRef.current) {
+        ruleRef.current.style.transform = `scaleX(${smooth(RULE_REVEAL[0], RULE_REVEAL[1], p).toFixed(4)})`;
+      }
     });
   }, [reduceMotion]);
 
@@ -141,42 +165,77 @@ export function ProblemCube() {
               gone; until then the canvas paints its own white for the mark
               to cut. */}
           <div ref={sheetRef} style={{ position: 'absolute', inset: 0, background: BG, opacity: reduceMotion ? 1 : 0 }}>
-            {/* The copy, high on the sheet; the box settles just over its
-                foot, so the last line runs a little behind the box. Lines
-                rise out of their masks as the box locks. */}
-          <div
-            aria-hidden={!reduceMotion}
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              top: 'clamp(4rem, 9vh, 8rem)',
-              textAlign: 'center',
-              pointerEvents: 'none',
-              padding: '0 clamp(1.5rem, 4vw, 5rem)',
-            }}
-          >
-            {LINES.map((line, i) => (
-              <div key={line} style={{ overflow: 'hidden' }}>
+            {/* The poster grid, high on the sheet; the box settles into the
+                lower right beside it. Everything rises out of masks or draws
+                along its own length as the box locks, on the lines' curve. */}
+            <div
+              aria-hidden={!reduceMotion}
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: 'clamp(5.5rem, 9vh, 8rem)',
+                padding: '0 clamp(1.5rem, 4vw, 5rem)',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+                columnGap: 'clamp(12px, 1.5vw, 24px)',
+                rowGap: 'clamp(14px, 2.4vh, 28px)',
+                alignItems: 'start',
+                pointerEvents: 'none',
+                color: INK,
+              }}
+            >
+              <div style={{ gridColumn: wide ? '10 / span 3' : '1 / span 12', gridRow: wide ? 1 : 3, textAlign: wide ? 'right' : 'left', overflow: 'hidden' }}>
                 <span
-                  ref={(el) => {
-                    lineRefs.current[i] = el;
-                  }}
+                  ref={labelRef}
                   style={{
                     display: 'block',
-                    fontSize: 'clamp(40px, 7.2vw, 132px)',
-                    fontWeight: 800,
-                    letterSpacing: '-0.05em',
-                    lineHeight: 1.0,
-                    color: INK,
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: 10,
+                    fontWeight: 600,
+                    letterSpacing: '0.24em',
+                    textTransform: 'uppercase',
+                    lineHeight: 1.6,
+                    paddingTop: wide ? '0.6em' : 0,
                     transform: reduceMotion ? 'none' : 'translateY(110%)',
                   }}
                 >
-                  {line}
+                  {LABEL}
                 </span>
               </div>
-            ))}
-          </div>
+              <div style={{ gridColumn: wide ? '1 / span 8' : '1 / span 12', gridRow: 1 }}>
+                {LINES.map((line, i) => (
+                  <div key={line} style={{ overflow: 'hidden' }}>
+                    <span
+                      ref={(el) => {
+                        lineRefs.current[i] = el;
+                      }}
+                      style={{
+                        display: 'block',
+                        fontSize: 'clamp(44px, 8.4vw, 150px)',
+                        fontWeight: 800,
+                        letterSpacing: '-0.05em',
+                        lineHeight: 0.96,
+                        transform: reduceMotion ? 'none' : 'translateY(110%)',
+                      }}
+                    >
+                      {line}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div
+                ref={ruleRef}
+                style={{
+                  gridColumn: '1 / span 12',
+                  gridRow: 2,
+                  height: 1,
+                  background: INK,
+                  transformOrigin: 'left center',
+                  transform: reduceMotion ? 'none' : 'scaleX(0)',
+                }}
+              />
+            </div>
           </div>
           <div style={{ position: 'absolute', inset: 0 }}>
             <Canvas

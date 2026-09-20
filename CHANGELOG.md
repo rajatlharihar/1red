@@ -6,6 +6,11 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-20 (night) — H2 cube line
+
+- **Section 2's end state is a Swiss poster** (`cube/ProblemCube.tsx`): headline "Or hire / the whole box." flush-left on eight of twelve columns at display size, label "Every skill. One collective." top-right in the site's small-caps label style, one hairline rule across the page under the headline. Lines and label rise out of masks on the existing `LINE_REVEAL` curve; the rule draws left to right over 0.88 to 0.99. Phone: headline full width, label under the rule.
+- **The box settles bottom-right on wide frames** (`cube/CubeAssembly.tsx`): during the existing settle window the camera also slides left by `BOX_SHIFT` of the frame's half-width, rises `BOX_DROP_WIDE` and backs off 1.0, so the box lands under the rule beside the headline. Portrait keeps the old centred, closer settle. Gather timing untouched.
+
 ## 2026-09-20 (night) — H1 hero statement
 
 - **"Still hiring five agencies for one job?" lettered on the facade** (`hero/wallStatement.ts`, drawn by `StudioScene`): a transparent canvas texture on a plane flush with the wall right of the door, uppercase Outfit 700, red "?". Placement is fitted at mount from the p = 0 camera: the largest type whose lines sit inside the frame's (rolled, oblique) footprint on the wall, each line starting a fixed 0.9 m right of the door rim at its own height, so the block leans with the jamb. Line breaks chosen by the fitter per aspect (three lines at 1440x900, six on a phone). It rides the wall through the establishing sweep and is out of frame by p 0.24; nothing fades. Hero timing, camera, door and mark untouched.
