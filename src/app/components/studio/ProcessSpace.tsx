@@ -84,7 +84,7 @@ const FILL_TO = -0.65 * P;
 const GRID = {
   wide: { col: 0.115, row: 0.3, openW: 0.064, dy: 0 },
   // Sat a little low, under the heading.
-  portrait: { col: 0.3, row: 0.27, openW: 0.22, dy: 0.07 },
+  portrait: { col: 0.3, row: 0.24, openW: 0.19, dy: 0.12 },
 };
 const ASPECT = 2.4;
 type Slot = { col: number; row: number; step?: number; z: number };
@@ -445,7 +445,7 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
               willChange: 'transform, opacity',
             }}
           >
-            <h2 style={{ gridColumn: '1 / span 12', margin: 0, fontSize: 'clamp(40px, 6.4vw, 112px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 0.92 }}>
+            <h2 style={{ gridColumn: '1 / span 12', margin: 0, fontSize: wide ? 'clamp(40px, 6.4vw, 112px)' : '34px', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 0.92 }}>
               Our
               <br />
               process

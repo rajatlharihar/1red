@@ -50,7 +50,7 @@ const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:o
 
 /* Fluid stagger for the mobile menu items */
 const listVariants = {
-  open: { transition: { staggerChildren: 0.06, delayChildren: 0.06 } },
+  open: { transition: { staggerChildren: 0.05, delayChildren: 0.02 } },
   closed: { transition: { staggerChildren: 0.04, staggerDirection: -1 } },
 };
 const itemVariants = {
@@ -337,63 +337,58 @@ export function Navigation() {
         </button>
       </motion.div>
 
-      {/* Mobile expanded panel — same object, same glass */}
+      {/* Mobile menu, after Rajat's YUI site (yuiii.vercel.app at 390 wide):
+          no panel. A column of round buttons drops from under the trigger,
+          one per destination, the current one red, each falling into place
+          a beat after the one above it, and lifting back up on close. */}
       <AnimatePresence>
         {open && (
           <motion.div
             className="lg:hidden"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={reduceMotion ? { duration: 0.01 } : SPRING}
+            variants={listVariants}
+            initial="closed"
+            animate="open"
+            exit="closed"
             style={{
               position: 'fixed',
               top: 'clamp(66px, 14vw, 76px)',
-              left: 'clamp(14px, 4vw, 20px)',
               right: 'clamp(14px, 4vw, 20px)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 8,
               pointerEvents: 'auto',
-              padding: 8,
-              ...glassStyle,
             }}
           >
-            <motion.div variants={listVariants} initial="closed" animate="open" exit="closed" style={{ display: 'flex', gap: 8 }}>
-              {NAV_ITEMS.map((item) => {
-                const isActive = location.pathname === item.path;
-                const Icon = item.icon;
-                return (
-                  <motion.div key={item.path} variants={itemVariants} style={{ flex: 1 }}>
-                    <Link
-                      to={item.path}
-                      onClick={() => setOpen(false)}
-                      aria-label={item.label}
-                      aria-current={isActive ? 'page' : undefined}
-                      className={`${focusRing} btn-corners`}
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 6,
-                        height: 58,
-                        border: isActive ? '1px solid rgba(234,51,35,0.25)' : '1px solid transparent',
-                        background: isActive ? 'rgba(234,51,35,0.06)' : 'transparent',
-                      }}
-                    >
-                      <Icon size={19} strokeWidth={1.5} color={isActive ? RED : 'rgba(10,10,10,0.6)'} />
-                      <span
-                        style={{
-                          width: isActive ? 10 : 0,
-                          height: 2,
-                          background: RED,
-                          borderRadius: 1,
-                          transition: 'width 260ms cubic-bezier(0.22,1,0.36,1)',
-                        }}
-                      />
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
+            {NAV_ITEMS.map((item) => {
+              const isActive = location.pathname === item.path;
+              const Icon = item.icon;
+              return (
+                <motion.div key={item.path} variants={itemVariants}>
+                  <Link
+                    to={item.path}
+                    onClick={() => setOpen(false)}
+                    aria-label={item.label}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={focusRing}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 46,
+                      height: 46,
+                      borderRadius: 999,
+                      background: isActive ? RED : 'rgb(10,10,10)',
+                      color: 'white',
+                      boxShadow: '0 8px 20px rgba(0,0,0,0.18)',
+                      transition: 'transform 200ms cubic-bezier(0.22,1,0.36,1)',
+                    }}
+                  >
+                    <Icon size={18} strokeWidth={1.7} color="white" />
+                  </Link>
+                </motion.div>
+              );
+            })}
           </motion.div>
         )}
       </AnimatePresence>
