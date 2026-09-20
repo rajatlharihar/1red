@@ -73,45 +73,175 @@ const smooth = (a: number, b: number, v: number) => {
 };
 const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
 
+/* ── Hand-drawn, not iconed ──────────────────────────────────────────────
+ * The reference is a pen sketch: nothing on it is a clean shape. So every
+ * line here is a wobbly path from a seeded PRNG (the same on every render),
+ * fills are rough blobs, the table is hand-ruled and a little bowed, and a
+ * turbulence displacement over the sketch group roughens the ink further.
+ * Type stays outside the filter and stays crisp. */
+function rng(seed: number) {
+  let n = seed * 9301 + 49297;
+  return () => ((n = (n * 9301 + 49297) % 233280) / 233280);
+}
+
+/** A closed or open path through `pts`, each point nudged by up to `j`,
+ *  with a mid-point kink on every segment so long lines never read ruled. */
+function wobbly(pts: Array<[number, number]>, j: number, r: () => number, close = true) {
+  const q = pts.map(([x, y]) => [x + (r() - 0.5) * j, y + (r() - 0.5) * j] as [number, number]);
+  const n = close ? q.length : q.length - 1;
+  let d = `M${q[0][0].toFixed(1)} ${q[0][1].toFixed(1)}`;
+  for (let i = 0; i < n; i++) {
+    const A = q[i];
+    const B = q[(i + 1) % q.length];
+    const mx = (A[0] + B[0]) / 2 + (r() - 0.5) * j * 1.6;
+    const my = (A[1] + B[1]) / 2 + (r() - 0.5) * j * 1.6;
+    d += ` Q${mx.toFixed(1)} ${my.toFixed(1)} ${B[0].toFixed(1)} ${B[1].toFixed(1)}`;
+  }
+  return close ? d + ' Z' : d;
+}
+
+/** A rough blob: an ellipse traced in 10 jittered points. */
+function blob(cx: number, cy: number, rx: number, ry: number, r: () => number, j = 8) {
+  const pts: Array<[number, number]> = [];
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    pts.push([cx + Math.cos(a) * rx, cy + Math.sin(a) * ry]);
+  }
+  return wobbly(pts, j, r);
+}
+
 /** A figure at a seat, seen from above: chair, shoulders, head toward the
- *  table. Solid ink, as in the reference. */
-function Figure({ x, side }: { x: number; side: 'top' | 'bottom' }) {
+ *  table. Each one sits a little differently. */
+function Figure({ x, side, seed }: { x: number; side: 'top' | 'bottom'; seed: number }) {
+  const r = rng(seed);
   const dir = side === 'top' ? -1 : 1;
   const edge = side === 'top' ? TABLE.y : TABLE.y + TABLE.h;
-  const cy = edge + dir * 62;
+  const size = 0.85 + r() * 0.35;
+  const lean = (r() - 0.5) * 22;
+  const cy = edge + dir * (56 + r() * 16);
+  const sw = 40 * size;
+  const sh = 22 * size;
+  const chairW = 62 * size;
+  const chairH = 56 * size;
+  const cx = x + lean;
+  const chairY = cy + dir * 22;
   return (
     <g>
-      <rect x={x - 34} y={cy + dir * 26 - 30} width={68} height={60} rx={8} fill="none" stroke={INK} strokeWidth={5} />
-      <ellipse cx={x} cy={cy} rx={44} ry={24} fill={INK} />
-      <circle cx={x} cy={cy - dir * 26} r={18} fill={INK} />
+      <path
+        d={wobbly(
+          [
+            [cx - chairW / 2, chairY - chairH / 2],
+            [cx + chairW / 2, chairY - chairH / 2],
+            [cx + chairW / 2, chairY + chairH / 2],
+            [cx - chairW / 2, chairY + chairH / 2],
+          ],
+          7,
+          r
+        )}
+        fill="none"
+        stroke={INK}
+        strokeWidth={3.5 + r() * 2}
+        strokeLinejoin="round"
+      />
+      {/* Shoulders: two passes of rough fill, so the ink looks worked. */}
+      <path d={blob(cx, cy, sw, sh, r, 10)} fill={INK} />
+      <path d={blob(cx + (r() - 0.5) * 8, cy + (r() - 0.5) * 6, sw * 0.9, sh * 0.85, r, 9)} fill={INK} opacity={0.85} />
+      {/* One arm on the table, sometimes. */}
+      {r() > 0.45 && (
+        <path
+          d={wobbly([[cx + (r() - 0.5) * 30, cy], [cx + (r() - 0.5) * 40, edge - dir * (10 + r() * 18)]], 5, r, false)}
+          fill="none"
+          stroke={INK}
+          strokeWidth={9 + r() * 5}
+          strokeLinecap="round"
+        />
+      )}
+      <path d={blob(cx + (r() - 0.5) * 10, cy - dir * (24 + r() * 6), 16 * size, 17 * size, r, 6)} fill={INK} />
     </g>
   );
 }
 
+/** The table: hand-ruled, ends rounded by hand, long edges a little bowed. */
+function tablePath(r: () => number) {
+  const { x, y, w, h } = TABLE;
+  const cap = 70;
+  const pts: Array<[number, number]> = [];
+  // Top edge, bowed up in the middle by a few units.
+  for (let i = 0; i <= 12; i++) {
+    const t = i / 12;
+    pts.push([x + cap + (w - 2 * cap) * t, y - Math.sin(t * Math.PI) * 6]);
+  }
+  for (let i = 1; i < 6; i++) {
+    const a = -Math.PI / 2 + (i / 6) * Math.PI;
+    pts.push([x + w - cap + Math.cos(a) * cap, y + h / 2 + Math.sin(a) * (h / 2)]);
+  }
+  for (let i = 12; i >= 0; i--) {
+    const t = i / 12;
+    pts.push([x + cap + (w - 2 * cap) * t, y + h + Math.sin(t * Math.PI) * 5]);
+  }
+  for (let i = 1; i < 6; i++) {
+    const a = Math.PI / 2 + (i / 6) * Math.PI;
+    pts.push([x + cap + Math.cos(a) * cap, y + h / 2 + Math.sin(a) * (h / 2)]);
+  }
+  return wobbly(pts, 5, r);
+}
+
 function Picture() {
   const label = { fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 600, letterSpacing: '0.24em', fill: INK } as const;
+  const line = { fontFamily: 'var(--font-sans)', fontSize: 96, fontWeight: 800, letterSpacing: '-0.04em', fill: INK } as const;
+  const r = rng(7);
+  const table = tablePath(r);
+  const table2 = tablePath(rng(11));
   return (
     <svg viewBox={`0 0 ${PIC_W} ${VIEW_H}`} width="100%" height="100%" preserveAspectRatio="xMinYMid meet" style={{ display: 'block' }}>
-      <rect x={TABLE.x} y={TABLE.y} width={TABLE.w} height={TABLE.h} rx={TABLE.r} fill="none" stroke={INK} strokeWidth={6} />
-      {PAPERS.map(([x, y, a], i) => (
-        <rect key={i} x={x} y={y} width={54} height={40} fill="none" stroke={INK} strokeWidth={4} transform={`rotate(${a} ${x + 27} ${y + 20})`} />
-      ))}
-      {SEATS.map((s) => (
-        <Figure key={s.x} x={s.x} side={s.side} />
-      ))}
+      <defs>
+        {/* Pen on paper: a fine displacement breaks every edge, and a
+            touch of blur under it lets the ink bleed. */}
+        <filter id="team-ink" x="-2%" y="-10%" width="104%" height="120%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="3" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="7" xChannelSelector="R" yChannelSelector="G" result="rough" />
+          <feGaussianBlur in="rough" stdDeviation="0.6" result="bleed" />
+          <feComponentTransfer in="bleed">
+            <feFuncA type="gamma" amplitude="1" exponent="0.55" />
+          </feComponentTransfer>
+        </filter>
+      </defs>
+      <g filter="url(#team-ink)">
+        {/* The outline, drawn twice: a pen going round again. */}
+        <path d={table} fill="none" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
+        <path d={table2} fill="none" stroke={INK} strokeWidth={2.5} strokeLinejoin="round" opacity={0.7} />
+        {PAPERS.map(([x, y, a], i) => {
+          const pr = rng(100 + i);
+          const w = 50 + pr() * 12;
+          const h = 36 + pr() * 10;
+          return (
+            <path
+              key={i}
+              d={wobbly([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], 6, pr)}
+              fill="none"
+              stroke={INK}
+              strokeWidth={3 + pr() * 1.5}
+              transform={`rotate(${a} ${x + w / 2} ${y + h / 2})`}
+            />
+          );
+        })}
+        {SEATS.map((s, i) => (
+          <Figure key={s.x} x={s.x} side={s.side} seed={20 + i * 7} />
+        ))}
+      </g>
       {SEATS.filter((s) => s.label).map((s) => (
         <text key={s.x} x={s.x} y={s.side === 'top' ? TABLE.y - 128 : TABLE.y + TABLE.h + 150} textAnchor="middle" style={label}>
           {s.label!.toUpperCase()}
         </text>
       ))}
       {/* The line, written along the tabletop. */}
-      <text x={TABLE.x + 120} y={TABLE.y + TABLE.h * 0.68} style={{ fontFamily: 'var(--font-sans)', fontSize: 96, fontWeight: 800, letterSpacing: '-0.04em', fill: INK }}>
+      <text x={TABLE.x + 120} y={TABLE.y + TABLE.h * 0.68} style={line}>
         {LINE_A}
       </text>
-      <text x={1560} y={TABLE.y + TABLE.h * 0.68} style={{ fontFamily: 'var(--font-sans)', fontSize: 96, fontWeight: 800, letterSpacing: '-0.04em', fill: INK }}>
+      <text x={1560} y={TABLE.y + TABLE.h * 0.68} style={line}>
         {LINE_B}
       </text>
-      <text x={TABLE.x + TABLE.w + 60} y={TABLE.y + TABLE.h * 0.68} style={{ fontFamily: 'var(--font-sans)', fontSize: 96, fontWeight: 800, letterSpacing: '-0.04em', fill: RED }}>
+      <text x={TABLE.x + TABLE.w + 60} y={TABLE.y + TABLE.h * 0.68} style={{ ...line, fill: RED }}>
         {LINE_END}
       </text>
     </svg>
