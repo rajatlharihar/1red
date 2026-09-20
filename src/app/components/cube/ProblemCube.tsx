@@ -174,18 +174,18 @@ export function ProblemCube() {
                 position: 'absolute',
                 left: 0,
                 right: 0,
-                top: wide ? 'clamp(5.5rem, 9vh, 8rem)' : '7.5rem',
+                top: wide ? 'clamp(6.5rem, 11vh, 9rem)' : '7.5rem',
                 padding: '0 clamp(1.5rem, 4vw, 5rem)',
                 display: 'grid',
                 gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
                 columnGap: 'clamp(12px, 1.5vw, 24px)',
-                rowGap: 'clamp(14px, 2.4vh, 28px)',
+                rowGap: 'clamp(18px, 3vh, 36px)',
                 alignItems: 'start',
                 pointerEvents: 'none',
                 color: INK,
               }}
             >
-              <div style={{ gridColumn: wide ? '10 / span 3' : '1 / span 12', gridRow: wide ? 1 : 3, textAlign: wide ? 'right' : 'left', overflow: 'hidden' }}>
+              <div style={{ gridColumn: wide ? '9 / span 4' : '1 / span 12', gridRow: wide ? 1 : 3, textAlign: 'left', overflow: 'hidden', alignSelf: 'start' }}>
                 <span
                   ref={labelRef}
                   style={{
@@ -196,7 +196,9 @@ export function ProblemCube() {
                     letterSpacing: '0.24em',
                     textTransform: 'uppercase',
                     lineHeight: 1.6,
-                    paddingTop: wide ? '0.6em' : 0,
+                    // On the headline's cap line: its top padding is the
+                    // headline's own half-leading at the grid's widest size.
+                    paddingTop: wide ? 'clamp(6px, 0.5vw, 10px)' : 0,
                     transform: reduceMotion ? 'none' : 'translateY(110%)',
                   }}
                 >
@@ -212,10 +214,10 @@ export function ProblemCube() {
                       }}
                       style={{
                         display: 'block',
-                        fontSize: 'clamp(44px, 8.4vw, 150px)',
+                        fontSize: 'clamp(46px, 7.8vw, 138px)',
                         fontWeight: 800,
-                        letterSpacing: '-0.05em',
-                        lineHeight: 0.96,
+                        letterSpacing: '-0.045em',
+                        lineHeight: 0.94,
                         transform: reduceMotion ? 'none' : 'translateY(110%)',
                       }}
                     >

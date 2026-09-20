@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 3, R6
+
+- **Cube poster finesse** (`cube/ProblemCube.tsx`, `CubeAssembly.tsx`): the label sits on column 9 of the twelve, left-aligned on the headline's cap line, instead of floating right; headline 46 to 138 px at 7.8vw, leading 0.94, tracking −0.045em; the row gap between headline and rule opened to 18 to 36 px; the box settles a touch lower (`BOX_DROP_WIDE` 1.1). Material untouched: Rajat had called the box perfect.
+
 ## 2026-09-21 — round 2, R5
 
 - **The card flips up** (`studio/TeamTable.tsx`): after the team hold the film keeps growing past the frame and thins out (`TeamZoom` EXIT_P 0.82, depth to −0.4P, opacity gone by p 1), and the card comes up from edge-on (rotateX 88°, lying away from the lens, 14vh low) to face-up over the section's first 26%, ease-out, in the perspective stage. No arrival from depth any more.

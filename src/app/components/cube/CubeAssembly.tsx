@@ -196,7 +196,7 @@ const DRIFT_Y = 0.35;
 /** How far the camera rises as the box settles, so the box sits lower in
  *  the frame under the copy (world units). */
 const BOX_DROP = 0.3;
-const BOX_DROP_WIDE = 1.0;
+const BOX_DROP_WIDE = 1.1;
 /** ...and to the right on a wide frame, into the poster's empty lower-right
  *  column beside the headline: the camera slides left by this share of the
  *  frame's half-width at the box's depth. A portrait frame keeps it centred. */
