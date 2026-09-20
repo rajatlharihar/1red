@@ -23,13 +23,11 @@ const BG = '#FFFFFF';
 
 const SECTION_VH = 400;
 const P = 1200;
-/** The card is tossed in: from off the frame's top right and deep, it
- *  tumbles in with a little spin, lands, and settles with a damped bounce,
- *  all over this share of the section on one eased curve. Nothing linear. */
+/** The card rises from below the frame, lying back a little, and settles
+ *  flat and centred over this share of the section on one ease-out curve:
+ *  a glide, no bounce. */
 const ARRIVE_P = 0.3;
-const TOSS = { x: 0.7, y: -0.8, z: -700, spin: 42, tiltX: 22, tiltY: -16 };
-/** The landing bounce: a decaying sine on the spin, the depth and the lift. */
-const BOUNCE = { decay: 5.5, hz: 2.4, spin: 5, z: 36, y: 0.018 };
+const RISE = { y: 1.1, tiltX: -14 };
 /** The pan runs over this window; the rest is the end hold. */
 const PAN_FROM = 0.3;
 const PAN_TO = 0.94;
@@ -40,19 +38,18 @@ const VIEW_H = 560;
 const PIC_W = 4000;
 const TABLE = { x: 260, y: 200, w: 3080, h: 170, r: 60 };
 
-/* The words sit OUTSIDE the card, in italics, each in a different corner
-   of the frame as the pan goes on; one per stretch of the table, each swap
-   a quick eased cut, and the last one persists, so a fast scroll still lands
-   on the closing line. */
-type Corner = 'tl' | 'tr' | 'bl' | 'br';
-const CAPTIONS: Array<{ at: number; text: string; corner: Corner; red?: boolean }> = [
-  { at: 0, text: 'Everyone you need, at one table.', corner: 'tl' },
-  { at: 0.14, text: 'Web and UI/UX at this end.', corner: 'br' },
-  { at: 0.34, text: 'Brand, two seats down.', corner: 'tr' },
-  { at: 0.52, text: '2D and 3D, mid-table.', corner: 'bl' },
-  { at: 0.68, text: 'Motion, right here.', corner: 'tl' },
-  { at: 0.84, text: 'Ads, at the far end.', corner: 'br' },
-  { at: 0.97, text: "Don't worry. The whole table's on it.", corner: 'bl', red: true },
+/* The words sit in the card's own lower margin, thin italic, on the
+   card's inner column edges (left or right), one per stretch of the table;
+   each swap a quick eased cut, and the last one persists, so a fast scroll
+   still lands on the closing line. */
+const CAPTIONS: Array<{ at: number; text: string; side: 'left' | 'right'; red?: boolean }> = [
+  { at: 0, text: 'Everyone you need, at one table.', side: 'left' },
+  { at: 0.14, text: 'Web and UI/UX at this end.', side: 'left' },
+  { at: 0.34, text: 'Brand, two seats down.', side: 'right' },
+  { at: 0.52, text: '2D and 3D, mid-table.', side: 'left' },
+  { at: 0.68, text: 'Motion, right here.', side: 'right' },
+  { at: 0.84, text: 'Ads, at the far end.', side: 'right' },
+  { at: 0.97, text: "Don't worry. The whole table's on it.", side: 'left', red: true },
 ];
 /** The corner rank runs like a flipbook while the page scrolls and
  *  settles back to the card's own rank when it stops. */
@@ -308,17 +305,8 @@ export function TeamTable() {
       if (cardRef.current) {
         const t = easeOutCubic(clamp01(p / ARRIVE_P));
         const u = 1 - t;
-        // A decaying sine that only rings once the card is nearly down.
-        const b = Math.exp(-BOUNCE.decay * t) * Math.sin(Math.PI * 2 * BOUNCE.hz * t) * t;
-        const x = TOSS.x * u * window.innerWidth;
-        const y = (TOSS.y * u + BOUNCE.y * b) * window.innerHeight;
-        const z = TOSS.z * u + BOUNCE.z * b;
-        const spin = TOSS.spin * u + BOUNCE.spin * b;
-        const tiltX = TOSS.tiltX * u * Math.cos(t * 5.2);
-        const tiltY = TOSS.tiltY * u * Math.sin(t * 4.1 + 0.6);
         cardRef.current.style.transform =
-          `translate(-50%, -50%) translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px) ` +
-          `rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) rotateZ(${spin.toFixed(2)}deg)`;
+          `translate(-50%, -50%) translate3d(0, ${(RISE.y * u * window.innerHeight).toFixed(1)}px, 0) rotateX(${(RISE.tiltX * u).toFixed(2)}deg)`;
       }
       let panT = 0;
       if (windowRef.current && picRef.current) {
@@ -358,12 +346,6 @@ export function TeamTable() {
   }, [reduceMotion]);
 
 
-  const cornerStyle = (c: Corner): React.CSSProperties => ({
-    position: 'absolute',
-    ...(c === 'tl' || c === 'tr' ? { top: 'clamp(4.5rem, 9vh, 7rem)' } : { bottom: 'clamp(1.5rem, 5vh, 4rem)' }),
-    ...(c === 'tl' || c === 'bl' ? { left: 'clamp(1.5rem, 4vw, 5rem)', textAlign: 'left' } : { right: 'clamp(1.5rem, 4vw, 5rem)', textAlign: 'right' }),
-    maxWidth: '46vw',
-  });
   const captions = CAPTIONS.map((c, i) => (
     <span
       key={c.text}
@@ -371,18 +353,20 @@ export function TeamTable() {
         captionRefs.current[i] = el;
       }}
       style={{
-        ...cornerStyle(c.corner),
+        position: 'absolute',
+        bottom: '5.5%',
+        ...(c.side === 'left' ? { left: '9%', textAlign: 'left' } : { right: '15%', textAlign: 'right' }),
+        maxWidth: '82%',
         fontFamily: 'var(--font-sans)',
         fontStyle: 'italic',
-        fontSize: 'clamp(22px, 3.2vw, 56px)',
-        fontWeight: 700,
-        letterSpacing: '-0.04em',
-        lineHeight: 1,
+        fontSize: 'clamp(16px, 2.1vw, 34px)',
+        fontWeight: 300,
+        letterSpacing: '-0.01em',
+        lineHeight: 1.1,
         color: c.red ? RED : INK,
         opacity: i === 0 ? 1 : 0,
         transition: 'opacity 0.22s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
         pointerEvents: 'none',
-        zIndex: 3,
       }}
     >
       {c.text}
@@ -404,7 +388,7 @@ export function TeamTable() {
         boxShadow: '0 30px 70px rgba(0,0,0,0.10), 0 6px 20px rgba(0,0,0,0.05)',
         transform: reduceMotion
           ? 'translate(-50%, -50%)'
-          : `translate(-50%, -50%) translate3d(${TOSS.x * 100}vw, ${TOSS.y * 100}vh, ${TOSS.z}px) rotateZ(${TOSS.spin}deg)`,
+          : `translate(-50%, -50%) translate3d(0, ${RISE.y * 100}vh, 0) rotateX(${RISE.tiltX}deg)`,
         transformOrigin: '50% 50%',
         backfaceVisibility: 'hidden',
         willChange: 'transform',
@@ -415,7 +399,10 @@ export function TeamTable() {
       <Index flip rankRef={(el) => (rankRefs.current[1] = el)} />
       {/* The window onto the picture: the picture is wider than the card
           and pans behind it. */}
-      <div ref={windowRef} style={{ position: 'absolute', left: '9%', right: '9%', top: '10%', bottom: '10%', overflow: 'hidden' }}>
+      {captions}
+      {/* The window onto the picture: the picture is wider than the card
+          and pans behind it. */}
+      <div ref={windowRef} style={{ position: 'absolute', left: '9%', right: '9%', top: '9%', bottom: '19%', overflow: 'hidden' }}>
         <div ref={picRef} style={{ height: '100%', width: `${(PIC_W / VIEW_W) * 100}%`, willChange: 'transform' }}>
           <Picture />
         </div>
@@ -427,7 +414,6 @@ export function TeamTable() {
     return (
       <section style={{ position: 'relative', height: '100vh', background: BG, overflow: 'hidden' }}>
         {card}
-        {captions[0]}
       </section>
     );
   }
@@ -437,7 +423,6 @@ export function TeamTable() {
       <div ref={wrapRef} style={{ height: `${SECTION_VH}vh`, position: 'relative' }}>
         <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', perspective: `${P}px`, perspectiveOrigin: '50% 50%' }}>
           {card}
-          {captions}
         </div>
       </div>
     </section>

@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 4, R13
+
+- **The card rises from below** (`studio/TeamTable.tsx`): after the camera passes through the team film, the card comes up from below the frame lying back 14°, and settles flat and centred over the section's first 30% on one ease-out; no toss, no bounce. Captions are thin italic (300) in the card's own lower margin, on its inner column edges (left at 9%, right at 15% clear of the index), one per stretch of the pan, quick eased swaps, the red closing line persisting. Odometer rank and the pan unchanged.
+
 ## 2026-09-21 — round 4, R12
 
 - **/studio at 60 fps end to end.** Profiled the whole scroll (headless Brave, 1440x900 @2x, 40 px per frame) by zone. Before: process 16.7 ms median, then 33.3 ms median / 33.4 p95 from the process-to-grid hand-off on through the grid, the zoom into the team film, the hold and the table. Cause: six film decoders at the hand-off (the grid's three films in the stage copy AND the flow copy, both playing while hidden, since IntersectionObserver ignores visibility) plus a 5334x3000 team clip. After: 16.7 ms median, 16.8 p95 in every zone, both transitions included.

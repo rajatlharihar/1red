@@ -3,6 +3,10 @@
 ## Last Updated
 2026-09-20
 
+## Session Log: 2026-09-21 (round 4, hub-directed)
+
+- R10 cube end state to Rajat's reference layout; R11 "Our / process" stacked, steps set on the panels, solid numerals; R12 /studio at 60fps end to end (inert stage films, visibility-gated playback, transcoded clips, before/after in CHANGELOG); R13 card rises from below, thin italic captions on the card's margins. All local, NOT pushed.
+
 ## Session Log: 2026-09-21 (round 3, hub-directed)
 
 - R6 cube poster finesse; R7 process as the 3x3 grid with depth by number, Rajat's numerals (`studio/customDigits.ts`), heading row, no per-frame filters (perf before/after in CHANGELOG); R8 ServicesGrid without label/numerals/column lines; R9 card toss + corner captions. All local, NOT pushed.
