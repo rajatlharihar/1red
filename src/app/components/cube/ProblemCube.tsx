@@ -219,7 +219,7 @@ export function ProblemCube() {
             <div
               style={{
                 position: 'absolute',
-                ...(wide ? { left: '78%', top: '62vh', transform: 'translateY(-50%)' } : { left: '11%', top: '80vh' }),
+                ...(wide ? { left: '81%', top: '62vh', transform: 'translateY(-50%)' } : { left: '11%', top: '80vh' }),
                 overflow: 'hidden',
                 pointerEvents: 'none',
               }}

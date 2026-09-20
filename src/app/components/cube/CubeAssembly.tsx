@@ -200,7 +200,7 @@ const BOX_DROP_WIDE = 1.0;
 /** ...and to the right on a wide frame, into the poster's empty lower-right
  *  column beside the headline: the camera slides left by this share of the
  *  frame's half-width at the box's depth. A portrait frame keeps it centred. */
-const BOX_SHIFT = 0.28;
+const BOX_SHIFT = 0.3;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -646,7 +646,7 @@ export function CubeAssembly({
        the right, into the poster's empty lower-right; a portrait frame
        keeps it centred and closer. */
     const wide = aspect >= 1;
-    cam.position.z = lerp(CAM_Z, wide ? CAM_Z + 4.5 : CAM_Z - 0.4, settle);
+    cam.position.z = lerp(CAM_Z, wide ? CAM_Z + 2.6 : CAM_Z - 0.4, settle);
     cam.position.y = (wide ? BOX_DROP_WIDE : BOX_DROP) * settle;
     const halfW = cam.position.z * TAN_HALF * aspect;
     cam.position.x = wide ? -BOX_SHIFT * halfW * settle : 0;

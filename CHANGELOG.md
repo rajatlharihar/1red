@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 5, R15
+
+- **Bigger settled box** (`CubeAssembly.tsx`, `ProblemCube.tsx`): the camera backs off less (CAM_Z + 2.6, was + 4.5), shift 0.3, label at 81%; the box fills the band between headline and label, R10's layout kept.
+
 ## 2026-09-21 — round 5, R14
 
 - **Selected Work** (`FlashWork.tsx`, `data/projects.json`): headline one weight down (700); order is now Apptile, Yui, Illusdoodle, Ground, Terrabarn (renumbered); the three Behance cases are attached to their existing entries rather than duplicated (`behanceId` on Apptile 202820463, Yui 254011223, Illusdoodle 246821657): the desktop panel gets a "View on Behance" link beside "View case study", and the phone list embeds each case (`BehanceEmbed`, iframe mounted only within 400 px of the viewport, with the link beneath).
