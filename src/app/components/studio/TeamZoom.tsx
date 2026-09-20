@@ -15,7 +15,7 @@ const BG = '#FFFFFF';
 const CLIP = '/videos/Fg-01_3.mp4';
 const POSTER = '/images/team-poster.jpg';
 
-const SECTION_VH = 420;
+const SECTION_VH = 300;
 /** The lens, as in ProcessSpace. */
 const P = 1200;
 /** Tile size at the start, as a share of the frame; full-bleed is 1. */
@@ -25,12 +25,12 @@ const START_DEPTH = P / START_SCALE - P;
  *  from EXIT_P the camera keeps going: the film grows past the frame and
  *  thins out in the last stretch, so the next chapter's white is what is
  *  beyond it (the table's card flips up there). */
-const ARRIVE_P = 0.42;
-const EXIT_P = 0.86;
+const ARRIVE_P = 0.45;
+const EXIT_P = 0.62;
 const EXIT_DEPTH = -0.4 * P;
 /** The words rise on this window of progress. */
-const TEXT_FROM = 0.34;
-const TEXT_TO = 0.5;
+const TEXT_FROM = 0.36;
+const TEXT_TO = 0.52;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (a: number, b: number, v: number) => {

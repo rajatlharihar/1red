@@ -184,11 +184,8 @@ function ProjectRow({
 /* ─── Rotating circular badge — the reference's own signature interaction
  * (spinning circular text + a fixed center CTA), a generic, widely-used
  * technique rebuilt from scratch in OneRed red rather than lifted from
- * their code. Purely decorative here (not a link): this site's case-study
- * routes are currently disabled everywhere — see routes.tsx, `/work` and
- * `/work/:slug` both redirect home — so a "click here" badge would just
- * bounce back to the homepage. Wire it to a real destination once case
- * study pages exist again.
+ * their code. The red centre is a real link to /work, the full gallery
+ * (Rajat, round 5).
  *
  * `x`/`y` are magnetic offsets computed by the parent panel from cursor
  * distance to the badge (same technique as Footer's MagneticCTA) — the
@@ -201,7 +198,6 @@ function ExploreBadge({ x, y, hovered }: { x: MotionValue<number>; y: MotionValu
 
   return (
     <motion.div
-      aria-hidden
       animate={{ scale: hovered ? 1.1 : 1 }}
       transition={{ type: 'spring', stiffness: 260, damping: 20 }}
       style={{
@@ -212,7 +208,8 @@ function ExploreBadge({ x, y, hovered }: { x: MotionValue<number>; y: MotionValu
         height: 128,
         x,
         y,
-        pointerEvents: 'none',
+        // A real link now: the badge goes to the full gallery at /work.
+        pointerEvents: 'auto',
       }}
     >
       {/* Backing plate — keeps the white circular text legible no matter
@@ -252,7 +249,9 @@ function ExploreBadge({ x, y, hovered }: { x: MotionValue<number>; y: MotionValu
           </span>
         ))}
       </motion.div>
-      <div
+      <Link
+        to="/work"
+        aria-label="Explore more work"
         style={{
           position: 'absolute',
           inset: 24,
@@ -265,7 +264,7 @@ function ExploreBadge({ x, y, hovered }: { x: MotionValue<number>; y: MotionValu
         }}
       >
         <ArrowUpRight color="white" size={22} strokeWidth={2.2} />
-      </div>
+      </Link>
     </motion.div>
   );
 }

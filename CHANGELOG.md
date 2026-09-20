@@ -6,6 +6,13 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — R23 and R24
+
+- **R23a, no dead scroll before the card** (`studio/TeamZoom.tsx`, `TeamTable.tsx`): the film's section is 300vh (full-bleed at 0.45, hold to 0.62, then the pass-through to the end), and the card's section now starts 180vh before the film's ends (a transparent frame above it), rising over its first 20%: the card comes up through the film 45vh after it goes full-bleed, the film thinning out behind it. Nothing pops.
+- **R23b, the hand-off on a trackpad**: traced with momentum wheel input at three speeds (headless Brave 1440x900 @2x), recording the grid heading's screen position and the frame time each frame. The two-copy design was continuous (jerk 3.8 / 6.4 px per frame² slow / normal, 16.8 ms frames), but on a flick the pin let go before the glide had caught up (the glide's lag at 3000 px/s is about 600 px) and the copies swapped with the lag as a jump (48.7 px per frame²). The tail is now 160vh, so the glide always catches up before the unpin: flick 17.1 (and that reading is past the grid). A one-copy design was tried twice (grid inside the frame on the glide; grid in flow held by a transform) and was worse: 33 ms frames from the films re-compositing under a per-frame transform, and a one-frame jitter on every wheel event from countering native scroll in JS; both reverted.
+- **R24a, the gallery is back**: `/work` renders `Work` (the "Ideas Built Into Experiences" gallery with the Behance embeds; Apptile and Illusdoodle now carry their Behance ids there too), scrolled to the top on arrival; the Explore-more badge's red centre is a real link to it; "View case study" goes to `/work/<slug>`, "View on Behance" opens the case in a new tab. Verified by clicking each.
+- **R24b, the box fills the band**: camera at CAM_Z + 0.6 on settle, shift 0.29, label at 82%.
+
 ## 2026-09-21 — round 5, R22
 
 - **"What we cover" content on the panels** (`ServicesGrid.tsx`): label, name, line and tags sit on the red at the top of each panel on a 10% margin, in the sky colour, as the process panels do; the film window is beneath (panels 1:1.5). The copy block under the panels is gone.

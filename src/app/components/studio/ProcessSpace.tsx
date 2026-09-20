@@ -42,7 +42,7 @@ const SECTION_VH = STEP_VH * process.length + 100;
  *  scroll the glide is still catching up when the raw scroll reaches the
  *  end, and without this the frame unpins and slides away under the
  *  arriving grid before the swap. */
-const TAIL_VH = 80;
+const TAIL_VH = 160;
 
 /** The lens: CSS perspective distance in px. */
 const P = 1200;

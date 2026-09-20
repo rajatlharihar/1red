@@ -26,8 +26,13 @@ const P = 1200;
 /** The card rises from below the frame, lying back a little, and settles
  *  flat and centred over this share of the section on one ease-out curve:
  *  a glide, no bounce. */
-const ARRIVE_P = 0.3;
+const ARRIVE_P = 0.2;
 const RISE = { y: 1.1, tiltX: -14 };
+/** The section starts this far before the team film's section ends, so
+ *  the card comes up through the film as the camera passes into it, with
+ *  no dead scroll between the two (Rajat). Its frame is transparent and
+ *  sits above the film's. */
+const OVERLAP_VH = 180;
 /** The pan runs over this window; the rest is the end hold. */
 const PAN_FROM = 0.3;
 const PAN_TO = 0.94;
@@ -418,7 +423,7 @@ export function TeamTable() {
   }
 
   return (
-    <section data-chapter="team-table" style={{ position: 'relative', background: BG }}>
+    <section data-chapter="team-table" style={{ position: 'relative', zIndex: 2, marginTop: `-${OVERLAP_VH}vh`, background: 'transparent' }}>
       <div ref={wrapRef} style={{ height: `${SECTION_VH}vh`, position: 'relative' }}>
         <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', perspective: `${P}px`, perspectiveOrigin: '50% 50%' }}>
           {card}
