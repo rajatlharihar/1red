@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useScroll, useMotionValue, useSpring, useTransform, motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { Home, Monitor, ShoppingBag, Camera, Menu, X } from 'lucide-react';
+import { Home, Monitor, Camera, Menu, X } from 'lucide-react';
 import { Logo } from './Logo';
 
 /* ─── 1Red floating navigation — two independent glass islands ────────────
@@ -43,7 +43,6 @@ const SPRING = { type: 'spring', stiffness: 420, damping: 34, mass: 0.6 } as con
 
 const NAV_ITEMS = [
   { label: 'Home', path: '/', icon: Home },
-  { label: 'Services', path: '/services', icon: ShoppingBag },
   { label: 'Studio', path: '/studio', icon: Camera },
 ];
 

@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 2, R1
+
+- **/services removed** on Rajat's review: route, nav item, `ServicesPage.tsx`, `Services.tsx`, `ServicesStack.tsx` and the `OurProcess` flick carousel are gone (git history keeps them). The footer's service-tag links now go to /studio, where `ServicesGrid` ("What we cover") lives.
+
 ## 2026-09-20 (night) — S4 the table
 
 - **/studio ends on the team card** (`studio/TeamTable.tsx`): a landscape playing card (cream, rounded, hairline, red "1 ◆" index in opposite corners) drawn as SVG after the 10-of-diamonds reference, arriving from depth (half size) and settling flat and centred by p 0.26 of a 400vh pin. Then its picture pans: the long table seen from above with ten seated figures, papers in the gaps, five seats captioned with the disciplines (Web & UI/UX, Brand, 2D & 3D, Motion, Ads), and the line written along the tabletop, "Don't worry. / The whole table's on it.", ending past the table's end on "Handled." in red; pan over p 0.3 to 0.94 on an eased curve, then a hold. On Rajat's note the picture is a pen sketch, not icons: every line is a seeded wobbly path (table hand-ruled and bowed, drawn twice; figures each a different size and lean with rough double-pass fills, an arm on the table for some; papers as rough tilted quads), under an feTurbulence displacement + slight blur filter so the ink breaks and bleeds; the type stays outside the filter. Reduced motion: the card static with the picture's start. `STUDIO_AFTER_TEAM` slot removed, the page is complete. This closes the 2026-09-20 scrollytelling brief (H1 to H3, S1 to S4).

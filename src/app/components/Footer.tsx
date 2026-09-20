@@ -168,7 +168,7 @@ function Tag({ label, delay }: { label: string; delay: number }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <Link to="/services" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Link to="/studio" style={{ textDecoration: 'none', color: 'inherit' }}>
       <motion.span
         animate={{
           backgroundColor: hovered ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0)',
