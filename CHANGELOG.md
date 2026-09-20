@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-20 (night) — S4 the table
+
+- **/studio ends on the team card** (`studio/TeamTable.tsx`): a landscape playing card (cream, rounded, hairline, red "1 ◆" index in opposite corners) drawn as SVG after the 10-of-diamonds reference, arriving from depth (half size) and settling flat and centred by p 0.26 of a 400vh pin. Then its picture pans: the long table seen from above with ten seated figures, papers in the gaps, five seats captioned with the disciplines (Web & UI/UX, Brand, 2D & 3D, Motion, Ads), and the line written along the tabletop, "Don't worry. / The whole table's on it.", ending past the table's end on "Handled." in red; pan over p 0.3 to 0.94 on an eased curve, then a hold. Reduced motion: the card static with the picture's start. `STUDIO_AFTER_TEAM` slot removed, the page is complete. This closes the 2026-09-20 scrollytelling brief (H1 to H3, S1 to S4).
+
 ## 2026-09-20 (night) — S3 into the team
 
 - **The forward move closes on the team film** (`studio/TeamZoom.tsx`, mounted after the grid on /studio): `public/videos/Fg-01_3.mp4` (line-art team, the mark glitching on a shirt; confirmed by frame) starts as a 30%-of-frame hairline tile in a perspective stage, grows to full-bleed by section p 0.68 on an eased depth curve (tile size and frame size are one quantity), the hairline going as it becomes the frame, then holds; 280vh pinned. "our team" in the heading face, italic, large, off-centre left, rises out of its mask over p 0.5 to 0.72. Clip plays muted, looped, only while on screen; `public/images/team-poster.jpg` is its poster and the reduced-motion still. `StudioPage` exports `STUDIO_AFTER_TEAM`, the slot for S4.
