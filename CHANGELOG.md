@@ -6,6 +6,11 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — R29 five rows, seamless plates, the films
+
+- **Five rows again** (`FlashWork.tsx`, `data/projects.json`): Apptile, Yui, Illusdoodle, Ground, Terrabarn. The three with a Behance case (`page: true`) are links with the "View case study" CTA and the badge; Ground and Terrabarn are plain rows (hover brings their film up in the panel, nothing to click). The phone list plays each project's film as its thumbnail.
+- **Project pages carry every Behance module in order** (`pages/WorkDetailPage.tsx`, `data/workImages.json` now an ordered module list): plates edge to edge with zero gap and a fade-only reveal (no lift, so no seam ever opens), and the project's films inline where Behance has them, muted, looped, playing while on screen, webm with mp4 fallback. Behance hosts Rajat's films on Vimeo: pulled from their HLS streams and transcoded to 1080p (`public/work/<slug>/vNN.mp4|webm`). Module counts: Apptile 13 plates + 4 films (13.5 MB), Yui 15 + 5 (32.8 MB, the 35 s "Deskstop" clip is the bulk), Illusdoodle 10 + 0 (1.4 MB); 47.7 MB in all. Verified headless: Yui page 20 modules, 5 films, gaps between plates all 0; panel film plays on hover; Ground row not a link and no CTA; clicking Yui opens /work/yui.
+
 ## 2026-09-21 — R28 project pages
 
 - **Selected Work shows three** (`data/projects.json`, `FlashWork.tsx`): Apptile, Yui, Illusdoodle; Ground and Terrabarn carry `hidden: true` and stay in the data. Rows are links to the project's page (hover brings its visual up, as the click used to); the phone list shows each project's first plate as a thumbnail (`thumb`). The list's Behance embeds are gone (the project page carries the presentation). The intro headline is clamp(32px, 4.1vw, 68px) so "we made together." holds on two lines in its column.

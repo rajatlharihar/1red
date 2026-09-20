@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useParams, Link, Navigate } from 'react-router';
 import { motion, useReducedMotion } from 'motion/react';
 import { ArrowLeft, ArrowRight, ArrowUpRight } from 'lucide-react';
@@ -9,10 +9,13 @@ import workImages from '../data/workImages.json';
  * Presented the way Rajat presents it on Behance (R28): the title, its
  * category and year and one line at the top, then the presentation images
  * stacked at full content width one after another, and "View on Behance"
- * at the end. The images are his own project modules, fetched from his
- * Behance projects into public/work/<slug>/ (1400 wide webp, in order,
- * listed in data/workImages.json). Each image eases up into place as it
- * comes into view; nothing pops. Below the fold they load lazily.
+ * at the end. The modules are his own, fetched from his Behance projects
+ * into public/work/<slug>/ in the project's order (plates as the 1400-wide
+ * webp Behance serves; films, which Behance hosts on Vimeo, pulled from
+ * their streams and transcoded to 1080p mp4 + webm, muted), listed in
+ * data/workImages.json, stacked edge to edge with no gap, each
+ * fading in as it comes into view (a fade, not a lift, so no seam ever
+ * opens between plates). Below the fold they load lazily.
  * ────────────────────────────────────────────────────────────────────────── */
 
 const RED = '#EA3323';
@@ -20,7 +23,12 @@ const INK = 'rgb(10,10,10)';
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 type Project = (typeof projectsData)[0] & { hidden?: boolean };
-const IMAGES = workImages as Record<string, string[]>;
+type Module =
+  | { type: 'image'; src: string }
+  | { type: 'video'; mp4: string; webm: string; aspect: string; title?: string }
+  | { type: 'embed'; src: string };
+/** Every module of the Behance project, in its order: plates and films. */
+const MODULES = workImages as Record<string, Module[]>;
 
 /** The projects that are shown: the hidden ones stay in the data. */
 const shown = (projectsData as Project[]).filter((p) => !p.hidden);
@@ -33,23 +41,51 @@ const label: React.CSSProperties = {
   textTransform: 'uppercase',
 };
 
-function Plate({ src, alt, i, reduceMotion }: { src: string; alt: string; i: number; reduceMotion: boolean }) {
+function Plate({ m, alt, i, reduceMotion }: { m: Module; alt: string; i: number; reduceMotion: boolean }) {
   return (
     <motion.figure
-      initial={reduceMotion ? false : { opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      // Fade only: a translate would open a seam between plates mid-scroll.
+      initial={reduceMotion ? false : { opacity: 0 }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: '-8% 0px' }}
       transition={{ duration: 0.9, ease: EASE }}
       style={{ margin: 0 }}
     >
-      <img
-        src={src}
-        alt={alt}
-        loading={i < 2 ? 'eager' : 'lazy'}
-        decoding="async"
-        style={{ display: 'block', width: '100%', height: 'auto', background: '#F2EFE8' }}
-      />
+      {m.type === 'image' && (
+        <img src={m.src} alt={alt} loading={i < 2 ? 'eager' : 'lazy'} decoding="async" style={{ display: 'block', width: '100%', height: 'auto', background: '#F2EFE8' }} />
+      )}
+      {m.type === 'video' && <Film m={m} />}
+      {m.type === 'embed' && (
+        <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', background: '#F2EFE8' }}>
+          <iframe src={m.src} title={alt} loading="lazy" allow="autoplay; fullscreen" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }} />
+        </div>
+      )}
     </motion.figure>
+  );
+}
+
+/** One of the project's films, inline, muted and looped, playing only
+ *  while on screen; a Behance video module as it sits in the sequence. */
+function Film({ m }: { m: Extract<Module, { type: 'video' }> }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) v.play().catch(() => {});
+        else v.pause();
+      },
+      { threshold: 0.15 }
+    );
+    io.observe(v);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <video ref={ref} muted loop playsInline preload="metadata" style={{ display: 'block', width: '100%', height: 'auto', aspectRatio: m.aspect, background: '#F2EFE8' }}>
+      <source src={m.webm} type="video/webm" />
+      <source src={m.mp4} type="video/mp4" />
+    </video>
   );
 }
 
@@ -65,7 +101,7 @@ export function WorkDetailPage() {
   // Unknown slug → home, rather than a broken shell.
   if (!project) return <Navigate to="/" replace />;
 
-  const images = IMAGES[project.id] ?? [];
+  const modules = MODULES[project.id] ?? [];
   const index = shown.findIndex((p) => p.id === project.id);
   const next = shown[(index + 1) % shown.length];
   const behance = project.behanceId ? `https://www.behance.net/gallery/${project.behanceId}` : null;
@@ -117,12 +153,12 @@ export function WorkDetailPage() {
       </div>
 
       {/* ── The presentation, plate after plate ── */}
-      <div style={{ maxWidth: 1100, margin: 'clamp(2.5rem, 6vh, 4rem) auto 0', padding: '0 clamp(1.5rem, 4vw, 5rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.2vw, 18px)' }}>
-        {images.map((src, i) => (
-          <Plate key={src} src={src} alt={`${project.title}, ${i + 1} of ${images.length}`} i={i} reduceMotion={reduceMotion} />
+      <div style={{ maxWidth: 1100, margin: 'clamp(2.5rem, 6vh, 4rem) auto 0', padding: '0 clamp(1.5rem, 4vw, 5rem)', display: 'flex', flexDirection: 'column', gap: 0 }}>
+        {modules.map((m, i) => (
+          <Plate key={i} m={m} alt={`${project.title}, ${i + 1} of ${modules.length}`} i={i} reduceMotion={reduceMotion} />
         ))}
-        {images.length === 0 && project.video && (
-          <video src={project.video} muted loop autoPlay playsInline preload="metadata" style={{ width: '100%', display: 'block', aspectRatio: '16 / 9', objectFit: 'cover' }} />
+        {modules.length === 0 && project.video && (
+          <video src={project.video} muted loop autoPlay playsInline preload="auto" style={{ display: 'block', width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', background: '#F2EFE8' }} />
         )}
       </div>
 

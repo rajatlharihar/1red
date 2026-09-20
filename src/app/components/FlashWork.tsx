@@ -54,9 +54,11 @@ const grainOverlayStyle: React.CSSProperties = {
    unused in projects.json. Reading from the shared file instead lets each
    project actually argue for itself, and gives every row a real case-study
    destination via its `id`. */
-/* Only the projects Rajat is showing for now (R28: Apptile, Yui,
-   Illusdoodle); the others stay in the data with `hidden`. */
-const projects = projectsData.filter((p) => !(p as { hidden?: boolean }).hidden);
+/* All five (R29). The three with a Behance case (`page`) have their own
+   page, a CTA and the badge; Ground and Terrabarn just show name,
+   category and their film. */
+type Proj = (typeof projectsData)[0] & { hidden?: boolean; page?: boolean; thumb?: string };
+const projects = (projectsData as Proj[]).filter((p) => !p.hidden);
 const WORK_COUNT = projects.length;
 
 /* Shared by the list rows and the visual, which lines up with the headline
@@ -110,25 +112,28 @@ function ProjectRow({
   const underlineScale = useTransform(closeness, [0, 1], [0.08, 1]);
   const underlineOpacity = useTransform(closeness, [0, 1], [0.14, 1]);
 
-  // A row is a link to the project's own page (Rajat, R28); hovering it
-  // brings its visual up in the panel, as the click used to.
+  // A row with a page is a link to it; hovering any row brings its film
+  // up in the panel. Rows without a page (Ground, Terrabarn) only do that.
+  const rowStyle: React.CSSProperties = {
+    display: 'block',
+    width: '100%',
+    textAlign: 'left',
+    background: 'none',
+    border: 'none',
+    padding: `${ROW_PAD_Y} 0`,
+    cursor: project.page ? 'pointer' : 'default',
+    textDecoration: 'none',
+    color: 'inherit',
+    font: 'inherit',
+  };
+  const Row: React.ElementType = project.page ? Link : 'div';
   return (
-    <Link
-      to={`/work/${project.id}`}
+    <Row
+      {...(project.page ? { to: `/work/${project.id}` } : {})}
       onMouseEnter={() => onJump(index)}
       onFocus={() => onJump(index)}
       className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
-      style={{
-        display: 'block',
-        width: '100%',
-        textAlign: 'left',
-        background: 'none',
-        border: 'none',
-        padding: `${ROW_PAD_Y} 0`,
-        cursor: 'pointer',
-        textDecoration: 'none',
-        color: 'inherit',
-      }}
+      style={rowStyle}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, minWidth: 0 }}>
@@ -184,7 +189,7 @@ function ProjectRow({
           opacity: underlineOpacity,
         }}
       />
-    </Link>
+    </Row>
   );
 }
 
@@ -358,24 +363,38 @@ function VisualPanel({ project }: { project: (typeof projects)[0] }) {
 
 /* ─── Static, non-pinned fallback — mobile/tablet and reduced-motion. Every
  * project fully visible and readable, no scroll-jacking, no video load. */
+/** A phone row: a link when the project has a page, plain otherwise. */
+function StaticRow({ project, children }: { project: Proj; children: React.ReactNode }) {
+  const style: React.CSSProperties = { display: 'block', padding: '18px 0', textDecoration: 'none', color: 'rgb(10,10,10)' };
+  return project.page ? (
+    <Link to={`/work/${project.id}`} className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]" style={style}>
+      {children}
+    </Link>
+  ) : (
+    <div style={style}>{children}</div>
+  );
+}
+
 function StaticWorkList() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {projects.map((project) => (
         <div key={project.number} style={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
-          <Link
-          to={`/work/${project.id}`}
-          className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
-          style={{ display: 'block', padding: '18px 0', textDecoration: 'none', color: 'rgb(10,10,10)' }}
-        >
-          {(project as { thumb?: string }).thumb && (
-            <img
-              src={(project as { thumb?: string }).thumb}
-              alt=""
-              loading="lazy"
+          <StaticRow project={project}>
+          {project.video ? (
+            <video
+              src={project.video}
+              muted
+              loop
+              autoPlay
+              playsInline
+              preload="metadata"
+              poster={project.thumb}
               style={{ display: 'block', width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', marginBottom: 14, background: '#F2EFE8' }}
             />
-          )}
+          ) : project.thumb ? (
+            <img src={project.thumb} alt="" loading="lazy" style={{ display: 'block', width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', marginBottom: 14, background: '#F2EFE8' }} />
+          ) : null}
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
               <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, opacity: 0.4 }}>{project.number}.</span>
@@ -393,7 +412,7 @@ function StaticWorkList() {
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, lineHeight: 1.6, opacity: 0.55, margin: '10px 0 0' }}>
             {project.overview}
           </p>
-          </Link>
+          </StaticRow>
         </div>
       ))}
     </div>
@@ -733,6 +752,7 @@ export function FlashWork() {
                   ))}
                 </div>
 
+                {projects[activeIndex].page && (
                 <Link
                   to={`/work/${projects[activeIndex].id}`}
                   className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
@@ -753,9 +773,10 @@ export function FlashWork() {
                 >
                   View Case Study <ArrowUpRight size={13} strokeWidth={2} />
                 </Link>
+                )}
               </motion.div>
 
-              <ExploreBadge x={badgeX} y={badgeY} hovered={badgeHovered} to={`/work/${projects[activeIndex].id}`} />
+              {projects[activeIndex].page && <ExploreBadge x={badgeX} y={badgeY} hovered={badgeHovered} to={`/work/${projects[activeIndex].id}`} />}
             </div>
           </div>
         </div>

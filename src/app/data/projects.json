@@ -21,7 +21,8 @@
     ],
     "result": "Brand recognition increased 3× in the first quarter post-launch.",
     "hidden": false,
-    "thumb": "/work/apptile/01.webp"
+    "thumb": "/work/apptile/01.webp",
+    "page": true
   },
   {
     "id": "yui",
@@ -45,7 +46,8 @@
     ],
     "result": "User session duration increased by 62% and churn dropped by 28%.",
     "hidden": false,
-    "thumb": "/work/yui/01.webp"
+    "thumb": "/work/yui/01.webp",
+    "page": true
   },
   {
     "id": "illusdoodle",
@@ -70,7 +72,8 @@
     ],
     "result": "Secured two enterprise retainers within 90 days of brand relaunch.",
     "hidden": false,
-    "thumb": "/work/illusdoodle/01.webp"
+    "thumb": "/work/illusdoodle/01.webp",
+    "page": true
   },
   {
     "id": "ground",
@@ -93,7 +96,8 @@
       "Motion Guidelines"
     ],
     "result": "Video content achieved 4× the reach of static posts within the first month.",
-    "hidden": true
+    "hidden": false,
+    "page": false
   },
   {
     "id": "terrabarn",
@@ -116,6 +120,7 @@
       "Community Playbook"
     ],
     "result": "Grew following by 18k in 6 months with a 9.4% average engagement rate.",
-    "hidden": true
+    "hidden": false,
+    "page": false
   }
 ]
