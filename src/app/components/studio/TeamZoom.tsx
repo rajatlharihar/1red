@@ -83,9 +83,11 @@ export function TeamZoom() {
     <div
       style={{
         position: 'absolute',
-        left: 'clamp(1.5rem, 6vw, 8rem)',
-        top: '50%',
-        transform: 'translateY(-50%)',
+        // Lower-left quadrant: the mark and the faces in the clip sit in
+        // the upper two thirds, so the words never cross them.
+        left: 'clamp(1.5rem, 4vw, 5rem)',
+        top: '78vh',
+        transform: 'translateY(-100%)',
         overflow: 'hidden',
         pointerEvents: 'none',
         zIndex: 2,
