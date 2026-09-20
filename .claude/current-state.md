@@ -3,6 +3,10 @@
 ## Last Updated
 2026-09-20
 
+## Session Log: 2026-09-21 (round 3, hub-directed)
+
+- R6 cube poster finesse; R7 process as the 3x3 grid with depth by number, Rajat's numerals (`studio/customDigits.ts`), heading row, no per-frame filters (perf before/after in CHANGELOG); R8 ServicesGrid without label/numerals/column lines; R9 card toss + corner captions. All local, NOT pushed.
+
 ## Session Log: 2026-09-21 (round 2, hub-directed)
 
 - R1 /services removed; R2 Selected Work intro "Here's what the box built."; R3 process scene rebuilt as the red-panel print in 3D (`studio/ProcessSpace.tsx`, reusing `StudioProcess.tsx`'s figures and palette); R4 `ServicesGrid` as three red panels; R5 table card flips up, fixed swapping captions, flipbook rank. See CHANGELOG 2026-09-21. All local, NOT pushed.

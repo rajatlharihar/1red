@@ -6,6 +6,11 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 3, R9
+
+- **The card is tossed in** (`studio/TeamTable.tsx`): from off the frame's top right and 700 px deep it comes in with 42° of spin and a decaying X/Y tumble, lands centred and settles with a damped bounce (a decaying 2.4 Hz sine on spin, depth and lift), all on one ease-out curve over the section's first 30%. The lid-flip is gone. Card up to 84vw / 118vh.
+- **Captions outside the card**, italic display type, one per stretch of the pan, each in a different corner of the frame (top-left, bottom-right, top-right, bottom-left, ...), quick eased swaps, the closing line in red persisting. The odometer rank stays.
+
 ## 2026-09-21 — round 3, R8
 
 - **"What we cover" pared back** (`ServicesGrid.tsx`): the "Three disciplines. One team." label, the outlined numerals on the panels and the hairline column lines are gone (we do far more than three). Heading row, the three red panels with their films, and the ink copy beneath stay.
