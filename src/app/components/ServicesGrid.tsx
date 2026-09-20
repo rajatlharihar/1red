@@ -65,23 +65,37 @@ function useWide() {
   return wide;
 }
 
-/** A film that only plays while on screen, so three decoders never run
- *  for cells the viewer has scrolled past. */
-function Film({ src, style }: { src: string; style?: React.CSSProperties }) {
+/** A film that only plays while on screen AND visible, so decoders never
+ *  run for cells the viewer has scrolled past, nor for the hidden copy of
+ *  the grid that the Studio arrival keeps (`inert`: never plays, shows its
+ *  first frame, which is what the playing copy starts on at the swap). */
+function Film({ src, style, inert = false }: { src: string; style?: React.CSSProperties; inert?: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const v = ref.current;
-    if (!v) return;
+    if (!v || inert) return;
+    let onScreen = false;
+    const sync = () => {
+      const shown = onScreen && v.checkVisibility?.({ visibilityProperty: true }) !== false;
+      if (shown) v.play().catch(() => {});
+      else v.pause();
+    };
     const io = new IntersectionObserver(
       ([e]) => {
-        if (e.isIntersecting) v.play().catch(() => {});
-        else v.pause();
+        onScreen = e.isIntersecting;
+        sync();
       },
       { threshold: 0.2 }
     );
     io.observe(v);
-    return () => io.disconnect();
-  }, []);
+    // Visibility can change without a scroll (the Studio hand-off), so
+    // re-check on a slow tick while on screen.
+    const tick = window.setInterval(() => onScreen && sync(), 250);
+    return () => {
+      io.disconnect();
+      window.clearInterval(tick);
+    };
+  }, [inert]);
   return (
     <video
       ref={ref}
@@ -89,7 +103,7 @@ function Film({ src, style }: { src: string; style?: React.CSSProperties }) {
       muted
       loop
       playsInline
-      preload="metadata"
+      preload={inert ? 'metadata' : 'auto'}
       style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', background: '#EDE8D9', ...style }}
     />
   );
@@ -124,7 +138,7 @@ function Copy({ s }: { s: (typeof services)[number] }) {
 
 /** A tall red panel in the process scene's language, the film in a window
  *  low on it, nothing over the red but the film. */
-function RedPanel({ s, i }: { s: (typeof services)[number]; i: number }) {
+function RedPanel({ s, i, inert }: { s: (typeof services)[number]; i: number; inert: boolean }) {
   return (
     <div style={{ position: 'relative', aspectRatio: '1 / 1.35' }}>
       <svg viewBox="0 0 100 135" preserveAspectRatio="none" style={{ position: 'absolute', inset: '-2% -4%', width: '108%', height: '104%', overflow: 'visible' }}>
@@ -138,7 +152,7 @@ function RedPanel({ s, i }: { s: (typeof services)[number]; i: number }) {
         <rect x={4} y={3} width={92} height={128} fill={RED} filter={`url(#sg-rough-${i})`} transform={`rotate(${i % 2 ? -0.35 : 0.4} 50 67)`} />
       </svg>
       <div style={{ position: 'absolute', left: '11%', right: '11%', bottom: '8%', height: '58%', overflow: 'hidden', border: `1px solid ${INK}`, zIndex: 1 }}>
-        <Film src={s.video} />
+        <Film src={s.video} inert={inert} />
       </div>
     </div>
   );
@@ -156,8 +170,8 @@ const rise = (i: number, still: boolean) =>
 
 /** `heading` off where the page already introduces the block (the
  *  Services page); on for a standalone mount (the Studio page). `still`
- *  renders the settled state with no entrance motion, for a copy that is
- *  being carried by something else's motion (the Studio arrival). */
+ *  renders the settled state with no entrance motion and films that never
+ *  play, for the copy the Studio arrival carries in the stage. */
 export function ServicesGrid({ heading = true, still = false }: { heading?: boolean; still?: boolean }) {
   const wide = useWide();
   const [a, b, c] = services;
@@ -183,7 +197,7 @@ export function ServicesGrid({ heading = true, still = false }: { heading?: bool
               borderBottom: !wide && i < 2 ? `1px solid ${RULE}` : 'none',
             }}
           >
-            <RedPanel s={s} i={i} />
+            <RedPanel s={s} i={i} inert={still} />
             <Copy s={s} />
           </motion.div>
         ))}

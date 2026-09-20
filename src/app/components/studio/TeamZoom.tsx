@@ -46,6 +46,13 @@ export function TeamZoom() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const reduceMotion = useReducedMotion() ?? false;
 
+  // The poster is fetched ahead, so the tile never shows blank while the
+  // clip's first frame loads.
+  useEffect(() => {
+    const img = new Image();
+    img.src = POSTER;
+  }, []);
+
   // The clip runs only while the section is on screen.
   useEffect(() => {
     const v = videoRef.current;

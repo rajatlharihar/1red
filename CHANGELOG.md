@@ -6,6 +6,12 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 4, R12
+
+- **/studio at 60 fps end to end.** Profiled the whole scroll (headless Brave, 1440x900 @2x, 40 px per frame) by zone. Before: process 16.7 ms median, then 33.3 ms median / 33.4 p95 from the process-to-grid hand-off on through the grid, the zoom into the team film, the hold and the table. Cause: six film decoders at the hand-off (the grid's three films in the stage copy AND the flow copy, both playing while hidden, since IntersectionObserver ignores visibility) plus a 5334x3000 team clip. After: 16.7 ms median, 16.8 p95 in every zone, both transitions included.
+- Fixes: `ServicesGrid`'s `still` copy is now inert (films never play, first frame only, which is the frame the flow copy starts on at the swap); `Film` plays only when on screen AND visible (`checkVisibility`, re-checked on a slow tick, since the hand-off changes visibility without a scroll), preloads `auto` only for the playing copy; `Fg-01_3.mp4` transcoded 5334x3000 12 MB to 1920x1080 0.9 MB, `app-showcase.mp4` 40 MB to 3 MB, `terrabarn-socials.mp4` 22 MB to 2 MB (h264, faststart, no audio; originals in the session scratchpad, not in the repo); the team poster is fetched ahead.
+- Panel numerals are solid fills, not strokes (Rajat, mid-session).
+
 ## 2026-09-21 — round 4, R11
 
 - **Process heading and readable steps** (`studio/ProcessSpace.tsx`): the heading is two stacked words, "Our" over "process", no label, no rule. Each step's label, title and one-liner are set small in the sky colour ON its panel, on a 10% inner margin under the numeral, sized to the panel so they scale with it; the ink captions at the feet are gone. Every step reads during its own arrival.

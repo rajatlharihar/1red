@@ -173,11 +173,12 @@ const SCRIBBLES = [
   'M20 110 q50 10 100 -4',
 ];
 
-/** One of Rajat's numerals, from the sheet, at a given height. */
-function Digit({ n, height, stroke }: { n: number; height: string; stroke: string }) {
+/** One of Rajat's numerals, from the sheet, at a given height: solid, as
+ *  the letters are drawn (Rajat: a fill, not a stroke). */
+function Digit({ n, height, fill }: { n: number; height: string; fill: string }) {
   const g = CUSTOM_DIGITS[n];
   return (
-    <svg viewBox={`${g.x0} ${g.y0} ${g.w} ${g.h}`} style={{ height, width: 'auto', display: 'block', overflow: 'visible' }} fill="none" stroke={stroke} strokeWidth={14} strokeLinejoin="round">
+    <svg viewBox={`${g.x0} ${g.y0} ${g.w} ${g.h}`} style={{ height, width: 'auto', display: 'block', overflow: 'visible' }} fill={fill}>
       {g.paths.map((d, i) => (
         <path key={i} d={d} />
       ))}
@@ -200,7 +201,7 @@ function Panel({ slot, i, panelRef }: { slot: Slot; i: number; panelRef: (el: HT
           <>
             <div style={{ position: 'absolute', left: '10%', top: '5%', height: '20%', display: 'flex', gap: '4%' }}>
               {step.number.split('').map((ch, j) => (
-                <Digit key={j} n={Number(ch)} height="100%" stroke={SKY} />
+                <Digit key={j} n={Number(ch)} height="100%" fill={SKY} />
               ))}
             </div>
             {/* The step, set small on the red itself, on a 10% margin
