@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 5, R17
+
+- **Grid by number** (`studio/ProcessSpace.tsx`): row one 01, 02, blank; row two 03, 04, blank; row three blank, blank, 05; depth by number kept. Since 05 is no longer the centre slot, the camera pans onto it over its approach (2.2D to 0.35D out), so it is still passed head-on, covers the frame and reveals the next chapter as before. Phone: its own grid (panels 22vw, pitch 30vw x 27vh, sat 7vh low under the heading) so the composition reads on a 390 screen; the wide/portrait split is by aspect in both the frame loop and the markup.
+
 ## 2026-09-21 — round 5, R19 and R20
 
 - **Step content at the top of each panel** (`studio/ProcessSpace.tsx`): numeral, title and one-liner together on the panel's top 10% margin, not at the foot.

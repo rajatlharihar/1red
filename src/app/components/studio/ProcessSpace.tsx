@@ -77,25 +77,33 @@ const FILL_TO = -0.65 * P;
 /* ── The grid ───────────────────────────────────────────────────────────
  * Nine slots, columns −1/0/+1 and rows −1/0/+1, as they read at the
  * opening shot: `COL` and `ROW` are the slot pitch as shares of the frame's
- * width and height, `OPEN_W` a panel's projected width then. Numbered
- * panels take the print's stage slots, 05 at the centre so the camera
- * passes through it; blanks fill the rest at half-step depths. */
-const COL = 0.115;
-const ROW = 0.3;
-const OPEN_W = 0.064;
+ * width and height, `OPEN_W` a panel's projected width then. By number
+ * (Rajat): row one 01, 02, blank; row two 03, 04, blank; row three blank,
+ * blank, 05. Depth by number too; blanks at half-step depths. A phone gets
+ * a tighter, larger grid that reads as one composition at 390 wide. */
+const GRID = {
+  wide: { col: 0.115, row: 0.3, openW: 0.064, dy: 0 },
+  // Sat a little low, under the heading.
+  portrait: { col: 0.3, row: 0.27, openW: 0.22, dy: 0.07 },
+};
 const ASPECT = 2.4;
 type Slot = { col: number; row: number; step?: number; z: number };
 const SLOTS: Slot[] = [
   { col: -1, row: -1, step: 0, z: 0 },
-  { col: 1, row: 0, step: 1, z: D },
+  { col: 0, row: -1, step: 1, z: D },
   { col: -1, row: 0, step: 2, z: 2 * D },
-  { col: 1, row: 1, step: 3, z: 3 * D },
-  { col: 0, row: 0, step: 4, z: 4 * D },
-  { col: 0, row: -1, z: 0.5 * D },
-  { col: 1, row: -1, z: 1.5 * D },
+  { col: 0, row: 0, step: 3, z: 3 * D },
+  { col: 1, row: 1, step: 4, z: 4 * D },
+  { col: 1, row: -1, z: 0.5 * D },
+  { col: 1, row: 0, z: 1.5 * D },
   { col: -1, row: 1, z: 2.5 * D },
   { col: 0, row: 1, z: 3.5 * D },
 ];
+/** The camera pans onto 05 as it comes (over this stretch of its
+ *  approach), so the last panel is passed head-on and covers the frame,
+ *  which is what reveals the next chapter. */
+const STEER_FROM = 2.2 * D;
+const STEER_TO = 0.35 * D;
 /** Scale factor that makes a panel at opening depth `z − START_Z` project
  *  like one on the screen plane. */
 const openK = (z: number) => 1 + (z - START_Z) / P;
@@ -191,10 +199,10 @@ function Digit({ n, height, fill }: { n: number; height: string; fill: string })
   );
 }
 
-function Panel({ slot, i, panelRef }: { slot: Slot; i: number; panelRef: (el: HTMLDivElement | null) => void }) {
+function Panel({ slot, i, wide, panelRef }: { slot: Slot; i: number; wide: boolean; panelRef: (el: HTMLDivElement | null) => void }) {
   const step = slot.step != null ? process[slot.step] : null;
   const k = openK(slot.z);
-  const w = `${(OPEN_W * k * 100).toFixed(2)}vw`;
+  const w = `${((wide ? GRID.wide : GRID.portrait).openW * k * 100).toFixed(2)}vw`;
   return (
     <div style={{ position: 'relative', width: w, aspectRatio: `1 / ${ASPECT}` }}>
       <div ref={panelRef} style={{ position: 'absolute', inset: 0, willChange: 'opacity' }}>
@@ -240,10 +248,12 @@ function Panel({ slot, i, panelRef }: { slot: Slot; i: number; panelRef: (el: HT
   );
 }
 
+/** Landscape frames get the wide grid, portrait ones the phone grid: the
+ *  same split the frame loop makes from the aspect. */
 function useWide() {
-  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches);
+  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-aspect-ratio: 1/1)').matches);
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)');
+    const mq = window.matchMedia('(min-aspect-ratio: 1/1)');
     const apply = () => setWide(mq.matches);
     apply();
     mq.addEventListener('change', apply);
@@ -323,6 +333,12 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
         }
       }
 
+      const g = vw / vh >= 1 ? GRID.wide : GRID.portrait;
+      const last5 = SLOTS[4];
+      const steer = smooth(STEER_FROM, STEER_TO, last5.z - camZ);
+      const k5 = openK(last5.z);
+      const panX = last5.col * g.col * vw * k5 * steer;
+      const panY = (last5.row * g.row + g.dy) * vh * k5 * steer;
       groupRefs.current.forEach((group, i) => {
         const panel = panelRefs.current[i];
         if (!group || !panel) return;
@@ -333,8 +349,8 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
            layer that only changes opacity and transform stays cheap. */
         const depth = Math.max(slot.z - camZ, FADE_TO);
         const k = openK(slot.z);
-        const x = slot.col * COL * vw * k;
-        const y = slot.row * ROW * vh * k;
+        const x = slot.col * g.col * vw * k - panX;
+        const y = (slot.row * g.row + g.dy) * vh * k - panY;
         group.style.transform = `translate(-50%, -50%) translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${(-depth).toFixed(1)}px)`;
         group.style.opacity = (1 - smooth(FADE_FROM, FADE_TO, depth)).toFixed(3);
         panel.style.opacity = (1 - smooth(fillFrom, Math.min(FILL_TO, fillFrom - 0.3 * P), depth)).toFixed(3);
@@ -392,6 +408,7 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
               <Panel
                 slot={slot}
                 i={i}
+                wide={wide}
                 panelRef={(el) => {
                   panelRefs.current[i] = el;
                 }}
