@@ -109,6 +109,11 @@ export function ProcessSpace() {
         card.style.transform = `translate(-50%, -50%) translate3d(${side.toFixed(1)}px, 0, ${(-depth).toFixed(1)}px)`;
         card.style.opacity = (1 - smooth(FADE_FROM, FADE_TO, depth)).toFixed(3);
         card.style.backgroundColor = `rgba(255,255,255,${(1 - smooth(FILL_FROM, FILL_TO, depth)).toFixed(3)})`;
+        // Depth cue: a card in the queue is drawn lighter, hairline and ink
+        // both, and comes up to full strength as it arrives.
+        const near = 1 - smooth(0.3 * D, 2 * D, depth);
+        card.style.borderColor = `rgba(10,10,10,${(0.3 + 0.7 * near).toFixed(3)})`;
+        (card.firstElementChild as HTMLElement | null)?.style.setProperty('opacity', (0.6 + 0.4 * near).toFixed(3));
       });
     });
   }, [reduceMotion]);
@@ -172,23 +177,41 @@ export function ProcessSpace() {
   );
 }
 
-/** Number, title, one line. Sizes in vw so the card's type keeps its
- *  proportion to the card at every depth. */
+/** The number is the graphic: an outlined red numeral at display scale in
+ *  the card's empty upper area; title and one line sit bottom-left. Sizes
+ *  in vw so the type keeps its proportion to the card at every depth. */
 function Card({ step }: { step: (typeof process)[number] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
       <span
+        aria-hidden
         style={{
           fontFamily: 'var(--font-sans)',
-          fontSize: 'clamp(11px, 1.1vw, 16px)',
-          fontWeight: 600,
-          letterSpacing: '0.24em',
-          color: RED,
+          fontSize: 'clamp(96px, 17vw, 300px)',
+          fontWeight: 800,
+          letterSpacing: '-0.06em',
+          lineHeight: 0.8,
+          marginLeft: '-0.04em',
+          color: 'transparent',
+          WebkitTextStroke: `clamp(1px, 0.12vw, 2px) ${RED}`,
         }}
       >
         {step.number}
       </span>
       <div>
+        <span
+          style={{
+            display: 'block',
+            fontFamily: 'var(--font-sans)',
+            fontSize: 'clamp(11px, 1.1vw, 16px)',
+            fontWeight: 600,
+            letterSpacing: '0.24em',
+            color: RED,
+            marginBottom: 'clamp(8px, 1vw, 16px)',
+          }}
+        >
+          Step {step.number}
+        </span>
         <h3
           style={{
             margin: 0,
