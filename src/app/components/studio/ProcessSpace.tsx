@@ -185,11 +185,10 @@ function Digit({ n, height, stroke }: { n: number; height: string; stroke: strin
   );
 }
 
-function Panel({ slot, i, wide, panelRef }: { slot: Slot; i: number; wide: boolean; panelRef: (el: HTMLDivElement | null) => void }) {
+function Panel({ slot, i, panelRef }: { slot: Slot; i: number; panelRef: (el: HTMLDivElement | null) => void }) {
   const step = slot.step != null ? process[slot.step] : null;
   const k = openK(slot.z);
   const w = `${(OPEN_W * k * 100).toFixed(2)}vw`;
-  const left = slot.col <= 0; // caption reads on the panel's right
   return (
     <div style={{ position: 'relative', width: w, aspectRatio: `1 / ${ASPECT}` }}>
       <div ref={panelRef} style={{ position: 'absolute', inset: 0, willChange: 'opacity' }}>
@@ -198,11 +197,24 @@ function Panel({ slot, i, wide, panelRef }: { slot: Slot; i: number; wide: boole
           <path d={EDGES[i].a} fill={RED} />
         </svg>
         {step && (
-          <div style={{ position: 'absolute', left: '10%', top: '5%', height: '20%', display: 'flex', gap: '4%' }}>
-            {step.number.split('').map((ch, j) => (
-              <Digit key={j} n={Number(ch)} height="100%" stroke={SKY} />
-            ))}
-          </div>
+          <>
+            <div style={{ position: 'absolute', left: '10%', top: '5%', height: '20%', display: 'flex', gap: '4%' }}>
+              {step.number.split('').map((ch, j) => (
+                <Digit key={j} n={Number(ch)} height="100%" stroke={SKY} />
+              ))}
+            </div>
+            {/* The step, set small on the red itself, on a 10% margin
+                inside the panel, so it reads on every panel as it arrives
+                rather than colliding at the feet. Sized to the panel, so
+                it scales with it in depth. */}
+            <div style={{ position: 'absolute', left: '10%', right: '10%', bottom: '8%', color: SKY, fontSize: `calc(${w} * 0.07)` }}>
+              <span style={{ display: 'block', fontFamily: 'var(--font-sans)', fontSize: '0.7em', fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', opacity: 0.85, marginBottom: '0.9em' }}>
+                Step {step.number}
+              </span>
+              <h3 style={{ margin: 0, fontSize: '1.9em', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 0.98 }}>{step.title}</h3>
+              <p style={{ margin: '0.8em 0 0', fontSize: '1em', lineHeight: 1.4, opacity: 0.9 }}>{step.description}</p>
+            </div>
+          </>
         )}
       </div>
 
@@ -224,25 +236,6 @@ function Panel({ slot, i, wide, panelRef }: { slot: Slot; i: number; wide: boole
         ))}
       </svg>
 
-      {step && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '6%',
-            ...(left ? { left: '115%' } : { right: '115%', textAlign: 'right' }),
-            // Sized to the panel, so it scales with it in depth.
-            width: `calc(${w} * 1.6)`,
-            color: INK,
-            fontSize: `calc(${w} * 0.075)`,
-          }}
-        >
-          <span style={{ display: 'block', fontFamily: 'var(--font-sans)', fontSize: '0.55em', fontWeight: 600, letterSpacing: '0.24em', textTransform: 'uppercase', color: RED, marginBottom: '0.8em' }}>
-            Step {step.number}
-          </span>
-          <h3 style={{ margin: 0, fontSize: '2.2em', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.96 }}>{step.title}</h3>
-          <p style={{ margin: '0.7em 0 0', fontSize: wide ? '0.8em' : '0.9em', lineHeight: 1.5, opacity: 0.65 }}>{step.description}</p>
-        </div>
-      )}
     </div>
   );
 }
@@ -376,7 +369,6 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
               <Panel
                 slot={slot}
                 i={i}
-                wide={wide}
                 panelRef={(el) => {
                   panelRefs.current[i] = el;
                 }}
@@ -384,8 +376,8 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
             </div>
           ))}
 
-          {/* The heading row, over the opening shot; it leaves upward as
-              the first panel comes. */}
+          {/* The heading, two stacked words over the opening shot; it
+              leaves upward as the first panel comes. */}
           <div
             ref={headRef}
             style={{
@@ -403,24 +395,11 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
               willChange: 'transform, opacity',
             }}
           >
-            <h2 style={{ gridColumn: wide ? '1 / span 8' : '1 / span 12', margin: 0, fontSize: 'clamp(40px, 6.4vw, 112px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 0.94 }}>
-              Our process
+            <h2 style={{ gridColumn: '1 / span 12', margin: 0, fontSize: 'clamp(40px, 6.4vw, 112px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 0.92 }}>
+              Our
+              <br />
+              process
             </h2>
-            <span
-              style={{
-                gridColumn: wide ? '9 / span 4' : '1 / span 12',
-                fontFamily: 'var(--font-sans)',
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: '0.24em',
-                textTransform: 'uppercase',
-                lineHeight: 1.6,
-                paddingTop: wide ? 'clamp(6px, 0.5vw, 10px)' : 0,
-              }}
-            >
-              How we work, in five steps
-            </span>
-            <div style={{ gridColumn: '1 / span 12', height: 1, background: INK }} />
           </div>
 
           {arrival && (

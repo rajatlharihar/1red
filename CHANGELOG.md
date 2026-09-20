@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 4, R11
+
+- **Process heading and readable steps** (`studio/ProcessSpace.tsx`): the heading is two stacked words, "Our" over "process", no label, no rule. Each step's label, title and one-liner are set small in the sky colour ON its panel, on a 10% inner margin under the numeral, sized to the panel so they scale with it; the ink captions at the feet are gone. Every step reads during its own arrival.
+
 ## 2026-09-21 — round 4, R10
 
 - **Cube end state to Rajat's layout** (`cube/ProblemCube.tsx`, `CubeAssembly.tsx`, after `.claude/refs/cube-end-state-layout-rajat.png`): a hairline across the upper third (28vh, 11% margins), then one band at 62vh: "Or hire / the whole box." flush-left at 500 weight, the box centre-right and smaller (camera backs off to CAM_Z + 4.5, shift 0.28 of the half-width), and "EVERY SKILL. / ONE COLLECTIVE." in 300 weight, uppercase, two lines, right of the box and centred on it. R6's label-on-cap-line and the grid layout are undone. Phone: rule 16vh, headline 30vh, box centred, label at 80vh.
