@@ -5,7 +5,7 @@
 
 ## Session Log: 2026-09-21 (round 4, hub-directed)
 
-- R10 cube end state to Rajat's reference layout; R11 "Our / process" stacked, steps set on the panels, solid numerals; R12 /studio at 60fps end to end (inert stage films, visibility-gated playback, transcoded clips, before/after in CHANGELOG); R13 card rises from below, thin italic captions on the card's margins. All local, NOT pushed.
+- R10 cube end state to Rajat's reference layout; R11 "Our / process" stacked, steps set on the panels, solid numerals; R12 /studio at 60fps end to end (inert stage films, visibility-gated playback, transcoded clips, before/after in CHANGELOG); R13 card rises from below, thin italic captions on the card's margins. Then the scroll-back smoothness pass (Rajat direct). Pushed to main and live on Vercel 2026-09-21.
 
 ## Session Log: 2026-09-21 (round 3, hub-directed)
 

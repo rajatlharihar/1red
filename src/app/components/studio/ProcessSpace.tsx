@@ -265,6 +265,7 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
   const wide = useWide();
   const groupRefs = useRef<Array<HTMLDivElement | null>>([]);
   const panelRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const landedRef = useRef(false);
   const reduceMotion = useReducedMotion() ?? false;
 
   useEffect(() => {
@@ -299,18 +300,33 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
         stageArrivalRef.current.style.transform = `translate3d(0, 0, ${(-depth).toFixed(1)}px)`;
         stageArrivalRef.current.style.visibility = !landed && lastDepth <= coverDepth ? 'visible' : 'hidden';
         flowArrivalRef.current.style.visibility = landed ? 'visible' : 'hidden';
+        /* Scrolling back: the flow copy's films have been playing, the
+           stage copy's are stills. On the frame the stage takes over, seek
+           each still to the frame its film is on, so nothing jumps; the
+           film pauses where it is (it is hidden now) and resumes from that
+           same frame when the page lands again. */
+        if (landed !== landedRef.current) {
+          landedRef.current = landed;
+          if (!landed) {
+            const stills = stageArrivalRef.current.querySelectorAll('video');
+            const films = flowArrivalRef.current.querySelectorAll('video');
+            films.forEach((film, i) => {
+              const still = stills[i];
+              if (still && Math.abs(still.currentTime - film.currentTime) > 0.02) still.currentTime = film.currentTime;
+            });
+          }
+        }
       }
 
       groupRefs.current.forEach((group, i) => {
         const panel = panelRefs.current[i];
         if (!group || !panel) return;
         const slot = SLOTS[i];
-        const depth = slot.z - camZ;
-        if (depth < FADE_TO) {
-          group.style.visibility = 'hidden';
-          return;
-        }
-        group.style.visibility = 'visible';
+        /* Past the lens a panel is held at the fade-out depth, invisible,
+           rather than hidden: re-showing a hidden element this big costs a
+           full re-raster (a 130 ms hitch on the way back up), while a
+           layer that only changes opacity and transform stays cheap. */
+        const depth = Math.max(slot.z - camZ, FADE_TO);
         const k = openK(slot.z);
         const x = slot.col * COL * vw * k;
         const y = slot.row * ROW * vh * k;
@@ -364,7 +380,8 @@ export function ProcessSpace({ arrival }: { arrival?: ReactNode }) {
                 // them, since overflow: hidden rules out a preserve-3d stage.
                 zIndex: 20 - Math.round(slot.z / (D / 2)),
                 willChange: 'transform, opacity',
-                visibility: 'hidden',
+                opacity: 0,
+                pointerEvents: 'none',
               }}
             >
               <Panel

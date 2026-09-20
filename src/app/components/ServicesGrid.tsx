@@ -103,7 +103,7 @@ function Film({ src, style, inert = false }: { src: string; style?: React.CSSPro
       muted
       loop
       playsInline
-      preload={inert ? 'metadata' : 'auto'}
+      preload="auto"
       style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', background: '#EDE8D9', ...style }}
     />
   );

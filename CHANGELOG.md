@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — scroll-back smoothness (Rajat, direct)
+
+- **Our process and What we cover are smooth in both directions** (`studio/ProcessSpace.tsx`, `ServicesGrid.tsx`). Two causes on the way back up: (1) a passed panel was `visibility: hidden` and re-showing it near the lens cost a full re-raster, a 130 to 150 ms hitch at about 70% of the section; passed panels are now held at the fade-out depth at opacity 0 instead, so the layer only ever changes transform and opacity. (2) At the hand-off going backwards the stage copy's still films took over from the playing ones on their first frame, a visible jump; on that frame each still is now seeked to the frame its film is on (the film pauses there, hidden, and resumes from it when the page lands again); stage films preload `auto` so the seek has data. Reverse profile (headless Brave 1440x900 @2x): hand-off 16.7 ms median / 16.8 max, process 16.7 / 16.8 (was max 150), forward unchanged at 16.7 throughout.
+
 ## 2026-09-21 — round 4, R13
 
 - **The card rises from below** (`studio/TeamTable.tsx`): after the camera passes through the team film, the card comes up from below the frame lying back 14°, and settles flat and centred over the section's first 30% on one ease-out; no toss, no bounce. Captions are thin italic (300) in the card's own lower margin, on its inner column edges (left at 9%, right at 15% clear of the index), one per stretch of the pan, quick eased swaps, the red closing line persisting. Odometer rank and the pan unchanged.
