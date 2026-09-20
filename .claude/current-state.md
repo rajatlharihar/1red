@@ -3,7 +3,9 @@
 ## Last Updated
 2026-09-20
 
-## Session Log: 2026-09-21 (round 5, hub-directed)
+## Session Log: 2026-09-21 (rounds 5 to R29, hub-directed) — PUSHED
+
+- R22 grid content on the panels + films playing; R23 card through the film, hand-off tail 160vh; R24 /work gallery then R27 removed again, box fills the band; R25/R26 final copy ("Got an idea that needs every skill?" / "Collab with the whole box." / "Yours too." / "Here's what we made together."); R28/R29 project pages as the Behance presentation with Rajat's plates and films (`public/work/<slug>/`, `data/workImages.json`), five rows with pages for three. Pushed to main and live on Vercel 2026-09-21 on Rajat's "peace, push it".
 
 - R14 Selected Work reorder + Behance; R15 bigger box; R16 YUI-style phone nav; R17 grid by number + phone grid; R18 hand-off bump gone (stage copy rides the glide until caught up); R19 step content at panel tops; R20 sharp card; R21 plain numerals. Local commits after 0cc9988, NOT pushed.
 

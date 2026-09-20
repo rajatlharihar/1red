@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — pushed
+
+- Everything from R22 to R29 pushed to `main` and deployed to https://1red.vercel.app on Rajat's word.
+
 ## 2026-09-21 — R29 five rows, seamless plates, the films
 
 - **Five rows again** (`FlashWork.tsx`, `data/projects.json`): Apptile, Yui, Illusdoodle, Ground, Terrabarn. The three with a Behance case (`page: true`) are links with the "View case study" CTA and the badge; Ground and Terrabarn are plain rows (hover brings their film up in the panel, nothing to click). The phone list plays each project's film as its thumbnail.
