@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-20 (night) — S1 process in depth
+
+- **/studio opens with the process in 3D** (`studio/ProcessSpace.tsx`, mounted by `StudioPage.tsx`; `StudioProcess.tsx` stays on disk, unmounted). Five cards from `data/process.ts` stand along the camera axis 1200 px apart in a CSS `perspective` (1200 px) stage: type stays crisp, no canvas. Scroll on the shared glide moves the camera forward (700vh pinned, ~120vh per step). A waiting card sits 0.8 vw to the side in world units (alternating), which projects to 0.4 of the frame one step back so it shows past the current card, and eases to centre as it approaches (the camera steers onto it). A card spans 70% of the frame at the screen plane, then the camera passes through it: its white fill clears over depth −0.3P..−0.65P so the next card is seen through it, its edge and type go at −0.86P..−0.97P, and it is hidden just before the lens. Nearer cards stack over farther ones by z-index (a preserve-3d stage is not possible under overflow: hidden). After the fifth the camera runs on 1200 px into open space: `EXIT_P` is exported as S2's cue. Phone: 84vw 4:5 cards. Reduced motion: a plain list with rules.
+
 ## 2026-09-20 (night) — H3 what we cover
 
 - **Services as a designed grid** (`ServicesGrid.tsx`, new, self-contained with its own data and optional heading row so it can be mounted on the Studio page for S2): twelve-column Swiss grid matching section 2's poster. Card 01 is the anchor, seven columns and both rows with its film on top; 02 and 03 share the five right columns, film beside copy; hairline rules divide cells, nothing boxed; one column with film first on a phone. Films play only while on screen. `Services.tsx` now mounts it with `heading={false}` under its own "Our Services" heading; the small label reads "What we cover". `ServicesStack.tsx` is no longer imported (kept on disk, in git if wanted).

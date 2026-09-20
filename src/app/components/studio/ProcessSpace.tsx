@@ -1,0 +1,217 @@
+import { useEffect, useRef, useState } from 'react';
+import { useReducedMotion } from 'motion/react';
+import { process } from '../../data/process';
+import { glide, subscribeGlide } from '../scrollGlide';
+
+/* ─── The process, in depth ────────────────────────────────────────────────
+ * Five flat cards stand one behind the other along the camera axis. Scroll
+ * drives the camera forward on the shared glide: a card comes toward the
+ * screen until it spans about 70% of the frame, then the camera passes
+ * THROUGH it (it only fades in the last few percent before it crosses the
+ * near plane) and the next one is already on its way. After the fifth the
+ * camera keeps going into open space; that run-out is the hand-off to the
+ * next chapter (S2), see `EXIT_P`.
+ *
+ * Built in CSS 3D rather than a canvas: the cards are type, and type stays
+ * crisp under a transform where a texture would not. A `perspective`
+ * container is the lens; each card is placed at its own depth and the
+ * browser does the projection (scale = P / (P + depth)). A card's lateral
+ * offset alternates left/right so the next one shows past the current, and
+ * eases to zero as the card approaches, which is the camera steering onto
+ * it: one continuous move, nothing snaps.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+const INK = '#0A0A0A';
+const RED = '#EA3323';
+const BG = '#FFFFFF';
+const RULE = 'rgba(10,10,10,0.18)';
+
+/** Scroll per step, plus the pinned viewport. */
+const STEP_VH = 120;
+const SECTION_VH = STEP_VH * process.length + 100;
+
+/** The lens: CSS perspective distance in px. */
+const P = 1200;
+/** Depth between one card and the next, px. */
+const D = 1200;
+/** Lateral offset of a waiting card, as a share of the viewport width, in
+ *  WORLD units at its own depth: one card back it projects to 0.4 of the
+ *  frame, which is what it takes to show past a card that spans 0.7 of it.
+ *  Alternates left/right; eases to zero as the card becomes the current one. */
+const SIDE = 0.8;
+/** Camera depth at which the first card is still approaching (start) and
+ *  how far past the last card's plane the camera runs on (end). */
+const START_Z = -1.3 * D;
+const RUN_OUT = 1.0 * D;
+const TRAVEL = (process.length - 1) * D + P + RUN_OUT - START_Z;
+/** Section progress at which the camera has crossed the last card: S2's
+ *  cue. From here to 1 the frame is open space. */
+export const EXIT_P = ((process.length - 1) * D + P - START_Z) / TRAVEL;
+
+/** A card fades between these depths (negative: past the screen plane,
+ *  toward the lens at -P) and is dropped just before the lens. */
+const FADE_FROM = -0.86 * P;
+const FADE_TO = -0.97 * P;
+/** The card's white fill clears earlier, once the viewer is inside its
+ *  rectangle and its type has left the frame, so the next card is seen
+ *  through it rather than a blank white stretch; its edge and type still
+ *  go only at the very end. */
+const FILL_FROM = -0.3 * P;
+const FILL_TO = -0.65 * P;
+
+const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+const smooth = (a: number, b: number, v: number) => {
+  const t = clamp01((v - a) / (b - a));
+  return t * t * (3 - 2 * t);
+};
+
+/** Landscape cards from 768px; a phone gets a taller, near-full-width card. */
+function useWide() {
+  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const apply = () => setWide(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+  return wide;
+}
+
+export function ProcessSpace() {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const wide = useWide();
+  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const reduceMotion = useReducedMotion() ?? false;
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    return subscribeGlide(() => {
+      const el = wrapRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + glide.raw;
+      const scrollable = (SECTION_VH / 100 - 1) * window.innerHeight;
+      if (scrollable <= 0) return;
+      const p = clamp01((glide.y - top) / scrollable);
+      const camZ = START_Z + p * TRAVEL;
+      const vw = window.innerWidth;
+      cardRefs.current.forEach((card, i) => {
+        if (!card) return;
+        const depth = i * D - camZ;
+        if (depth < FADE_TO) {
+          card.style.visibility = 'hidden';
+          return;
+        }
+        card.style.visibility = 'visible';
+        // Full offset while the card is still one step away, none once it
+        // is the one in front: the camera steers onto each card in turn.
+        const side = (i % 2 === 0 ? -1 : 1) * SIDE * vw * smooth(0.15 * D, 1.0 * D, depth);
+        card.style.transform = `translate(-50%, -50%) translate3d(${side.toFixed(1)}px, 0, ${(-depth).toFixed(1)}px)`;
+        card.style.opacity = (1 - smooth(FADE_FROM, FADE_TO, depth)).toFixed(3);
+        card.style.backgroundColor = `rgba(255,255,255,${(1 - smooth(FILL_FROM, FILL_TO, depth)).toFixed(3)})`;
+      });
+    });
+  }, [reduceMotion]);
+
+  if (reduceMotion) {
+    return (
+      <section style={{ background: BG, color: INK, padding: 'clamp(4rem, 10vh, 8rem) clamp(1.5rem, 4vw, 5rem)' }}>
+        {process.map((s) => (
+          <div key={s.number} style={{ padding: '28px 0', borderTop: `1px solid ${RULE}` }}>
+            <Card step={s} />
+          </div>
+        ))}
+      </section>
+    );
+  }
+
+  return (
+    <section style={{ position: 'relative', background: BG, color: INK }}>
+      <div ref={wrapRef} style={{ height: `${SECTION_VH}vh`, position: 'relative' }}>
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            height: '100vh',
+            overflow: 'hidden',
+            perspective: `${P}px`,
+            perspectiveOrigin: '50% 50%',
+          }}
+        >
+          {process.map((s, i) => (
+            <div
+              key={s.number}
+              ref={(el) => {
+                cardRefs.current[i] = el;
+              }}
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                width: wide ? 'min(70vw, 1100px)' : '84vw',
+                aspectRatio: wide ? '16 / 10' : '4 / 5',
+                boxSizing: 'border-box',
+                padding: 'clamp(18px, 2.6vw, 40px)',
+                background: BG,
+                border: `1px solid ${INK}`,
+                // Nearer cards paint over farther ones. The camera always
+                // passes them in order, so DOM stacking can do the sorting
+                // (a preserve-3d stage cannot: overflow: hidden flattens it).
+                zIndex: process.length - i,
+                backfaceVisibility: 'hidden',
+                willChange: 'transform, opacity',
+                visibility: 'hidden',
+              }}
+            >
+              <Card step={s} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Number, title, one line. Sizes in vw so the card's type keeps its
+ *  proportion to the card at every depth. */
+function Card({ step }: { step: (typeof process)[number] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+      <span
+        style={{
+          fontFamily: 'var(--font-sans)',
+          fontSize: 'clamp(11px, 1.1vw, 16px)',
+          fontWeight: 600,
+          letterSpacing: '0.24em',
+          color: RED,
+        }}
+      >
+        {step.number}
+      </span>
+      <div>
+        <h3
+          style={{
+            margin: 0,
+            fontSize: 'clamp(40px, 5.6vw, 92px)',
+            fontWeight: 800,
+            letterSpacing: '-0.05em',
+            lineHeight: 0.96,
+          }}
+        >
+          {step.title}
+        </h3>
+        <p
+          style={{
+            margin: 'clamp(10px, 1.4vw, 22px) 0 0',
+            fontSize: 'clamp(14px, 1.25vw, 19px)',
+            lineHeight: 1.5,
+            opacity: 0.6,
+            maxWidth: '46ch',
+          }}
+        >
+          {step.description}
+        </p>
+      </div>
+    </div>
+  );
+}
