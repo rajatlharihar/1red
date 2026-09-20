@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useParams, Link, Navigate } from 'react-router';
 import { motion } from 'motion/react';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight } from 'lucide-react';
 import projectsData from '../data/projects.json';
 
 /* ─── Case study detail — /work/:slug ──────────────────────────────────────
@@ -184,6 +184,53 @@ export function WorkDetailPage() {
               />
             )}
           </div>
+        </motion.div>
+      )}
+
+      {/* ── The Behance case, big, when there is one (Apptile, Yui,
+             Illusdoodle): the project presented as it is on Behance, at
+             full content width, with the link out beneath. ── */}
+      {project.behanceId && (
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: EASE, delay: 0.3 }}
+          style={{ maxWidth: 1100, margin: 'clamp(2rem, 5vh, 3.5rem) auto 0', padding: '0 clamp(1.5rem, 4vw, 5rem)' }}
+        >
+          <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#F2EFE8', overflow: 'hidden' }}>
+            <iframe
+              src={`https://www.behance.net/embed/project/${project.behanceId}?ilo0=1`}
+              title={`${project.title} on Behance`}
+              loading="lazy"
+              allowFullScreen
+              allow="clipboard-write"
+              referrerPolicy="strict-origin-when-cross-origin"
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+            />
+          </div>
+          <a
+            href={`https://www.behance.net/gallery/${project.behanceId}`}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-corners"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              marginTop: 18,
+              padding: '12px 22px',
+              background: RED,
+              color: 'white',
+              fontFamily: 'var(--font-sans)',
+              fontSize: 12,
+              fontWeight: 600,
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+            }}
+          >
+            View on Behance <ArrowUpRight size={14} strokeWidth={2} />
+          </a>
         </motion.div>
       )}
 

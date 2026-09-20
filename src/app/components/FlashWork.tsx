@@ -184,14 +184,14 @@ function ProjectRow({
 /* ─── Rotating circular badge — the reference's own signature interaction
  * (spinning circular text + a fixed center CTA), a generic, widely-used
  * technique rebuilt from scratch in OneRed red rather than lifted from
- * their code. The red centre is a real link to /work, the full gallery
- * (Rajat, round 5).
+ * their code. The red centre is a real link to the active project's own
+ * page, as nknstudio.com's cards open (Rajat, R26).
  *
  * `x`/`y` are magnetic offsets computed by the parent panel from cursor
  * distance to the badge (same technique as Footer's MagneticCTA) — the
  * badge itself stays `pointer-events: none` since it isn't a real link;
  * the panel tracks the mouse and feeds the pull in. */
-function ExploreBadge({ x, y, hovered }: { x: MotionValue<number>; y: MotionValue<number>; hovered: boolean }) {
+function ExploreBadge({ x, y, hovered, to }: { x: MotionValue<number>; y: MotionValue<number>; hovered: boolean; to: string }) {
   const label = 'EXPLORE MORE • ';
   const chars = label.repeat(3).split('');
   const radius = 54;
@@ -250,8 +250,8 @@ function ExploreBadge({ x, y, hovered }: { x: MotionValue<number>; y: MotionValu
         ))}
       </motion.div>
       <Link
-        to="/work"
-        aria-label="Explore more work"
+        to={to}
+        aria-label="Explore this project"
         style={{
           position: 'absolute',
           inset: 24,
@@ -567,7 +567,7 @@ export function FlashWork() {
             // Identical to the cube poster's headline (ProblemCube): 500, -0.03em, leading 1.
             style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(34px, 4.8vw, 80px)', fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.0, margin: 0, color: 'rgb(10,10,10)' }}
           >
-            Here's what<br />we built together.
+            Here's what<br />we made together.
           </motion.h2>
         </div>
         <div className="overflow-hidden" style={{ flexShrink: 0, paddingTop: '0.5em' }}>
@@ -592,7 +592,7 @@ export function FlashWork() {
 
   if (!isDesktop || reduceMotion) {
     return (
-      <section className="bg-white" style={{ padding: '7rem clamp(1.5rem, 4vw, 5rem)' }}>
+      <section id="work" className="bg-white" style={{ padding: '7rem clamp(1.5rem, 4vw, 5rem)' }}>
         {Heading}
         <StaticWorkList />
       </section>
@@ -600,7 +600,7 @@ export function FlashWork() {
   }
 
   return (
-    <section className="bg-white" style={{ position: 'relative' }}>
+    <section id="work" className="bg-white" style={{ position: 'relative' }}>
       {/* Heading, list and visual share one pinned viewport (Rajat: the
           separate heading block left too much white space above the list).
           The left column is heading + list at their natural height (sizes
@@ -786,34 +786,9 @@ export function FlashWork() {
                 >
                   View Case Study <ArrowUpRight size={13} strokeWidth={2} />
                 </Link>
-                {projects[activeIndex].behanceId && (
-                  <a
-                    href={`https://www.behance.net/gallery/${projects[activeIndex].behanceId}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 7,
-                      marginLeft: 22,
-                      fontFamily: 'var(--font-sans)',
-                      fontSize: 11,
-                      fontWeight: 600,
-                      letterSpacing: '0.16em',
-                      textTransform: 'uppercase',
-                      textDecoration: 'none',
-                      color: 'white',
-                      borderBottom: '1px solid rgba(255,255,255,0.45)',
-                      paddingBottom: 3,
-                    }}
-                  >
-                    View on Behance <ArrowUpRight size={13} strokeWidth={2} />
-                  </a>
-                )}
               </motion.div>
 
-              <ExploreBadge x={badgeX} y={badgeY} hovered={badgeHovered} />
+              <ExploreBadge x={badgeX} y={badgeY} hovered={badgeHovered} to={`/work/${projects[activeIndex].id}`} />
             </div>
           </div>
         </div>

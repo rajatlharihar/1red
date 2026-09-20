@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { HERO_FOV, FACADE_Z, doorRimX, facadeFrontZ, sampleSequence } from './studioSequence';
 
 /* ─── The statement on the wall ────────────────────────────────────────────
- * "Still briefing five agencies for one job?" lettered on the facade to the
+ * "Got an idea that needs every skill?" lettered on the facade to the
  * right of the door, as signage painted on the building rather than a
  * caption over the picture. It lives on the wall plane, so the opening sweep
  * carries it: it foreshortens with the wall and slides out of frame as the
@@ -18,7 +18,7 @@ import { HERO_FOV, FACADE_Z, doorRimX, facadeFrontZ, sampleSequence } from './st
  * jamb). Lines are horizontal on the wall, as painted lettering would be.
  * ────────────────────────────────────────────────────────────────────────── */
 
-export const STATEMENT = 'Still briefing five agencies for one job?';
+export const STATEMENT = 'Got an idea that needs every skill?';
 
 const INK = '#0A0A0A';
 const RED = '#FF0000';
@@ -40,9 +40,9 @@ const Y_MAX = 5.2;
 /** Candidate line breaks, longest-first lines are fine; the fitter picks the
  *  set that gives the biggest type for the patch of wall available. */
 const BREAKS: string[][] = [
-  ['STILL BRIEFING', 'FIVE AGENCIES', 'FOR ONE JOB?'],
-  ['STILL BRIEFING', 'FIVE', 'AGENCIES', 'FOR ONE JOB?'],
-  ['STILL', 'BRIEFING', 'FIVE', 'AGENCIES', 'FOR ONE', 'JOB?'],
+  ['GOT AN IDEA', 'THAT NEEDS', 'EVERY SKILL?'],
+  ['GOT AN IDEA', 'THAT NEEDS', 'EVERY', 'SKILL?'],
+  ['GOT AN', 'IDEA', 'THAT', 'NEEDS', 'EVERY', 'SKILL?'],
 ];
 
 interface Line {

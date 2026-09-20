@@ -29,8 +29,8 @@ const INK = '#0A0A0A';
 /** The answer to the wall's question. Set as a Swiss poster: headline
  *  flush-left over two lines, a small label top-right, one hairline rule
  *  under the headline, and the box settling bottom-right off-centre. */
-const LINES = ['Or build it', 'with the whole box.'];
-const LABEL = 'Every skill. One collective. Built with you.';
+const LINES = ['Collab with', 'the whole box.'];
+const LABEL = 'Every skill. One collective. Yours too.';
 /** Section progress over which each line rises out of its mask; the label
  *  rides with the first line, the rule draws after the second. */
 const LINE_REVEAL: Array<[number, number]> = [
@@ -242,7 +242,7 @@ export function ProblemCube() {
                 <br />
                 One collective.
                 <br />
-                Built with you.
+                Yours too.
               </span>
             </div>
           </div>

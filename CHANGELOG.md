@@ -6,6 +6,12 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — R26 and R27
+
+- **Final copy:** wall "Got an idea that needs every skill?" (refitted: three lines desktop, four phone), cube "Collab with / the whole box." with "Every skill. / One collective. / Yours too.", intro "Here's what we made together."
+- **Cards open the project's own page**, as nknstudio.com's do: the Explore badge and each row go to `/work/<slug>`; the separate Behance link on the home card is gone. `WorkDetailPage` shows the Behance case big near the top for Apptile, Yui and Illusdoodle (embed at full content width, 16:10, with a red "View on Behance" button), the case study beneath. Click-verified: badge → /work/apptile with the embed and button present; row → /work/apptile.
+- **No gallery page** (R27): `WorkPage.tsx` and `Work.tsx` removed; `/work` redirects to the home Selected Work section (`/#work`); `FlashWork`'s section carries `id="work"`.
+
 ## 2026-09-21 — R25 collaborative copy
 
 - Wall: "Still briefing five agencies for one job?" (fitter re-run with the new breaks: three lines at 1440x900, four on a phone). Cube: "Or build it / with the whole box." with the label "Every skill. / One collective. / Built with you." centred on the box. Selected Work intro: "Here's what we built together." Scroll cue unchanged. To keep the cube headline on two lines beside the bigger box, both headlines are clamp(34px, 4.8vw, 80px) and the box sits at shift 0.34 with the label at 84%.

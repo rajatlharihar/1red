@@ -12,10 +12,11 @@ export const router = createBrowserRouter([
     Component: Layout,
     children: [
       { index: true, Component: HomePage },
-      // /work is the full gallery (WorkPage); individual case studies are
-      // real destinations too. Unknown slugs redirect home from inside
+      // There is no gallery page (Rajat, R27): the home page's Selected
+      // Work is the index, and each project has its own page. /work itself
+      // goes to that section; unknown slugs redirect home from inside
       // WorkDetailPage.
-      { path: 'work', lazy: () => import('./pages/WorkPage').then((m) => ({ Component: m.WorkPage })) },
+      { path: 'work', element: <Navigate to="/#work" replace /> },
       { path: 'work/:slug', lazy: () => import('./pages/WorkDetailPage').then((m) => ({ Component: m.WorkDetailPage })) },
       { path: 'studio', lazy: () => import('./pages/StudioPage').then((m) => ({ Component: m.StudioPage })) },
       { path: 'contact', lazy: () => import('./pages/ContactPage').then((m) => ({ Component: m.ContactPage })) },
