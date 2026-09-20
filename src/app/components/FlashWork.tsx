@@ -565,7 +565,8 @@ export function FlashWork() {
             initial={{ y: '110%' }}
             animate={headingInView ? { y: 0 } : {}}
             transition={{ duration: 0.78, ease: EASE, delay: 0.05 }}
-            style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(36px, min(6vw, 9vh), 84px)', fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 0.96, margin: 0, color: 'rgb(10,10,10)' }}
+            // Identical to the cube poster's headline (ProblemCube): 500, -0.03em, leading 1.
+            style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(38px, 5.6vw, 92px)', fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.0, margin: 0, color: 'rgb(10,10,10)' }}
           >
             Here's what<br />the box built.
           </motion.h2>

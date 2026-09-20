@@ -30,7 +30,7 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ## 2026-09-21 — round 5, R14
 
-- **Selected Work** (`FlashWork.tsx`, `data/projects.json`): headline one weight down (700); order is now Apptile, Yui, Illusdoodle, Ground, Terrabarn (renumbered); the three Behance cases are attached to their existing entries rather than duplicated (`behanceId` on Apptile 202820463, Yui 254011223, Illusdoodle 246821657): the desktop panel gets a "View on Behance" link beside "View case study", and the phone list embeds each case (`BehanceEmbed`, iframe mounted only within 400 px of the viewport, with the link beneath).
+- **Selected Work** (`FlashWork.tsx`, `data/projects.json`): headline set exactly like the cube poster's (500, −0.03em, leading 1, clamp(38px, 5.6vw, 92px)); order is now Apptile, Yui, Illusdoodle, Ground, Terrabarn (renumbered); the three Behance cases are attached to their existing entries rather than duplicated (`behanceId` on Apptile 202820463, Yui 254011223, Illusdoodle 246821657): the desktop panel gets a "View on Behance" link beside "View case study", and the phone list embeds each case (`BehanceEmbed`, iframe mounted only within 400 px of the viewport, with the link beneath).
 
 ## 2026-09-21 — fast-scroll fixes (Rajat, direct)
 
