@@ -9,6 +9,7 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 ## 2026-09-20 (night) — H1 hero statement
 
 - **"Still hiring five agencies for one job?" lettered on the facade** (`hero/wallStatement.ts`, drawn by `StudioScene`): a transparent canvas texture on a plane flush with the wall right of the door, uppercase Outfit 700, red "?". Placement is fitted at mount from the p = 0 camera: the largest type whose lines sit inside the frame's (rolled, oblique) footprint on the wall, each line starting a fixed 0.9 m right of the door rim at its own height, so the block leans with the jamb. Line breaks chosen by the fitter per aspect (three lines at 1440x900, six on a phone). It rides the wall through the establishing sweep and is out of frame by p 0.24; nothing fades. Hero timing, camera, door and mark untouched.
+- Phone (portrait) fix after review: four lines only ("STILL HIRING / FIVE / AGENCIES / FOR ONE JOB?"), block kept above 1.9 m so it sits in the upper half, fills the strip's width and clears the door edge as the sweep begins.
 - Scroll cue text is now "The answer is inside" (same motion curve).
 - `FACADE_T`, `WALL_TAPER_*`, `facadeFrontZ()` and `doorRimX()` moved to / added in `studioSequence.ts` so the text and the geometry share one definition of the wall face.
 

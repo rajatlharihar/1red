@@ -34,6 +34,7 @@ const RIM_MARGIN = 0.9;
 const FRAME_PAD = 0.25;
 /** The wall band the text may occupy (metres above the approach ground). */
 const Y_MIN = 0.9;
+const Y_MIN_PORTRAIT = 1.9;
 const Y_MAX = 5.2;
 
 /** Candidate line breaks, longest-first lines are fine; the fitter picks the
@@ -124,8 +125,6 @@ export function layoutWallStatement(ctx: CanvasRenderingContext2D, aspect: numbe
   const span = visibleWall(aspect);
   if (!span) return null;
 
-  const EM = 100;
-  const widths = BREAKS.map((lines) => lines.map((l) => measure(ctx, l, EM) / EM));
 
   /* Each line starts a fixed margin right of the door rim, or a fixed pad
      inside the frame's left edge where that is further right (the phone,
@@ -166,16 +165,26 @@ export function layoutWallStatement(ctx: CanvasRenderingContext2D, aspect: numbe
     return out;
   };
 
+  /* A phone sees a narrow, tall strip of wall. Six one-word lines fit it
+     biggest, but read timid and sat low, where the door's edge cut through
+     them as the sweep began (Rajat's review). So a portrait frame keeps to
+     the four-line setting, which fills the strip's width, and the block
+     stays out of the lower third, clear of the door's edge and the cue. */
+  const portrait = aspect < 1;
+  const candidates = portrait ? [BREAKS[1]] : BREAKS;
+  const yMin = portrait ? Y_MIN_PORTRAIT : Y_MIN;
+  const EM = 100;
+  const widths = candidates.map((lines) => lines.map((l) => measure(ctx, l, EM) / EM));
   let best: WallStatementLayout | null = null;
   const STEPS = 36;
-  for (let bi = 0; bi < BREAKS.length; bi++) {
-    const lines = BREAKS[bi];
+  for (let bi = 0; bi < candidates.length; bi++) {
+    const lines = candidates[bi];
     const n = lines.length;
     for (let i = 0; i <= STEPS; i++) {
-      const y0 = Y_MIN + ((Y_MAX - Y_MIN) * i) / STEPS;
+      const y0 = yMin + ((Y_MAX - yMin) * i) / STEPS;
       if (!span(y0)) continue;
       for (let j = i + 1; j <= STEPS; j++) {
-        const y1 = Y_MIN + ((Y_MAX - Y_MIN) * j) / STEPS;
+        const y1 = yMin + ((Y_MAX - yMin) * j) / STEPS;
         if (!span(y1)) continue;
         // Height sets the first guess; then every line must also fit
         // between the wall's edges at its own height. The edges move with
