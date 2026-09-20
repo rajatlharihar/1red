@@ -505,36 +505,39 @@ export function FlashWork() {
     setBadgeHovered(false);
   }, [badgeXRaw, badgeYRaw]);
 
+  /* The intro carries the home page's story on from the cubes ("Or hire
+     the whole box."): same Swiss row as that poster, headline flush-left
+     over two lines, the label on the right, one hairline rule beneath. */
   const Heading = (
     <div ref={headingRef} style={{ display: 'flex', flexDirection: 'column', gap: HEADING_GAP, marginBottom: 'clamp(1.25rem, 3vh, 3.5rem)' }}>
-      <div className="overflow-hidden">
-        <motion.p
-          initial={{ y: '110%' }}
-          animate={headingInView ? { y: 0 } : {}}
-          transition={{ duration: 0.6, ease: EASE }}
-          style={{ fontFamily: 'var(--font-sans)', fontSize: 10, lineHeight: `${EYEBROW_LINE}px`, fontWeight: 600, letterSpacing: '0.28em', textTransform: 'uppercase', opacity: 0.4, margin: 0 }}
-        >
-          Selected Work
-        </motion.p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
+        <div className="overflow-hidden">
+          <motion.h2
+            initial={{ y: '110%' }}
+            animate={headingInView ? { y: 0 } : {}}
+            transition={{ duration: 0.78, ease: EASE, delay: 0.05 }}
+            style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(36px, min(6vw, 9vh), 84px)', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.96, margin: 0, color: 'rgb(10,10,10)' }}
+          >
+            Here's what<br />the box built.
+          </motion.h2>
+        </div>
+        <div className="overflow-hidden" style={{ flexShrink: 0, paddingTop: '0.5em' }}>
+          <motion.p
+            initial={{ y: '110%' }}
+            animate={headingInView ? { y: 0 } : {}}
+            transition={{ duration: 0.6, ease: EASE }}
+            style={{ fontFamily: 'var(--font-sans)', fontSize: 10, lineHeight: `${EYEBROW_LINE}px`, fontWeight: 600, letterSpacing: '0.24em', textTransform: 'uppercase', margin: 0, textAlign: 'right', color: 'rgb(10,10,10)' }}
+          >
+            Selected work
+          </motion.p>
+        </div>
       </div>
-      <div className="overflow-hidden">
-        <motion.h2
-          initial={{ y: '110%' }}
-          animate={headingInView ? { y: 0 } : {}}
-          transition={{ duration: 0.78, ease: EASE, delay: 0.05 }}
-          style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(32px, min(5.4vw, 8vh), 68px)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.02, margin: 0, color: 'rgb(10,10,10)' }}
-        >
-          Work That Moves<br />Brands Forward
-        </motion.h2>
-      </div>
-      <motion.p
-        initial={{ opacity: 0, y: 10 }}
-        animate={headingInView ? { opacity: 0.55, y: 0 } : {}}
-        transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
-        style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.65, maxWidth: 360, margin: 0, color: 'rgb(10,10,10)' }}
-      >
-        Digital experiences, websites, and brand systems crafted to help ambitious businesses grow.
-      </motion.p>
+      <motion.div
+        initial={{ scaleX: 0 }}
+        animate={headingInView ? { scaleX: 1 } : {}}
+        transition={{ duration: 0.9, delay: 0.25, ease: EASE }}
+        style={{ height: 1, background: 'rgb(10,10,10)', transformOrigin: 'left center' }}
+      />
     </div>
   );
 

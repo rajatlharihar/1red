@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-21 — round 2, R2
+
+- **Selected Work's intro continues the story** (`FlashWork.tsx`, heading only; the grid is untouched): "Here's what / the box built." flush-left at display weight, "Selected work" label on the right, one hairline rule drawing beneath, the same Swiss row as the cube poster. The generic paragraph is gone.
+
 ## 2026-09-21 — round 2, R1
 
 - **/services removed** on Rajat's review: route, nav item, `ServicesPage.tsx`, `Services.tsx`, `ServicesStack.tsx` and the `OurProcess` flick carousel are gone (git history keeps them). The footer's service-tag links now go to /studio, where `ServicesGrid` ("What we cover") lives.
