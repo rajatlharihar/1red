@@ -33,6 +33,21 @@ export const DOOR_APEX_Y = 15;
 export const FACADE_Z = 5.5;
 export const FACADE_W = 120;
 export const FACADE_H = 26;
+/** The facade is a slab whose depth grows with height, so its front face
+ *  leans out toward the approach. Half-thickness is 0.9 at these tapers. */
+export const FACADE_T = 1.8;
+export const WALL_TAPER_BOTTOM = 0.7;
+export const WALL_TAPER_TOP = 1.55;
+/** Local z of the facade's front face at height `y` (world z = FACADE_Z + this). */
+export function facadeFrontZ(y: number) {
+  const h = clamp01(y / FACADE_H);
+  return (FACADE_T / 2) * lerp(WALL_TAPER_BOTTOM, WALL_TAPER_TOP, h);
+}
+/** Half-width of the door opening at height `y`; the rim the wall text
+ *  aligns to. */
+export function doorRimX(y: number) {
+  return (DOOR_BASE_W / 2) * (1 - y / DOOR_APEX_Y);
+}
 
 /* ── The door is a SECTIONAL garage door ─────────────────────────────────
  * Three panels rising together. Each one vanishes as it passes the lower

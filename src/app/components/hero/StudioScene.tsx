@@ -3,6 +3,7 @@ import { useFrame, useLoader, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { createHatchTexture } from './surfaceTextures';
+import { createWallStatement } from './wallStatement';
 import { StudioEnvironment, type RoomMaterials } from './StudioEnvironment';
 import { INK, FILL_OFFSET, createInkLineMaterial, inkEdges } from './inkLines';
 import { buildLogoGeometry } from './logoGeometry';
@@ -16,8 +17,12 @@ import {
   DOOR_SECTION_FOOT,
   DOOR_SECTION_TOPS,
   FACADE_H,
+  FACADE_T,
   FACADE_W,
   FACADE_Z,
+  facadeFrontZ,
+  WALL_TAPER_BOTTOM,
+  WALL_TAPER_TOP,
   LOGO_DEPTH,
   LOGO_PIVOT,
   LOGO_SVG_URL,
@@ -61,13 +66,8 @@ const LOGO_DARK = '#140504';
 const SKETCH_DARK = '#CFC7B0';
 
 
-const FACADE_T = 1.8;
-
 const REVEAL_FRONT = '#0A0A0A';
 const REVEAL_BACK = '#0A0A0A';
-
-const WALL_TAPER_BOTTOM = 0.7;
-const WALL_TAPER_TOP = 1.55;
 
 
 /** The ground plane sits this far above y = 0 (see the ground mesh), so the
@@ -291,6 +291,42 @@ export function StudioScene({
   }, []);
   const facadeLines = useMemo(() => inkEdges(facadeGeo, mats.line, SEAM_Y), [facadeGeo, mats]);
 
+  /* The statement lettered on the wall right of the door. Fitted to the
+     patch of wall the opening shot shows, so it depends on the aspect and is
+     rebuilt when the viewport's shape changes. Drawn once with whatever font
+     is loaded, then again when Outfit arrives. */
+  const statement = useMemo(
+    () => createWallStatement(size.width / size.height, simplified ? 1536 : 2048),
+    [size.width, size.height, simplified]
+  );
+  useEffect(() => {
+    if (!statement) return;
+    let live = true;
+    document.fonts?.load(`700 100px 'Outfit'`).then(() => {
+      if (!live) return;
+      statement.redraw();
+      invalidate();
+    });
+    return () => {
+      live = false;
+      statement.texture.dispose();
+    };
+  }, [statement, invalidate]);
+  const statementMat = useMemo(
+    () =>
+      statement &&
+      new THREE.MeshBasicMaterial({
+        map: statement.texture,
+        transparent: true,
+        toneMapped: false,
+        depthWrite: false,
+      }),
+    [statement]
+  );
+  useEffect(() => () => statementMat?.dispose(), [statementMat]);
+  /** The face leans out with height; the lettering lies on it. */
+  const wallLean = Math.atan((FACADE_T / 2) * (WALL_TAPER_TOP - WALL_TAPER_BOTTOM) / FACADE_H);
+
   /* Each section is cut to the opening's width at its own closed height (plus
      the buried overlap), built with its hinge — its bottom edge — at the
      local origin so the track can place and tip it. */
@@ -443,6 +479,15 @@ export function StudioScene({
       <group position={[0, 0, FACADE_Z]}>
         <mesh geometry={facadeGeo} material={[mats.facade, mats.reveal]} />
         <primitive object={facadeLines} />
+        {statement && statementMat && (
+          <mesh
+            position={[statement.cx, statement.cy, facadeFrontZ(statement.cy) + 0.012]}
+            rotation={[wallLean, 0, 0]}
+            material={statementMat}
+          >
+            <planeGeometry args={[statement.w, statement.h]} />
+          </mesh>
+        )}
       </group>
 
       <group position={[0, 0, FACADE_Z]}>

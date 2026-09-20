@@ -237,7 +237,7 @@ export function StudioEntrance() {
                 color: 'rgba(10,10,10,0.5)',
               }}
             >
-              Scroll to enter
+              The answer is inside
             </span>
             <motion.span
               animate={{ y: [0, 7, 0] }}
