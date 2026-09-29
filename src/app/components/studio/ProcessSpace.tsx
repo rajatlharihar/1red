@@ -333,19 +333,18 @@ export function ProcessSpace({ arrival }: { arrival?: (inert: boolean) => ReactN
       const cam = cameraAt(p, vw, vh);
       const camZ = cam.z;
       /* The landing. The stage copy is placed by the glide, the flow copy
-         by the raw scroll, and on a fast scroll the raw runs ahead. So once
-         the glide has arrived (p = 1) the stage copy is carried up by the
+         by the raw scroll, and on a fast scroll the raw runs ahead. Once the
+         glide has arrived (p = 1) the stage copy is carried up by the
          glide's own overshoot (landing − glide.y) as if it were already in
-         the document, and the flow copy takes over only on a frame where
-         the glide has caught up with the raw scroll (the two then coincide
-         to the pixel), or at the latest when the pin lets go. Going back
-         below p = 1 hands it back to the stage. */
+         the document, and the flow copy is held back by the glide's lag
+         (raw − glide.y) until the glide catches up, so the two sit on the
+         same pixel at any speed and the swap happens on landing. (It used
+         to wait for the glide to catch up or the pin to let go; on a long
+         scroll the pin let go first and the grid jumped by the lag,
+         Shrikar 2026-09-30.) Going back below p = 1 hands it back to the
+         stage. */
       const landingY = top + scrollable;
-      const caughtUp = Math.abs(glide.y - glide.raw) < 1;
-      const unpinned = glide.raw >= landingY + (TAIL_VH / 100) * vh;
-      let landed = landedRef.current;
-      if (p < 1) landed = false;
-      else if (caughtUp || unpinned) landed = true;
+      const landed = p >= 1;
 
       if (headRef.current) {
         const t = smooth(HEAD_FROM, HEAD_TO, p);
@@ -369,6 +368,7 @@ export function ProcessSpace({ arrival }: { arrival?: (inert: boolean) => ReactN
            the landing cost nothing on the frame they happen. */
         stageArrivalRef.current.style.opacity = !landed && lastDepth <= coverDepth ? '1' : '0';
         flowArrivalRef.current.style.opacity = landed ? '1' : '0';
+        flowArrivalRef.current.style.transform = landed ? `translate3d(0, ${(glide.raw - glide.y).toFixed(1)}px, 0)` : '';
         /* Scrolling back: the flow copy's films have been playing, the
            stage copy's are stills. On the frame the stage takes over, seek
            each still to the frame its film is on, so nothing jumps; the
