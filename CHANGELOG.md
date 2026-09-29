@@ -6,6 +6,21 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-09-30 — Shrikar's fixes, the agency IA, About and Contact in 1Red's language — pushed
+
+Pushed to `main` as `14b7339` (from `fa17853`), Vercel green, all routes 200 on https://1red.vercel.app.
+
+- **Shrikar's review (8 items, each reproduced first):** the hero mark no longer turns (`studioSequence.ts`, the white boom starts in the freed beat); the cube section is pinned 180vh instead of 390vh, the hero seam kept at its tuned rate (`ProblemCube.tsx`, `sectionP`); Selected work rows preview on hover instead of scrolling the page there, which had yanked the scroll back (`FlashWork.tsx`); Our process camera eases onto each number 1 to 5 in turn, then pushes through 05 (`ProcessSpace.tsx`, `cameraAt`); What we cover no longer jumps ~230px at the process hand-off on a long scroll (flow copy held back by the glide lag); the team film's 0.4s black tail trimmed (it flashed black every loop); the team card's corner number counts 1 to 7, one slow roll per stretch, instead of flipping every 36px (`TeamTable.tsx`); Back and Forward restore the scroll position (`ScrollToTop.tsx` is now react-router's `ScrollRestoration`), `/#work` lands on its section.
+- **IA after a study of 9 agency sites** (Pentagram, Instrument, BUCK, Koto, Ogilvy, Lopez Design, Elephant, Codesign, Sideways): nav Work . Case studies . The Box . About + a red "Start a project" button (phone menu buttons carry their names); footer adds the same plus Careers (mail).
+- **Work** (`/work`, `pages/WorksPage.tsx`, `data/works.ts`): 24 pieces from `public/work` and `public/videos`, filters Campaigns / Motion graphics / Animation / Graphic design / Video editing (kept in `?f=`), tiles glide on filter, light lightbox with arrows/Esc, "Case study" tag and link. Grid films play on hover (in view on touch): 30 to 60fps at 2560 wide.
+- **Case studies** (`/case-studies`, `pages/CaseStudiesPage.tsx`): index of the three deep pages; pages moved to `/case-studies/<slug>`, `/work/<slug>` redirects.
+- **The Box** = the old /studio page, unchanged, at `/the-box`; `/studio` redirects.
+- **About** (`/about`, `components/about/`): option 1 of two, Rajat's pick: hero at the poster's scale, Who / What / Why on three of the process print's red panels in depth with the camera easing onto each (custom numerals 1 to 3), "On the table lately" as a strip the glide carries, the team card rising onto the table, Start a project. `?v=b` the box turning a face per scroll (the other option), `?v=c` Rajat's manifesto prototype (red boxes orbit the headline, burst on scroll, settle round the personality line; placeholder copy) + a facts strip.
+- **Contact** (`/contact`, `components/contact/ContactPanels.tsx`): option 1, the 3x3 print on red panels with the numerals, text flush-left, panels rising with the glide: 1 "Hi there" (name, company, email), 2 what you need, 3 the idea + Send (opens a ready email to hi@1red.in; the old cream form only faked sending), 4 email, 5 phone/WhatsApp, 6 where, 7 careers, a box on the blank panel, 8 follow. Old `Contact.tsx` deleted.
+- **Copy:** no em dashes anywhere rendered (checked by scanning the text of every route).
+- **Still mock (Rajat: leave it):** phone +91 00000 00000, no WhatsApp link, social links `#`, careers to hi@1red.in, manifesto copy.
+- **Measured, not fixed:** /the-box drops to 30fps from the grid on if you pause at the grid while its films play; the same on `fa17853`, and it survives unloading every video (likely the headless GPU's video path). Home's tail was 30fps before too.
+
 ## 2026-09-21 — pushed
 
 - Everything from R22 to R29 pushed to `main` and deployed to https://1red.vercel.app on Rajat's word.

@@ -1,7 +1,14 @@
 # Current State
 
 ## Last Updated
-2026-09-20
+2026-09-30
+
+## Session Log: 2026-09-30 (hub-directed, Shrikar's review + IA) — PUSHED `14b7339`
+
+- Live site now: Home, /work (filterable showcase), /case-studies (+ /case-studies/<slug>), /the-box (was /studio), /about (red panels in depth; ?v=b box, ?v=c manifesto prototype), /contact (3x3 red-panel print, form opens a mail). Redirects: /studio, /work/<slug>. See CHANGELOG 2026-09-30.
+- Placeholders still mock by Rajat's word: phone, WhatsApp, socials (`Footer.tsx` socialLinks `#`), careers email, manifesto copy.
+- Open: Rajat to decide whether the manifesto (?v=c) replaces or precedes the About chapters; /the-box 30fps after pausing at the grid (pre-existing, headless video path suspected); home tail 30fps (pre-existing).
+- Verification kit: Playwright + Brave scripts in the session scratchpad (sweep, per-frame probe, perf at 2560x1340@2x, rendered-dash scan); not committed.
 
 ## Session Log: 2026-09-21 (rounds 5 to R29, hub-directed) — PUSHED
 

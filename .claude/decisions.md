@@ -375,3 +375,28 @@ Chronological, most recent last. Each entry: date (where known — this project 
 **DECISION (2026-09-20, later):** /studio carries no editorial copy. It is one composition: the process as a 3 × 3 print of red blocks (`StudioProcess.tsx`), with stage copy only in a caption strip on hover/tap.
 **REASON:** Rajat: "we dont need any more yapology, replace all of it with the our process where its arranged like the image", with a collage reference (red blocks, cream sheet, horizon, tiny figures, ladder, wire). `Studio.tsx` (hero, beliefs, team, principles, rail, CTA) is deleted; git history has it.
 **NOTE:** The rough-edge filters here are on static rects that only animate opacity/scale once on entry, which is why the 2026-09-20 "no feTurbulence on anything that moves" rule does not bite. Keep it that way: no parallax on the blocks.
+
+---
+
+**DECISION (2026-09-30):** The site's IA is Home, Work, Case studies, The Box, About, Contact; nav Work . Case studies . The Box . About + "Start a project".
+**REASON:** Rajat: "we are an agency", look at other agencies and make our own. Every agency studied keeps nav to single words with Work as one filterable index; the Indian studios (Codesign, Sideways) split deep case studies from the showcase, which is what Shrikar asked for. Rajat picked "The Box" for the old Studio page (pays off "Collab with the whole box").
+**DO NOT:** Rename /the-box or move case studies off `/case-studies/<slug>` without keeping redirects; old `/studio` and `/work/<slug>` links are out in the world.
+
+---
+
+**DECISION (2026-09-30):** About and Contact speak the site's own language: the process print's rough red panels, Rajat's custom numerals, big editorial type, glide-driven motion. Never the soft cream "premium" card look.
+**REASON:** Rajat on the first About: "not in the same cool layouts"; on Contact: "why did it use the premium style and not continue the 1Red colour". He picked, from two options each, About = red panels in depth (camera stops per chapter) and Contact = the 3x3 print ("Hi there" on panel 1, text flush-left, a box on the blank panel).
+**DO NOT:** Use the soft-premium-ui style on 1Red. Keep `?v=b` / `?v=c` on /about as comparison routes until Rajat decides on the manifesto (he floated it as a replacement for the chapters).
+
+---
+
+**DECISION (2026-09-30):** Hovering a list row never scrolls the page; grid films play on hover (in view on touch); scroll position is restored on Back.
+**REASON:** Shrikar's review: a row's hover-jump yanked the scroll back ("can't scroll properly"), and Back landed on the top of home. Six films decoding at once halved /work's frame rate at 2560 wide.
+**DO NOT:** Add `window.scrollTo` on mount to pages (it undoes `ScrollRestoration`), or autoplay every film in a grid.
+
+---
+
+**DECISION (2026-09-30):** The 1Red mark never rotates, and pinned scenes stay short (the cube section is 180vh pinned).
+**REASON:** Shrikar: the logo should not rotate; cube sections "one scroll is enough, max two".
+**DO NOT:** Reintroduce the mark's turn or lengthen a pinned scene without Rajat asking.
+
