@@ -128,8 +128,10 @@ function stopFor(step: number, vw: number, vh: number): Cam {
   const k = openK(slot.z);
   const worldW = g.openW * vw * k;
   const wantW = Math.min((FRAME_H * vh) / ASPECT, 0.78 * vw);
-  // Projected size is worldW * P / (P + depth): solve for the depth.
-  const depth = (P * worldW) / wantW - P;
+  // Projected size is worldW * P / (P + depth): solve for the depth, but
+  // never stop nearer than where a panel's red starts to clear (the
+  // smallest panel on a phone would otherwise be framed washed out).
+  const depth = Math.max((P * worldW) / wantW - P, FILL_FROM + 0.02 * P);
   return { z: slot.z - depth, x: slot.col * g.col * vw * k, y: (slot.row * g.row + g.dy) * vh * k };
 }
 /** Camera at section progress `p`. */
