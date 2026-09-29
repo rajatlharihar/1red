@@ -30,3 +30,6 @@ pnpm-debug.log*
 /skills/
 ab6c7e15-d42e-4a80-a077-6614c63a4198
 "Screenshot 2026-08-26 at 11.26.29 AM.png"
+
+# Claude project memory: kept on disk, never in git (Rajat, 2026-09-30)
+.claude/
