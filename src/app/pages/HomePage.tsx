@@ -14,7 +14,7 @@ import { WhatsNext } from '../components/WhatsNext';
  * section's job, so the videos and the card now live only in FlashWork /
  * the case studies, and the cube carries the argument instead. No project
  * assets were deleted — projects.json and the videos are still used by
- * FlashWork and /work/:slug. */
+ * FlashWork and /case-studies/:slug. */
 export function HomePage() {
   return (
     <>

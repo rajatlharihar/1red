@@ -134,7 +134,7 @@ function ProjectRow({
   const Row: React.ElementType = project.page ? Link : 'div';
   return (
     <Row
-      {...(project.page ? { to: `/work/${project.id}` } : {})}
+      {...(project.page ? { to: `/case-studies/${project.id}` } : {})}
       onMouseEnter={() => onHover(index)}
       onFocus={(e: React.FocusEvent<HTMLElement>) => {
         if (e.currentTarget.matches(':focus-visible')) onJump(index);
@@ -374,7 +374,7 @@ function VisualPanel({ project }: { project: (typeof projects)[0] }) {
 function StaticRow({ project, children }: { project: Proj; children: React.ReactNode }) {
   const style: React.CSSProperties = { display: 'block', padding: '18px 0', textDecoration: 'none', color: 'rgb(10,10,10)' };
   return project.page ? (
-    <Link to={`/work/${project.id}`} className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]" style={style}>
+    <Link to={`/case-studies/${project.id}`} className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]" style={style}>
       {children}
     </Link>
   ) : (
@@ -767,7 +767,7 @@ export function FlashWork() {
 
                 {projects[activeIndex].page && (
                 <Link
-                  to={`/work/${projects[activeIndex].id}`}
+                  to={`/case-studies/${projects[activeIndex].id}`}
                   className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                   style={{
                     display: 'inline-flex',
@@ -789,7 +789,7 @@ export function FlashWork() {
                 )}
               </motion.div>
 
-              {projects[activeIndex].page && <ExploreBadge x={badgeX} y={badgeY} hovered={badgeHovered} to={`/work/${projects[activeIndex].id}`} />}
+              {projects[activeIndex].page && <ExploreBadge x={badgeX} y={badgeY} hovered={badgeHovered} to={`/case-studies/${projects[activeIndex].id}`} />}
             </div>
           </div>
         </div>

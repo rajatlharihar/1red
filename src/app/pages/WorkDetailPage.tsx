@@ -94,10 +94,6 @@ export function WorkDetailPage() {
   const project = (projectsData as Project[]).find((p) => p.id === slug);
   const reduceMotion = useReducedMotion() ?? false;
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [slug]);
-
   // Unknown slug → home, rather than a broken shell.
   if (!project) return <Navigate to="/" replace />;
 
@@ -111,11 +107,11 @@ export function WorkDetailPage() {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(7rem, 14vh, 10rem) clamp(1.5rem, 4vw, 5rem) 0' }}>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}>
           <Link
-            to="/#work"
+            to="/case-studies"
             className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
             style={{ ...label, display: 'inline-flex', alignItems: 'center', gap: 8, letterSpacing: '0.14em', textDecoration: 'none', color: INK, opacity: 0.5, marginBottom: 'clamp(2rem, 5vh, 3.5rem)' }}
           >
-            <ArrowLeft size={13} strokeWidth={2} /> Selected work
+            <ArrowLeft size={13} strokeWidth={2} /> Case studies
           </Link>
         </motion.div>
 
@@ -129,7 +125,7 @@ export function WorkDetailPage() {
           <span style={{ ...label, color: RED, fontVariantNumeric: 'tabular-nums' }}>{project.number}</span>
           <span aria-hidden style={{ width: 6, height: 6, background: RED }} />
           <span style={{ ...label, opacity: 0.55 }}>
-            {project.category} — {project.year}
+            {project.category} . {project.year}
           </span>
         </motion.div>
         <div style={{ overflow: 'hidden' }}>
@@ -179,7 +175,7 @@ export function WorkDetailPage() {
         )}
         {next && next.id !== project.id && (
           <Link
-            to={`/work/${next.id}`}
+            to={`/case-studies/${next.id}`}
             className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
             style={{ display: 'inline-flex', alignItems: 'baseline', gap: 12, textDecoration: 'none', color: INK }}
           >
