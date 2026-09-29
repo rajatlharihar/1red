@@ -36,18 +36,30 @@ const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:o
 const SLUG: Record<string, WorkFilter> = Object.fromEntries(WORK_FILTERS.map((f) => [f.toLowerCase().replace(/\s+/g, '-'), f]));
 const slugOf = (f: WorkFilter) => f.toLowerCase().replace(/\s+/g, '-');
 
-/** A piece's film, muted and looped, playing only while on screen. Before
- *  it plays it shows the frame at `still` (a media fragment), so the tile
- *  is never blank. */
-function Film({ piece, fit, autoPlay = false }: { piece: Extract<WorkPiece, { kind: 'video' }>; fit: 'cover' | 'contain'; autoPlay?: boolean }) {
+/** Where a pointer can hover, grid films play on hover only: a screen of
+ *  films all decoding at once halved the frame rate at 2560 wide. On touch
+ *  they play while mostly in view. */
+const canHover = typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches;
+
+/** A piece's film, muted and looped. Before it plays it shows the frame at
+ *  `still` (a media fragment), so the tile is never blank. `active`: the
+ *  grid's hover; undefined in the lightbox, where it plays while shown. */
+function Film({ piece, fit, autoPlay = false, active }: { piece: Extract<WorkPiece, { kind: 'video' }>; fit: 'cover' | 'contain'; autoPlay?: boolean; active?: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const hoverMode = active !== undefined && canHover;
   useEffect(() => {
     const v = ref.current;
-    if (!v) return;
-    const io = new IntersectionObserver(([e]) => (e.isIntersecting ? v.play().catch(() => {}) : v.pause()), { threshold: 0.2 });
+    if (!v || !hoverMode) return;
+    if (active) v.play().catch(() => {});
+    else v.pause();
+  }, [active, hoverMode]);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || hoverMode) return;
+    const io = new IntersectionObserver(([e]) => (e.isIntersecting ? v.play().catch(() => {}) : v.pause()), { threshold: active === undefined ? 0.2 : 0.7 });
     io.observe(v);
     return () => io.disconnect();
-  }, []);
+  }, [hoverMode, active]);
   const t = piece.still != null ? `#t=${piece.still}` : '';
   return (
     <video
@@ -65,8 +77,8 @@ function Film({ piece, fit, autoPlay = false }: { piece: Extract<WorkPiece, { ki
   );
 }
 
-function Media({ piece, fit, eager = false }: { piece: WorkPiece; fit: 'cover' | 'contain'; eager?: boolean }) {
-  if (piece.kind === 'video') return <Film piece={piece} fit={fit} autoPlay={fit === 'contain'} />;
+function Media({ piece, fit, eager = false, active }: { piece: WorkPiece; fit: 'cover' | 'contain'; eager?: boolean; active?: boolean }) {
+  if (piece.kind === 'video') return <Film piece={piece} fit={fit} autoPlay={fit === 'contain'} active={active} />;
   return (
     <img
       src={piece.src}
@@ -110,7 +122,7 @@ function Tile({ piece, index, onOpen, reduceMotion }: { piece: WorkPiece; index:
       >
         <div style={{ position: 'relative', aspectRatio: '4 / 3', overflow: 'hidden', background: PAPER }}>
           <motion.div animate={{ scale: hover && !reduceMotion ? 1.035 : 1 }} transition={{ duration: 0.7, ease: EASE }} style={{ position: 'absolute', inset: 0 }}>
-            <Media piece={piece} fit="cover" eager={index < 6} />
+            <Media piece={piece} fit="cover" eager={index < 6} active={hover} />
           </motion.div>
           {piece.caseStudy && (
             <span style={{ position: 'absolute', top: 12, left: 12 }}>
