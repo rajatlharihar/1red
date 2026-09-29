@@ -21,9 +21,25 @@ import { glide, subscribeGlide } from '../scrollGlide';
  * reveals them. The hero's red shows through the transparent pixels.
  * ────────────────────────────────────────────────────────────────────────── */
 
-/* Longer than the build alone needs: the tunnel gets its own run of scroll
-   before the cubes gather. */
-const SECTION_VH = 490;
+/* Pinned scroll: two flicks at most (Shrikar, 2026-09-30; it was 390vh).
+   The timeline below was tuned at 390vh, so the seam with the hero keeps
+   that rate: `sectionP` starts at it and eases up to a faster, steady rate
+   once the "e" blocks are gone, instead of scaling everything uniformly. */
+const SECTION_VH = 280;
+/** Pinned scroll (vh) the timeline was designed against. */
+const DESIGN_VH = 390;
+/** Scroll (vh) over which the rate eases from the design rate to the
+ *  section's own: past the hand-off, which lasts ~25vh of hero zoom. */
+const SEAM_VH = 50;
+/** Timeline progress at `s` vh into the pinned scroll. Rate starts at
+ *  1/DESIGN_VH, eases (cosine) to a steady `r1` by SEAM_VH, ends at 1. */
+function sectionP(s: number) {
+  const L = SECTION_VH - 100;
+  const r0 = 1 / DESIGN_VH;
+  const r1 = (1 - (r0 * SEAM_VH) / 2) / (L - SEAM_VH / 2);
+  const g = s < SEAM_VH ? s / 2 + (SEAM_VH / (2 * Math.PI)) * Math.sin((Math.PI * s) / SEAM_VH) : SEAM_VH / 2;
+  return r1 * s + (r0 - r1) * g;
+}
 const BG = '#FFFFFF';
 const INK = '#0A0A0A';
 /** The answer to the wall's question. Set as a Swiss poster: headline
@@ -44,9 +60,6 @@ const smooth = (a: number, b: number, v: number) => {
 };
 /** How much of the hero's animated scroll this section sits on top of. */
 const OVERLAP_VH = (1 - HANDOFF_P) * (HERO_VH - 100);
-/** Section progress per unit of the hero's own progress, for reading the
- *  hero's state at the hand-off. The hero animates over `HERO_VH - 100`. */
-const HERO_PER_SECTION = (SECTION_VH - 100) / (HERO_VH - 100);
 /** Anchor pixel ratio like the hero: same pixel budget, so the two canvases
  *  drawn on top of each other at the hand-off stay inside the GPU. */
 const MAX_DPR = 1.75;
@@ -110,10 +123,12 @@ export function ProblemCube() {
       const top = el.getBoundingClientRect().top + glide.raw;
       const scrollable = el.offsetHeight - window.innerHeight;
       if (scrollable <= 0) return;
-      const raw = (glide.y - top) / scrollable;
-      const p = Math.max(0, Math.min(1, raw));
+      // Scrolled into the pin, in vh. Negative before it pins.
+      const s = ((glide.y - top) / window.innerHeight) * 100;
+      const p = s <= 0 ? 0 : s >= SECTION_VH - 100 ? 1 : sectionP(s);
       progressRef.current = p;
-      heroPRef.current = HANDOFF_P + raw * HERO_PER_SECTION;
+      // The hero animates over `HERO_VH - 100`, at its own rate.
+      heroPRef.current = HANDOFF_P + s / (HERO_VH - 100);
       offsetRef.current = Math.max(0, top - glide.raw);
       /* The sheet behind the canvas shows once the mark has gone (the canvas
          drops its own white plane at the same moment); the lines rise out
