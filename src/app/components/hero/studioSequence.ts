@@ -95,7 +95,8 @@ const LOGO_ZOOM_MAX = 1400; // the gap is ~2 units of a 285-unit mark, so it nee
  *   0.26–0.50  door rolls up
  *   0.50–0.70  push through into the dark room, which starts to glow
  *   0.706      lights slam on
- *   0.73–0.86  the mark turns once
+ *   0.72–0.78  the lit mark holds still (it used to turn once here; the
+ *              mark never rotates, Shrikar/Rajat 2026-09-30)
  *   0.89–1.00  scale through the "e" gap into the next section, gliding
  *              onto the gap as the zoom begins (one move, not two) */
 const ANGLE_END = 0.24;
@@ -155,7 +156,7 @@ export const PANEL_SCALE0 = 0.7;
 export const PANEL_SCALE = 7.5;
 export const PANEL_TILT0 = Math.PI / 4;
 export const PANEL_TILT = -0.2;
-const PANEL_FROM = 0.85;
+const PANEL_FROM = 0.78;
 /** Hero progress from which the frame behind the mark is pure white. Section
  *  2 starts drawing here. The frame is covered well before (about 0.905);
  *  the rest is the settle. */
@@ -210,7 +211,8 @@ export function sampleSequence(p: number): SequenceState {
   const glow = GLOW_LEVEL * easeInOutSine(track(t, GLOW_FROM, LIGHTS_ON));
   const lights = lerp(glow, 1, easeInOutSine(track(t, LIGHTS_ON, LIGHTS_ON + 0.02)));
 
-  const logoSpin = easeInOutSine(track(t, 0.73, 0.86)) * Math.PI * 2;
+  // The mark never turns (2026-09-30): it holds square to the camera.
+  const logoSpin = 0;
   // Exponential, so the growth reads as a constant rush rather than a stall
   // that suddenly explodes at the end.
   const logoZoom = zoom;
@@ -248,4 +250,4 @@ export function gapHalfFraction(p: number): number {
 
 /** Composed resting shot for prefers-reduced-motion: inside, lights on, the
  *  mark facing the camera. */
-export const RESTING_STATE: SequenceState = sampleSequence(0.87);
+export const RESTING_STATE: SequenceState = sampleSequence(0.82);
