@@ -368,7 +368,13 @@ export function ProcessSpace({ arrival }: { arrival?: (inert: boolean) => ReactN
            the landing cost nothing on the frame they happen. */
         stageArrivalRef.current.style.opacity = !landed && lastDepth <= coverDepth ? '1' : '0';
         flowArrivalRef.current.style.opacity = landed ? '1' : '0';
-        flowArrivalRef.current.style.transform = landed ? `translate3d(0, ${(glide.raw - glide.y).toFixed(1)}px, 0)` : '';
+        /* Only while it is on screen and the lag is real: a transform left
+           on this tall copy keeps it composited under the team chapters and
+           halved the frame rate there. Once it has scrolled off, dropping
+           the offset is unseen. */
+        const lag = glide.raw - glide.y;
+        const onScreen = landingY - glide.raw + flowArrivalRef.current.offsetHeight > 0;
+        flowArrivalRef.current.style.transform = landed && onScreen && Math.abs(lag) >= 0.5 ? `translate3d(0, ${lag.toFixed(1)}px, 0)` : '';
         /* Scrolling back: the flow copy's films have been playing, the
            stage copy's are stills. On the frame the stage takes over, seek
            each still to the frame its film is on, so nothing jumps; the
