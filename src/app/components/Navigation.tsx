@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useScroll, useMotionValue, useSpring, useTransform, motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { Home, Monitor, Camera, Menu, X } from 'lucide-react';
+import { LayoutGrid, BookOpen, Box, Users, ArrowUpRight, Menu, X } from 'lucide-react';
 import { Logo } from './Logo';
 
 /* ─── 1Red floating navigation — two independent glass islands ────────────
@@ -41,10 +41,18 @@ const RED = '#EA3323';
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SPRING = { type: 'spring', stiffness: 420, damping: 34, mass: 0.6 } as const;
 
+/* The IA (2026-09-30): Work (every piece, filterable), Case studies (the
+   deep pages), The Box (how we work, was Studio), About. Home is the logo.
+   "Start a project" sits apart as the one call to action. */
 const NAV_ITEMS = [
-  { label: 'Home', path: '/', icon: Home },
-  { label: 'Studio', path: '/studio', icon: Camera },
+  { label: 'Work', path: '/work', icon: LayoutGrid },
+  { label: 'Case studies', path: '/case-studies', icon: BookOpen },
+  { label: 'The Box', path: '/the-box', icon: Box },
+  { label: 'About', path: '/about', icon: Users },
 ];
+const CTA = { label: 'Start a project', path: '/contact' };
+/** The nav item a path belongs to: a case study page lights Case studies. */
+const sectionOf = (pathname: string) => NAV_ITEMS.find((i) => pathname === i.path || pathname.startsWith(i.path + '/'))?.path ?? pathname;
 
 const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EA3323] focus-visible:rounded-[10px]';
 
@@ -149,7 +157,8 @@ export function Navigation() {
   const [hoverPath, setHoverPath] = useState<string | null>(null);
   const reduceMotion = useReducedMotion() ?? false;
   const isHome = location.pathname === '/';
-  const indicatorPath = hoverPath ?? location.pathname;
+  const section = sectionOf(location.pathname);
+  const indicatorPath = hoverPath ?? section;
 
   /* ── Entrance: homepage reveals after the hero; other routes are just present.
      Spring-smoothed so fast/jerky scrolling can't yank it around. ── */
@@ -267,12 +276,36 @@ export function Navigation() {
               {i > 0 && <span style={{ width: 1, alignSelf: 'stretch', margin: '10px 0', background: 'rgba(0,0,0,0.08)' }} />}
               <NavSegment
                 item={item}
-                active={location.pathname === item.path}
+                active={section === item.path}
                 indicated={indicatorPath === item.path}
                 onHover={() => setHoverPath(item.path)}
               />
             </div>
           ))}
+          <div style={{ display: 'flex', alignItems: 'center', padding: '0 6px 0 4px' }}>
+            <Link
+              to={CTA.path}
+              onMouseEnter={() => setHoverPath(null)}
+              className={`${focusRing} btn-corners`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                padding: '10px 14px',
+                background: RED,
+                color: 'white',
+                textDecoration: 'none',
+                fontFamily: 'var(--font-sans)',
+                fontSize: 13,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                boxShadow: location.pathname === CTA.path ? 'inset 0 0 0 1px rgba(255,255,255,0.5)' : 'none',
+              }}
+            >
+              {CTA.label}
+              <ArrowUpRight size={14} strokeWidth={2} />
+            </Link>
+          </div>
         </div>
       </motion.div>
 
@@ -355,22 +388,40 @@ export function Navigation() {
               right: 'clamp(14px, 4vw, 20px)',
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
+              alignItems: 'flex-end',
               gap: 8,
               pointerEvents: 'auto',
             }}
           >
-            {NAV_ITEMS.map((item) => {
-              const isActive = location.pathname === item.path;
+            {[...NAV_ITEMS, { ...CTA, icon: ArrowUpRight }].map((item) => {
+              const isActive = section === item.path;
+              const isCta = item.path === CTA.path;
               const Icon = item.icon;
               return (
                 <motion.div key={item.path} variants={itemVariants}>
                   <Link
                     to={item.path}
                     onClick={() => setOpen(false)}
-                    aria-label={item.label}
                     aria-current={isActive ? 'page' : undefined}
                     className={focusRing}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}
+                  >
+                    {/* The name beside each button: five icons alone read as a puzzle. */}
+                    <span
+                      style={{
+                        ...glassStyle,
+                        borderRadius: 10,
+                        padding: '7px 11px',
+                        fontFamily: 'var(--font-sans)',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: isActive || isCta ? RED : 'rgb(10,10,10)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                    <span
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -378,13 +429,15 @@ export function Navigation() {
                       width: 46,
                       height: 46,
                       borderRadius: 999,
-                      background: isActive ? RED : 'rgb(10,10,10)',
+                      background: isActive || isCta ? RED : 'rgb(10,10,10)',
+                      outline: isCta && isActive ? '2px solid white' : undefined,
                       color: 'white',
                       boxShadow: '0 8px 20px rgba(0,0,0,0.18)',
                       transition: 'transform 200ms cubic-bezier(0.22,1,0.36,1)',
                     }}
                   >
                     <Icon size={18} strokeWidth={1.7} color="white" />
+                    </span>
                   </Link>
                 </motion.div>
               );

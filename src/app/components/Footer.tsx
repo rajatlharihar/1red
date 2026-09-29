@@ -18,7 +18,7 @@ export const socialLinks = [
   { label: 'Dribbble',  href: '#' },
 ];
 
-const secondaryLinks = ['Contact', 'About', 'FAQs', 'Privacy Policy'];
+const secondaryLinks = ['Work', 'Case studies', 'The Box', 'About', 'Careers', 'Contact', 'Privacy Policy'];
 
 const tags = [
   'Branding',
@@ -168,7 +168,7 @@ function Tag({ label, delay }: { label: string; delay: number }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <Link to="/studio" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Link to="/the-box" style={{ textDecoration: 'none', color: 'inherit' }}>
       <motion.span
         animate={{
           backgroundColor: hovered ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0)',
@@ -403,7 +403,14 @@ export function Footer() {
                 onMouseEnter: (e: React.MouseEvent<HTMLElement>) => ((e.currentTarget as HTMLElement).style.opacity = '0.72'),
                 onMouseLeave: (e: React.MouseEvent<HTMLElement>) => ((e.currentTarget as HTMLElement).style.opacity = '0.36'),
               };
-              const routedLinks: Record<string, string> = { Contact: '/contact', 'Privacy Policy': '/privacy' };
+              const routedLinks: Record<string, string> = {
+                Work: '/work',
+                'Case studies': '/case-studies',
+                'The Box': '/the-box',
+                About: '/about',
+                Contact: '/contact',
+                'Privacy Policy': '/privacy',
+              };
               if (routedLinks[link]) {
                 return (
                   <Link
@@ -421,7 +428,7 @@ export function Footer() {
                 <motion.a
                   key={link}
                   {...motionProps}
-                  href="#"
+                  href={link === 'Careers' ? 'mailto:hi@1red.in?subject=Careers%20at%201Red' : '#'}
                   style={sharedStyle}
                 >
                   {link}
