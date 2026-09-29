@@ -100,11 +100,13 @@ function ProjectRow({
   index,
   activeValue,
   onJump,
+  onHover,
 }: {
   project: (typeof projects)[0];
   index: number;
   activeValue: MotionValue<number>;
   onJump: (i: number) => void;
+  onHover: (i: number) => void;
 }) {
   const closeness = useTransform(activeValue, (v) => Math.max(0, 1 - Math.abs(v - index)));
   const titleColor = useTransform(closeness, [0, 1], ['rgba(234,51,35,0.32)', RED]);
@@ -114,6 +116,9 @@ function ProjectRow({
 
   // A row with a page is a link to it; hovering any row brings its film
   // up in the panel. Rows without a page (Ground, Terrabarn) only do that.
+  // Hover never scrolls the page (it used to jump there, which yanked the
+  // scroll back whenever a row slid under a resting cursor, Shrikar
+  // 2026-09-30); only keyboard focus jumps.
   const rowStyle: React.CSSProperties = {
     display: 'block',
     width: '100%',
@@ -130,8 +135,10 @@ function ProjectRow({
   return (
     <Row
       {...(project.page ? { to: `/work/${project.id}` } : {})}
-      onMouseEnter={() => onJump(index)}
-      onFocus={() => onJump(index)}
+      onMouseEnter={() => onHover(index)}
+      onFocus={(e: React.FocusEvent<HTMLElement>) => {
+        if (e.currentTarget.matches(':focus-visible')) onJump(index);
+      }}
       className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
       style={rowStyle}
     >
@@ -441,9 +448,15 @@ export function FlashWork() {
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const rawProgress = useMotionValue(0);
-  const activeValue = useTransform(rawProgress, workActiveValue);
+  const scrollValue = useTransform(rawProgress, workActiveValue);
+  /* A hovered row previews its project; -1 = none. Any scroll clears it,
+     so the scroll position always wins again as soon as the user moves. */
+  const hoverValue = useMotionValue(-1);
+  const activeValue = useTransform([scrollValue, hoverValue], ([sv, hv]: number[]) => (hv >= 0 ? hv : sv));
   const [activeIndex, setActiveIndex] = useState(0);
   const lastIndexRef = useRef(0);
+
+  useEffect(() => scrollValue.on('change', () => hoverValue.set(-1)), [scrollValue, hoverValue]);
 
   useEffect(() => {
     return activeValue.on('change', (v) => {
@@ -620,7 +633,7 @@ export function FlashWork() {
             <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {Heading}
               {projects.map((project, i) => (
-                <ProjectRow key={project.number} project={project} index={i} activeValue={activeValue} onJump={jumpToIndex} />
+                <ProjectRow key={project.number} project={project} index={i} activeValue={activeValue} onJump={jumpToIndex} onHover={(idx) => hoverValue.set(idx)} />
               ))}
             </div>
 
