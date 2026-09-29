@@ -53,9 +53,6 @@ const D = 1200;
 const START_Z = -1.3 * D;
 const RUN_OUT = 1.0 * D;
 const TRAVEL = (process.length - 1) * D + P + RUN_OUT - START_Z;
-/** Section progress at which the camera has crossed the last panel: S2's
- *  cue. From here to 1 the frame is open space. */
-export const EXIT_P = ((process.length - 1) * D + P - START_Z) / TRAVEL;
 /** The next chapter is drawn in the stage a little short of the screen
  *  plane (about 92% size) as the last panel clears, and settles onto it as
  *  the section unpins. */
@@ -99,14 +96,59 @@ const SLOTS: Slot[] = [
   { col: -1, row: 1, z: 2.5 * D },
   { col: 0, row: 1, z: 3.5 * D },
 ];
-/** The camera pans onto 05 as it comes (over this stretch of its
- *  approach), so the last panel is passed head-on and covers the frame,
- *  which is what reveals the next chapter. */
-const STEER_FROM = 2.2 * D;
-const STEER_TO = 0.35 * D;
 /** Scale factor that makes a panel at opening depth `z − START_Z` project
  *  like one on the screen plane. */
 const openK = (z: number) => 1 + (z - START_Z) / P;
+
+/* ── The camera: one stop per number ────────────────────────────────────
+ * (Shrikar, 2026-09-30: "zoom in for each number".) The camera no longer
+ * runs straight in past the grid. It eases from the opening shot onto 01,
+ * framed head-on at `FRAME_H` of the frame's height, settles, then eases
+ * on to 02, and so on to 05; from 05 it pushes straight through, as it
+ * always has, which reveals the next chapter. Pan and depth share one
+ * eased curve per move, so each move is a single glide that slows onto
+ * its number. Keyframes are in section progress: [move start, arrive]. */
+const FRAME_H = 0.82;
+const MOVES: Array<[number, number]> = [
+  [0.05, 0.16],
+  [0.2, 0.33],
+  [0.37, 0.5],
+  [0.54, 0.67],
+  [0.71, 0.84],
+];
+/** From here the camera pushes through 05 to the end of its travel. */
+const PUSH_FROM = 0.87;
+const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
+
+type Cam = { z: number; x: number; y: number };
+/** The camera framing numbered panel `step` head-on for this frame size. */
+function stopFor(step: number, vw: number, vh: number): Cam {
+  const g = vw / vh >= 1 ? GRID.wide : GRID.portrait;
+  const slot = SLOTS.find((s) => s.step === step)!;
+  const k = openK(slot.z);
+  const worldW = g.openW * vw * k;
+  const wantW = Math.min((FRAME_H * vh) / ASPECT, 0.78 * vw);
+  // Projected size is worldW * P / (P + depth): solve for the depth.
+  const depth = (P * worldW) / wantW - P;
+  return { z: slot.z - depth, x: slot.col * g.col * vw * k, y: (slot.row * g.row + g.dy) * vh * k };
+}
+/** Camera at section progress `p`. */
+function cameraAt(p: number, vw: number, vh: number): Cam {
+  const stops: Cam[] = [{ z: START_Z, x: 0, y: 0 }, ...MOVES.map((_, i) => stopFor(i, vw, vh))];
+  const last = stops[stops.length - 1];
+  if (p >= PUSH_FROM) {
+    const t = easeInOutSine(clamp01((p - PUSH_FROM) / (1 - PUSH_FROM)));
+    return { z: last.z + (START_Z + TRAVEL - last.z) * t, x: last.x, y: last.y };
+  }
+  let i = 0;
+  while (i < MOVES.length && p >= MOVES[i][1]) i++;
+  if (i === MOVES.length) return last;
+  const [a, b] = MOVES[i];
+  const t = easeInOutSine(clamp01((p - a) / (b - a)));
+  const from = stops[i];
+  const to = stops[i + 1];
+  return { z: from.z + (to.z - from.z) * t, x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
+}
 
 /* The heading row leaves upward over this window of progress. */
 const HEAD_FROM = 0.05;
@@ -268,6 +310,7 @@ function useWide() {
 export function ProcessSpace({ arrival }: { arrival?: (inert: boolean) => ReactNode }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
+  const floorRef = useRef<HTMLDivElement>(null);
   const stageArrivalRef = useRef<HTMLDivElement>(null);
   const flowArrivalRef = useRef<HTMLDivElement>(null);
   const wide = useWide();
@@ -287,7 +330,8 @@ export function ProcessSpace({ arrival }: { arrival?: (inert: boolean) => ReactN
       const scrollable = (SECTION_VH / 100 - 1) * vh;
       if (scrollable <= 0) return;
       const p = clamp01((glide.y - top) / scrollable);
-      const camZ = START_Z + p * TRAVEL;
+      const cam = cameraAt(p, vw, vh);
+      const camZ = cam.z;
       /* The landing. The stage copy is placed by the glide, the flow copy
          by the raw scroll, and on a fast scroll the raw runs ahead. So once
          the glide has arrived (p = 1) the stage copy is carried up by the
@@ -344,11 +388,10 @@ export function ProcessSpace({ arrival }: { arrival?: (inert: boolean) => ReactN
       }
 
       const g = vw / vh >= 1 ? GRID.wide : GRID.portrait;
-      const last5 = SLOTS[4];
-      const steer = smooth(STEER_FROM, STEER_TO, last5.z - camZ);
-      const k5 = openK(last5.z);
-      const panX = last5.col * g.col * vw * k5 * steer;
-      const panY = (last5.row * g.row + g.dy) * vh * k5 * steer;
+      const panX = cam.x;
+      const panY = cam.y;
+      // The floor is in the world too: it moves with the camera's height.
+      if (floorRef.current) floorRef.current.style.transform = `translate(-50%, -50%) translateY(${(-panY).toFixed(1)}px) rotateX(90deg)`;
       groupRefs.current.forEach((group, i) => {
         const panel = panelRefs.current[i];
         if (!group || !panel) return;
@@ -385,6 +428,7 @@ export function ProcessSpace({ arrival }: { arrival?: (inert: boolean) => ReactN
           {/* The floor: one plane laid flat through the screen plane at
               FLOOR_Y, long enough both ways that neither edge ever shows. */}
           <div
+            ref={floorRef}
             style={{
               position: 'absolute',
               left: '50%',
