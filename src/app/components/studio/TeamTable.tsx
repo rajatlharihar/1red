@@ -56,10 +56,12 @@ const CAPTIONS: Array<{ at: number; text: string; side: 'left' | 'right'; red?: 
   { at: 0.84, text: 'Ads, at the far end.', side: 'right' },
   { at: 0.97, text: "Don't worry. The whole table's on it.", side: 'left', red: true },
 ];
-/** The corner rank runs like a flipbook while the page scrolls and
- *  settles back to the card's own rank when it stops. */
-const RANKS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '◆', '♠', '♥', '♣'];
-const RANK_STEP_PX = 36;
+/** The corner rank counts the journey: one number per stretch of the
+ *  table (one per caption), rolling slowly up to the next as the pan
+ *  reaches it. It used to flip every 36px of scroll, far too fast to read
+ *  (Shrikar, 2026-09-30). */
+const RANKS = CAPTIONS.map((_, i) => String(i + 1));
+const RANK_ROLL = 'transform 0.9s cubic-bezier(0.37, 0, 0.63, 1)';
 
 /** Seats along the table; `label` is what that seat does (from the
  *  disciplines in ServicesGrid). Top seats face down, bottom seats face up. */
@@ -260,7 +262,8 @@ function Picture() {
 }
 
 /** The red index, as on the reference: the rank and a diamond, mirrored
- *  in the opposite corner. The rank is 1, for the one collective. */
+ *  in the opposite corner. The rank is a column of numbers in a one-line
+ *  window; `rankRef` is the column, rolled by transform. */
 function Index({ flip, rankRef }: { flip?: boolean; rankRef: (el: HTMLSpanElement | null) => void }) {
   return (
     <div
@@ -280,7 +283,15 @@ function Index({ flip, rankRef }: { flip?: boolean; rankRef: (el: HTMLSpanElemen
         letterSpacing: '-0.04em',
       }}
     >
-      <span ref={rankRef} style={{ minWidth: '1.2em', textAlign: 'center' }}>1</span>
+      <span style={{ display: 'block', height: '1em', overflow: 'hidden', minWidth: '1.2em', textAlign: 'center' }}>
+        <span ref={rankRef} style={{ display: 'flex', flexDirection: 'column', transition: RANK_ROLL, willChange: 'transform' }}>
+          {RANKS.map((r) => (
+            <span key={r} style={{ display: 'block', height: '1em' }}>
+              {r}
+            </span>
+          ))}
+        </span>
+      </span>
       <span style={{ fontSize: '0.8em' }}>◆</span>
     </div>
   );
@@ -293,10 +304,10 @@ export function TeamTable() {
   const picRef = useRef<HTMLDivElement>(null);
   const captionRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const rankRefs = useRef<Array<HTMLSpanElement | null>>([]);
-  const rank = useRef({ lastY: 0, acc: 0, i: 0, timer: 0 });
+  const rankRef = useRef(0);
   const reduceMotion = useReducedMotion() ?? false;
 
-  const setRank = (text: string) => rankRefs.current.forEach((el) => el && (el.textContent = text));
+  const setRank = (i: number) => rankRefs.current.forEach((el) => el && (el.style.transform = `translateY(${-i}em)`));
 
   useEffect(() => {
     if (reduceMotion) return;
@@ -330,22 +341,10 @@ export function TeamTable() {
         el.style.opacity = on ? '1' : '0';
         el.style.transform = on ? 'translateY(0)' : 'translateY(0.35em)';
       });
-      // The rank flips with the scroll and settles when it stops.
-      const r = rank.current;
-      const dy = Math.abs(glide.y - r.lastY);
-      r.lastY = glide.y;
-      if (dy > 0.5) {
-        r.acc += dy;
-        if (r.acc >= RANK_STEP_PX) {
-          r.acc = 0;
-          r.i = (r.i + 1) % RANKS.length;
-          setRank(RANKS[r.i]);
-        }
-        window.clearTimeout(r.timer);
-        r.timer = window.setTimeout(() => {
-          r.i = 0;
-          setRank(RANKS[0]);
-        }, 160);
+      // One number per stretch, rolled when the stretch changes.
+      if (live !== rankRef.current) {
+        rankRef.current = live;
+        setRank(live);
       }
     });
   }, [reduceMotion]);
