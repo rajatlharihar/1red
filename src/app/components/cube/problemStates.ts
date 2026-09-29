@@ -61,7 +61,7 @@ export const PROBLEM_STATES: ProblemState[] = [
     category: 'Distance',
     problem: 'Feedback becomes a telephone game.',
     response: 'No account layer between you and the work.',
-    grounding: 'Team roster contains no account-management role — a verifiable absence',
+    grounding: 'Team roster contains no account-management role, a verifiable absence',
   },
   {
     n: '04',

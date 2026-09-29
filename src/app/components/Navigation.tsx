@@ -247,7 +247,7 @@ export function Navigation() {
       >
         <Link
           to="/"
-          aria-label="1Red — Home"
+          aria-label="1Red, home"
           className={focusRing}
           style={{ display: 'flex', alignItems: 'center', lineHeight: 0, textDecoration: 'none', padding: '10px 12px' }}
         >

@@ -36,7 +36,7 @@ const SERVICES = ['Branding', 'Web Design', 'UI/UX', 'Motion', 'Creative Strateg
 // No real phone/location exist anywhere in this project yet — clearly
 // placeholder values, same spirit as Footer's CONTACT_EMAIL, easy to swap.
 const PLACEHOLDER_PHONE = '+91 00000 00000';
-const PLACEHOLDER_LOCATION = 'India — working with clients worldwide';
+const PLACEHOLDER_LOCATION = 'India. Working with clients worldwide';
 
 const eyebrowStyle: React.CSSProperties = {
   fontSize: 10,
@@ -662,7 +662,7 @@ export function Contact() {
                               transition={{ duration: 0.32, ease: EASE }}
                               style={{ fontSize: 13, fontWeight: 600, color: RED, margin: 0, marginTop: 14, overflow: 'hidden' }}
                             >
-                              Hey {name.trim().split(' ')[0]}, good to meet you — let's get into it. 👋
+                              Hey {name.trim().split(' ')[0]}, good to meet you. Let's get into it. 👋
                             </motion.p>
                           )}
                         </AnimatePresence>
@@ -723,7 +723,7 @@ export function Contact() {
 
                       {status === 'error' && (
                         <p role="alert" style={{ fontSize: 13, color: '#d4183d', margin: 0 }}>
-                          Something went wrong sending that — please try again, or email us directly at {CONTACT_EMAIL}.
+                          Something went wrong sending that. Please try again, or email us directly at {CONTACT_EMAIL}.
                         </p>
                       )}
 
