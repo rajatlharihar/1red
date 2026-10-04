@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate, useParams } from 'react-router';
 import { Layout } from './components/Layout';
+import { RouteError } from './components/RouteError';
 
 /** Old project URLs (/work/<slug>, live until 2026-09-30) keep working. */
 function OldCaseStudy() {
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     Component: Layout,
+    ErrorBoundary: RouteError,
     children: [
       // Lazy like every other route, so /work, /contact and the rest never
       // download three.js and the hero; home fetches it in parallel at start.
