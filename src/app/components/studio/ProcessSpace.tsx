@@ -29,11 +29,11 @@ import { CUSTOM_DIGITS } from './customDigits';
  * ────────────────────────────────────────────────────────────────────────── */
 
 const INK = '#0A0A0A';
-const RED = '#EA3323';
+const RED = '#EB3F43';
 const RED_SOFT = '#FF5A4A';
 const BG = '#FFFFFF';
-const SKY = '#F2EFE8';
-const FLOOR = '#E9E6DE';
+const SKY = '#FFFFFF';
+const FLOOR = '#F4F4F4';
 
 /** Scroll per step, plus the pinned viewport. */
 const STEP_VH = 120;

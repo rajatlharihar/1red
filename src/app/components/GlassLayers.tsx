@@ -12,7 +12,7 @@ import { motion } from 'motion/react';
  * idle/hover states; CSS variables can't be crossfaded that way.
  * ────────────────────────────────────────────────────────────────────────── */
 
-export const GLASS_RED = '#EA3323';
+export const GLASS_RED = '#EB3F43';
 
 export const GLASS = {
   /** Standard backdrop-filter for a full glass surface. */
@@ -33,14 +33,14 @@ export const GLASS = {
 
   /** Red-tinted border — the "1Red accent as border" pattern. */
   border: {
-    idle: 'rgba(234,51,35,0.16)',
-    hover: 'rgba(234,51,35,0.34)',
+    idle: 'rgba(235,63,67,0.16)',
+    hover: 'rgba(235,63,67,0.34)',
   },
 
   /** Layered shadow: soft red-tinted ambient glow + tight neutral contact shadow + bright inset top edge ("light catching the material"). */
   shadow: {
-    idle: '0 16px 40px rgba(234,51,35,0.1), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)',
-    hover: '0 26px 54px rgba(234,51,35,0.16), 0 4px 14px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.75)',
+    idle: '0 16px 40px rgba(235,63,67,0.1), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)',
+    hover: '0 26px 54px rgba(235,63,67,0.16), 0 4px 14px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.75)',
   },
 
   /** Shared spring for hover-state transitions ("smoothest possible", per the Navigation precedent). */
@@ -64,7 +64,7 @@ export function GlassAmbient({ hovered }: { hovered: boolean }) {
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          background: 'radial-gradient(120% 90% at 100% 0%, rgba(234,51,35,0.14), transparent 55%)',
+          background: 'radial-gradient(120% 90% at 100% 0%, rgba(235,63,67,0.14), transparent 55%)',
         }}
       />
       <span

@@ -1,18 +1,16 @@
-import { ProcessSpace } from '../components/studio/ProcessSpace';
+import { EvidenceBoard } from '../components/studio/EvidenceBoard';
 import { TeamZoom } from '../components/studio/TeamZoom';
 import { TeamTable } from '../components/studio/TeamTable';
-import { ServicesGrid } from '../components/ServicesGrid';
 
-/* /studio: the process in depth (S1), whose camera runs on into "What we
-   cover" (S2, the same grid the Services page uses), then closes on the
-   team film (S3), and ends on the team card and its long table (S4). The
-   print version (StudioProcess.tsx) and the
-   older editorial page (Studio.tsx) are on disk / in git history if any of
-   it is wanted back. */
+/* /the-box (2026-10-04, Rajat): the process is an evidence board followed
+   along its red thread (EvidenceBoard), whose last pin is the team polaroid;
+   the camera dives into it and TeamZoom opens on that very frame, full
+   bleed, then the card table. "What we cover" (ServicesGrid) and the 3D
+   panels (ProcessSpace) are off this page; both files stay on disk. */
 export function StudioPage() {
   return (
     <>
-      <ProcessSpace arrival={(inert) => <ServicesGrid still inert={inert} />} />
+      <EvidenceBoard />
       <TeamZoom />
       <TeamTable />
     </>

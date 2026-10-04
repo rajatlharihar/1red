@@ -15,10 +15,10 @@ import * as THREE from 'three';
  * forbids outright — and the real mark is the payoff waiting inside.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const RED = '#EA3323';
+const RED = '#EB3F43';
 const INK = '#141210';
-const PAPER = '#F4F1EB';
-const CREAM = '#EFE9DE';
+const PAPER = '#FFFFFF';
+const CREAM = '#FFFFFF';
 
 const FONT = "'Outfit', system-ui, -apple-system, sans-serif";
 

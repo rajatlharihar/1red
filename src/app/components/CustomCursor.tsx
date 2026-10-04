@@ -30,6 +30,9 @@ export function CustomCursor() {
         translateY: '-50%',
         pointerEvents: 'none',
         zIndex: 9999,
+        // White drawn with a difference blend: black over light pages, white
+        // over dark ones, and an inverse over red, with no detection code.
+        mixBlendMode: 'difference',
         width: 20,
         height: 20,
       }}
@@ -41,7 +44,7 @@ export function CustomCursor() {
           left: 0,
           right: 0,
           height: 1.5,
-          background: 'black',
+          background: 'white',
           transform: 'translateY(-50%)',
         }}
       />
@@ -52,7 +55,7 @@ export function CustomCursor() {
           top: 0,
           bottom: 0,
           width: 1.5,
-          background: 'black',
+          background: 'white',
           transform: 'translateX(-50%)',
         }}
       />

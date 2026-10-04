@@ -1,36 +1,16 @@
-import { useSearchParams } from 'react-router';
 import { useReducedMotion } from 'motion/react';
-import { AboutHero, BrandsStrip, PeopleCard, AboutCTA } from '../components/about/shared';
-import { ChaptersPanels } from '../components/about/ChaptersPanels';
-import { ChaptersBox } from '../components/about/ChaptersBox';
-import { Manifesto, FactsStrip } from '../components/about/Manifesto';
+import { AboutHero, AboutCTA } from '../components/about/shared';
 
 /* ─── /about ───────────────────────────────────────────────────────────────
- * Hero (the Swiss row at the home poster's scale), the chapters (who, what,
- * why), the names on the table as a strip the scroll carries, the team card
- * rising onto the table, and the one call to action. The chapters are
- * picked: red panels in depth (default). ?v=b the turning box is kept for
- * comparison; ?v=c is Rajat's manifesto prototype (orbiting boxes that
- * burst) with a facts strip in place of hero and chapters. */
+ * 2026-10-04 (Rajat): "the first text and the last is enough". The red
+ * panels in depth and the beliefs rows are gone; the hero and the close
+ * remain. ChaptersPanels, ChaptersBox, Manifesto and Beliefs stay in the
+ * repo, unmounted, in case a later round wants one back. */
 export function AboutPage() {
   const reduceMotion = useReducedMotion() ?? false;
-  const [params] = useSearchParams();
-  const v = params.get('v');
   return (
     <main style={{ background: '#fff' }}>
-      {v === 'c' ? (
-        <>
-          <Manifesto reduceMotion={reduceMotion} />
-          <FactsStrip />
-        </>
-      ) : (
-        <>
-          <AboutHero reduceMotion={reduceMotion} />
-          {v === 'b' ? <ChaptersBox /> : <ChaptersPanels />}
-        </>
-      )}
-      <BrandsStrip reduceMotion={reduceMotion} />
-      <PeopleCard reduceMotion={reduceMotion} />
+      <AboutHero reduceMotion={reduceMotion} />
       <AboutCTA />
     </main>
   );

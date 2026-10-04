@@ -200,7 +200,7 @@ const BOX_DROP_WIDE = 1.0;
 /** ...and to the right on a wide frame, into the poster's empty lower-right
  *  column beside the headline: the camera slides left by this share of the
  *  frame's half-width at the box's depth. A portrait frame keeps it centred. */
-const BOX_SHIFT = 0.34;
+const BOX_SHIFT = 0; // 2026-10-04: Rajat wants the box dead centre
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -348,14 +348,50 @@ const _d = new THREE.Vector3();
 const _qTumble = new THREE.Quaternion();
 const _scale = new THREE.Vector3();
 const _m = new THREE.Matrix4();
+const _qInv = new THREE.Quaternion();
+const _qLand = new THREE.Quaternion();
+const _qBody = new THREE.Quaternion();
+const _qRoll = new THREE.Quaternion();
+const _cBody = new THREE.Vector3();
+const _v2 = new THREE.Vector3();
+const _yAxis = new THREE.Vector3(0, 1, 0);
+const _zAxis = new THREE.Vector3(0, 0, 1);
+const _tumbleAxis = new THREE.Vector3(1, 0, 0.35).normalize();
+const HALF_PI = Math.PI / 2;
+/* The fall, in box sides (L). The floor sits FLOOR_Y below the box's
+   centre; the box drifts LAND_Z back as it falls, so it lands smaller, the
+   way something dropped away from you does. The camera lifts RISE, backs
+   off BACK and tips down PITCH so the floor reads and the box shows its top. */
+const FLOOR_Y = -3.6;
+const FLOOR_Y_PORTRAIT = -5;
+const LAND_Z = -3.2; // farther back: the box lands smaller (Rajat: "a little smaller")
+const LAND_T = 0.74;
+const LAND_YAW = -0.42;
+const RISE = 0.9;
+const BACK = 1.6;
+const PITCH = 0.34;
+/* The roll: gravity term (rad/s^2), the scroll's push per face of lag,
+   and damping. */
+const ROLL_G = 34;
+const ROLL_PUSH = 120;
+const ROLL_PUSH_MAX = 140;
+const ROLL_DAMP = 3.6;
 
 export function CubeAssembly({
   progressRef,
   heroPRef,
   offsetRef,
   pointerRef,
+  dropRef,
+  rollRef,
 }: {
   progressRef: React.MutableRefObject<number>;
+  /** 0..1 over the pinned tail after the poster: the finished box falls out
+   *  of the bottom of the frame (2026-10-04), to land in the next section. */
+  dropRef?: React.MutableRefObject<number>;
+  /** 0..1 over the reading stretch after the drop: how far the box has
+   *  rolled toward the frame's right edge (the target the physics chases). */
+  rollRef?: React.MutableRefObject<number>;
   /** The hero's progress, unclamped: nothing is drawn until the frame
    *  behind the mark has gone white (`PANEL_TO`). */
   heroPRef: React.MutableRefObject<number>;
@@ -367,6 +403,20 @@ export function CubeAssembly({
   pointerRef: React.MutableRefObject<{ x: number; y: number }>;
 }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
+  const shadow = useRef<THREE.Mesh>(null);
+  const physRef = useRef({ k: 0, th: 0, w: 0 });
+  const shadowTex = useMemo(() => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const g = c.getContext('2d')!;
+    const r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    r.addColorStop(0, 'rgba(0,0,0,1)');
+    r.addColorStop(0.45, 'rgba(0,0,0,0.55)');
+    r.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = r;
+    g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  }, []);
   const backdrop = useRef<THREE.Mesh>(null);
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
@@ -385,9 +435,27 @@ export function CubeAssembly({
   }, [gl, scene]);
 
   const geo = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
+  /* Film grain in the paint (Rajat: "this cube to be in grain"): a grey
+     noise map multiplies the red, so every face carries the 1Red loop's
+     grain without a post pass. */
+  const grainMap = useMemo(() => {
+    const n = 128;
+    const data = new Uint8Array(n * n * 4);
+    for (let i = 0; i < n * n; i++) {
+      const v = 175 + Math.floor(Math.random() * 80);
+      data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = v;
+      data[i * 4 + 3] = 255;
+    }
+    const t = new THREE.DataTexture(data, n, n);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.magFilter = THREE.NearestFilter;
+    t.needsUpdate = true;
+    return t;
+  }, []);
   const mat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
+        map: grainMap,
         color: RED,
         roughness: 0.38,
         metalness: 0.92,
@@ -396,7 +464,7 @@ export function CubeAssembly({
         // of going cream, and the hand-off emissive is the mark's exact red.
         toneMapped: false,
       }),
-    []
+    [grainMap]
   );
   /* Ink edges on every cube: one fat-line geometry holding all 27 cubes'
      edges, its endpoints rewritten each frame from the instance matrices. */
@@ -446,7 +514,7 @@ export function CubeAssembly({
     []
   );
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const m = mesh.current;
     if (!m) return;
     const on = heroPRef.current >= PANEL_TO;
@@ -473,6 +541,7 @@ export function CubeAssembly({
       REST_ROT_Y + (1 - settle) * (p - 1) * DRIFT_Y + pointerRef.current.x * 0.14,
       0
     );
+    const drop = dropRef ? dropRef.current : 0;
     _qGroup.setFromEuler(_euler);
 
     /* The tunnel is laid out in one reference frame and then scaled about the
@@ -615,6 +684,105 @@ export function CubeAssembly({
       }
     }
 
+    /* Camera settle (moved up so the fall can build on it). */
+    const wide = aspect >= 1;
+    cam.position.z = lerp(CAM_Z, wide ? CAM_Z + 0.6 : CAM_Z - 0.4, settle);
+    cam.position.y = (wide ? BOX_DROP_WIDE : BOX_DROP) * settle;
+    const halfW = cam.position.z * TAN_HALF * aspect;
+    cam.position.x = wide ? -BOX_SHIFT * halfW * settle : 0;
+
+    /* ── The fall and the roll (Rajat 2026-10-04: "let the box fall from the
+       middle to continue the story", "proper physics", "make it a cube").
+       The finished box is one rigid body. Drop: the camera lifts and tips
+       down to look at a floor below; the box falls from where it stands
+       under gravity (height goes with the square of the scroll), turning
+       out of its poster angle and tumbling once, lands flat, and bounces
+       twice, smaller each time. Roll: a rigid cube pivoting on its leading
+       bottom edge; gravity holds it until the centre of mass passes over
+       the edge, then pulls it over; each landing keeps a quarter of the
+       spin (angular momentum about the new edge). The scroll pushes, so it
+       rolls back when you scroll back. */
+    const roll = rollRef ? rollRef.current : 0;
+    if (drop > 0) {
+      const L = 3 * unit;
+      const look = easeInOutSine(clamp01(drop / 0.55));
+      cam.position.y += RISE * L * look;
+      cam.position.z += BACK * L * look;
+      cam.rotation.set(-PITCH * look, 0, 0);
+      _qInv.copy(_qGroup).invert();
+      _qLand.setFromAxisAngle(_yAxis, LAND_YAW);
+      // A phone's paragraph runs taller, so its floor sits deeper.
+      const floorY = (aspect < 1 ? FLOOR_Y_PORTRAIT : FLOOR_Y) * L;
+      const landY = floorY + L / 2;
+      const landZ = LAND_Z * L;
+      const t = clamp01(drop / LAND_T);
+      // Free fall: x, z drift with time, y with its square.
+      _cBody.set(0, landY * t * t, landZ * t);
+      if (drop > LAND_T) {
+        const b = (drop - LAND_T) / (1 - LAND_T);
+        const hop = b < 0.62 ? 0.2 * Math.sin((b / 0.62) * Math.PI) : 0.06 * Math.sin(((b - 0.62) / 0.38) * Math.PI);
+        _cBody.y = landY + hop * L;
+      }
+      _qBody.copy(_qGroup).slerp(_qLand, easeInOutSine(t));
+      _qTumble.setFromAxisAngle(_tumbleAxis, Math.sin(Math.PI * t) * 1.1);
+      _qBody.premultiply(_qTumble);
+
+      if (drop >= 1) {
+        // Faces to roll until the whole box is past the frame's right edge.
+        const dist = cam.position.z - landZ;
+        const n = Math.ceil((dist * TAN_HALF * aspect) / L) + 2;
+        const st = physRef.current;
+        const dtAll = Math.min(0.033, delta || 0.016);
+        for (let i = 0; i < 4; i++) {
+          const h = dtAll / 4;
+          const pos = st.k + st.th / HALF_PI;
+          const err = roll * n - pos;
+          const push = Math.max(-ROLL_PUSH_MAX, Math.min(ROLL_PUSH_MAX, err * ROLL_PUSH));
+          const grav = st.th >= 0 ? ROLL_G * Math.sin(st.th - Math.PI / 4) : ROLL_G * Math.sin(st.th + Math.PI / 4);
+          const atRest = st.th === 0 && Math.abs(push) < ROLL_G * Math.SQRT1_2;
+          const acc = atRest ? 0 : grav + push - ROLL_DAMP * st.w;
+          st.w = atRest ? 0 : st.w + acc * h;
+          st.th += st.w * h;
+          if (st.th >= HALF_PI) { st.k += 1; st.th -= HALF_PI; st.w *= 0.25; }
+          else if (st.th <= -HALF_PI) { st.k -= 1; st.th += HALF_PI; st.w *= 0.25; }
+          if ((st.th < 0 && st.th - st.w * h > 0) || (st.th > 0 && st.th - st.w * h < 0)) {
+            if (Math.abs(st.w) < 4) { st.th = 0; st.w = 0; }
+          }
+          if (st.k <= 0 && st.th < 0) { st.k = 0; st.th = 0; st.w = 0; }
+          if (st.k >= n && st.th > 0) { st.k = n; st.th = 0; st.w = 0; }
+        }
+        const { k, th } = st;
+        // Centre about the pivot edge, in the floor's own frame (x along the roll).
+        const ph = -th;
+        const px = th >= 0 ? k * L + L / 2 : k * L - L / 2;
+        const rx = th >= 0 ? -L / 2 : L / 2;
+        const ry = L / 2;
+        _v2.set(px + rx * Math.cos(ph) - ry * Math.sin(ph), -L / 2 + rx * Math.sin(ph) + ry * Math.cos(ph), 0);
+        _v2.applyQuaternion(_qLand);
+        _cBody.set(_v2.x, landY + _v2.y, landZ + _v2.z);
+        _qRoll.setFromAxisAngle(_zAxis, ph);
+        _qBody.copy(_qLand).multiply(_qRoll);
+      } else {
+        physRef.current = { k: 0, th: 0, w: 0 };
+      }
+
+      for (const w of work) {
+        w.pos.applyQuaternion(_qInv).applyQuaternion(_qBody).add(_cBody);
+        w.quat.premultiply(_qInv).premultiply(_qBody);
+      }
+      if (shadow.current) {
+        const near = clamp01(1 - (_cBody.y - landY) / (2.5 * L));
+        shadow.current.visible = true;
+        shadow.current.position.set(_cBody.x, floorY + 0.002, _cBody.z);
+        shadow.current.scale.setScalar(L * (1.15 + 0.9 * (1 - near)));
+        (shadow.current.material as THREE.MeshBasicMaterial).opacity = 0.5 * near * near * smoothstep(0.08, 0.4, drop);
+      }
+    } else {
+      cam.rotation.set(0, 0, 0);
+      physRef.current = { k: 0, th: 0, w: 0 };
+      if (shadow.current) shadow.current.visible = false;
+    }
+
     const edgeBuf = lines.geometry.attributes.instanceStart.data as THREE.InstancedInterleavedBuffer;
     const edges = edgeBuf.array as Float32Array;
     for (let i = 0; i < COUNT; i++) {
@@ -645,11 +813,6 @@ export function CubeAssembly({
        headline. On a wide frame it also backs off a little and slides to
        the right, into the poster's empty lower-right; a portrait frame
        keeps it centred and closer. */
-    const wide = aspect >= 1;
-    cam.position.z = lerp(CAM_Z, wide ? CAM_Z + 0.6 : CAM_Z - 0.4, settle);
-    cam.position.y = (wide ? BOX_DROP_WIDE : BOX_DROP) * settle;
-    const halfW = cam.position.z * TAN_HALF * aspect;
-    cam.position.x = wide ? -BOX_SHIFT * halfW * settle : 0;
   });
 
   return (
@@ -659,6 +822,10 @@ export function CubeAssembly({
         <meshBasicMaterial color="#FFFFFF" toneMapped={false} />
       </mesh>
       <instancedMesh ref={mesh} args={[geo, mat, COUNT]} frustumCulled={false} />
+      <mesh ref={shadow} rotation={[-Math.PI / 2, 0, 0]} visible={false} renderOrder={-1} frustumCulled={false}>
+        <planeGeometry args={[1.6, 1.6]} />
+        <meshBasicMaterial map={shadowTex} transparent depthWrite={false} opacity={0} toneMapped={false} />
+      </mesh>
       <primitive object={lines} />
     </>
   );

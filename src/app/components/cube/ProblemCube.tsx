@@ -25,7 +25,24 @@ import { glide, subscribeGlide } from '../scrollGlide';
    The timeline below was tuned at 390vh, so the seam with the hero keeps
    that rate: `sectionP` starts at it and eases up to a faster, steady rate
    once the "e" blocks are gone, instead of scaling everything uniformly. */
-const SECTION_VH = 280;
+const SECTION_VH = 210; // 2026-10-04: Rajat, the gather can be shorter (was 280)
+/** Pinned tail after the poster: the box falls out of the frame's bottom,
+ *  into the next section (home/RedLine.tsx catches it). */
+export const DROP_VH = 90;
+/** Then the reading stretch: "who we are" inks in while the same box rolls
+ *  off the frame's right edge (this was home/RedLine.tsx, merged in so the
+ *  box never leaves its own renderer). */
+export const ROLL_VH = 240;
+const BEIGE = '#C9BDA4';
+type Word = { t: string; tone?: 'red' | 'beige' };
+const WHO: Word[] = [
+  ...'1Red is a creative collective from India. Strategists, designers, animators, developers and editors at one table.'.split(' ').map((t) => ({ t })),
+  ...'Most brands play it'.split(' ').map((t) => ({ t })),
+  { t: 'beige:', tone: 'beige' },
+  ...'safe, polite, forgotten by Tuesday. We make yours'.split(' ').map((t) => ({ t })),
+  ...'impossible to scroll past.'.split(' ').map((t) => ({ t, tone: 'red' as const })),
+  ...'The logo, the website and the campaign, made by the same people, so they finally sound like the same brand.'.split(' ').map((t) => ({ t })),
+];
 /** Pinned scroll (vh) the timeline was designed against. */
 const DESIGN_VH = 390;
 /** Scroll (vh) over which the rate eases from the design rate to the
@@ -45,13 +62,21 @@ const INK = '#0A0A0A';
 /** The answer to the wall's question. Set as a Swiss poster: headline
  *  flush-left over two lines, a small label top-right, one hairline rule
  *  under the headline, and the box settling bottom-right off-centre. */
-const LINES = ['Collab with', 'the whole box.'];
-const LABEL = 'Every skill. One collective. Yours too.';
+/* The answer to the wall ("Everyone says think outside the box."), set as
+ * Rajat placed it before: flush-left in the band beside the box, which now
+ * sits dead centre. Three ink lines, then a grey kicker. */
+const LINES: Array<{ t: string; grey?: boolean }> = [
+  { t: 'Be the' },
+  { t: 'red one.' },
+  { t: 'Strategy, brand, websites and campaigns, built to be remembered.', grey: true },
+];
+const LABEL = 'Strategy. Brand. Web. Campaigns. Motion. Whatever it takes.';
 /** Section progress over which each line rises out of its mask; the label
  *  rides with the first line, the rule draws after the second. */
 const LINE_REVEAL: Array<[number, number]> = [
-  [0.8, 0.9],
-  [0.85, 0.95],
+  [0.78, 0.9],
+  [0.82, 0.94],
+  [0.88, 0.98],
 ];
 const RULE_REVEAL: [number, number] = [0.88, 0.99];
 const smooth = (a: number, b: number, v: number) => {
@@ -80,6 +105,10 @@ export function ProblemCube() {
     return () => mq.removeEventListener('change', apply);
   }, []);
   const progressRef = useRef(0);
+  const dropRef = useRef(0);
+  const rollRef = useRef(0);
+  const whoRef = useRef<HTMLDivElement>(null);
+  const wordRefs = useRef<Array<HTMLSpanElement | null>>([]);
   /** The hero's own progress at this scroll position, unclamped, so the
    *  canvas can place the mark where the hero has it and know when the
    *  frame behind the mark has gone white. */
@@ -127,6 +156,24 @@ export function ProblemCube() {
       const s = ((glide.y - top) / window.innerHeight) * 100;
       const p = s <= 0 ? 0 : s >= SECTION_VH - 100 ? 1 : sectionP(s);
       progressRef.current = p;
+      const drop = Math.max(0, Math.min(1, (s - (SECTION_VH - 100)) / DROP_VH));
+      const roll = Math.max(0, Math.min(1, (s - (SECTION_VH - 100) - DROP_VH) / ROLL_VH));
+      dropRef.current = drop;
+      rollRef.current = smooth(0.06, 0.94, roll);
+      // The poster leaves upward into its masks as the box starts to fall;
+      // the paragraph arrives as it lands, then inks in word by word.
+      const out = smooth(0, 0.28, drop);
+      if (whoRef.current) {
+        const a = smooth(0.45, 0.85, drop);
+        whoRef.current.style.opacity = a.toFixed(3);
+        whoRef.current.style.transform = `translateY(${((1 - a) * 24).toFixed(1)}px)`;
+      }
+      const read = smooth(0.02, 0.8, roll) * (WHO.length + 2);
+      wordRefs.current.forEach((w, i) => {
+        if (!w) return;
+        const k = Math.max(0, Math.min(1, read - i));
+        w.style.opacity = (0.16 + 0.84 * k).toFixed(3);
+      });
       // The hero animates over `HERO_VH - 100`, at its own rate.
       heroPRef.current = HANDOFF_P + s / (HERO_VH - 100);
       offsetRef.current = Math.max(0, top - glide.raw);
@@ -137,14 +184,14 @@ export function ProblemCube() {
       lineRefs.current.forEach((el, i) => {
         if (!el) return;
         const t = smooth(LINE_REVEAL[i][0], LINE_REVEAL[i][1], p);
-        el.style.transform = `translateY(${((1 - t) * 110).toFixed(2)}%)`;
+        el.style.transform = `translateY(${((1 - t) * 110 - out * 110).toFixed(2)}%)`;
       });
       if (labelRef.current) {
         const t = smooth(LINE_REVEAL[0][0], LINE_REVEAL[0][1], p);
-        labelRef.current.style.transform = `translateY(${((1 - t) * 110).toFixed(2)}%)`;
+        labelRef.current.style.transform = `translateY(${((1 - t) * 110 - out * 110).toFixed(2)}%)`;
       }
       if (ruleRef.current) {
-        ruleRef.current.style.transform = `scaleX(${smooth(RULE_REVEAL[0], RULE_REVEAL[1], p).toFixed(4)})`;
+        ruleRef.current.style.transform = `scaleX(${(smooth(RULE_REVEAL[0], RULE_REVEAL[1], p) * (1 - out)).toFixed(4)})`;
       }
     });
   }, [reduceMotion]);
@@ -171,7 +218,7 @@ export function ProblemCube() {
         background: reduceMotion ? BG : 'transparent',
       }}
     >
-      <div ref={wrapRef} style={{ height: reduceMotion ? '100vh' : `${SECTION_VH}vh`, position: 'relative' }}>
+      <div ref={wrapRef} style={{ height: reduceMotion ? '100vh' : `${SECTION_VH + DROP_VH + ROLL_VH}vh`, position: 'relative' }}>
         <div
           onMouseMove={onPointerMove}
           style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}
@@ -180,6 +227,41 @@ export function ProblemCube() {
               gone; until then the canvas paints its own white for the mark
               to cut. */}
           <div ref={sheetRef} style={{ position: 'absolute', inset: 0, background: BG, opacity: reduceMotion ? 1 : 0 }}>
+            {/* Who we are: arrives as the box lands, inks in as it rolls away. */}
+            <div
+              ref={whoRef}
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: 'clamp(6rem, 17vh, 11rem)',
+                padding: '0 clamp(1rem, 4vw, 5rem)',
+                display: 'flex',
+                justifyContent: 'center',
+                opacity: reduceMotion ? 1 : 0,
+                pointerEvents: 'none',
+              }}
+            >
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(24px, min(3.3vw, 5.2vh), 58px)', fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.12, margin: 0, maxWidth: '21em', color: INK, textAlign: 'center' }}>
+                {WHO.map((w, i) => (
+                  <span key={i}>
+                    <span
+                      ref={(el) => {
+                        wordRefs.current[i] = el;
+                      }}
+                      style={{
+                        opacity: reduceMotion ? 1 : 0.16,
+                        color: w.tone === 'red' ? '#EB3F43' : w.tone === 'beige' ? BEIGE : INK,
+                        textDecoration: w.tone === 'beige' ? 'line-through' : 'none',
+                        textDecorationThickness: '0.06em',
+                      }}
+                    >
+                      {w.t}
+                    </span>{' '}
+                  </span>
+                ))}
+              </p>
+            </div>
             {/* The end state, after Rajat's own layout (.claude/refs/
                 cube-end-state-layout-rajat.png): one hairline across the
                 upper third, then one horizontal band: the headline
@@ -192,7 +274,7 @@ export function ProblemCube() {
                 position: 'absolute',
                 left: '11%',
                 right: '11%',
-                top: wide ? '28vh' : '16vh',
+                top: wide ? '28vh' : '36vh',
                 height: 1,
                 background: 'rgba(10,10,10,0.35)',
                 transformOrigin: 'left center',
@@ -203,30 +285,32 @@ export function ProblemCube() {
               aria-hidden={!reduceMotion}
               style={{
                 position: 'absolute',
-                left: '11%',
-                top: wide ? '62vh' : '30vh',
+                left: wide ? '6%' : '11%',
+                top: wide ? '58vh' : '24vh',
                 transform: 'translateY(-50%)',
-                width: wide ? '44vw' : '78vw',
+                width: wide ? '29vw' : '80vw',
                 pointerEvents: 'none',
                 color: INK,
               }}
             >
               {LINES.map((line, i) => (
-                <div key={line} style={{ overflow: 'hidden' }}>
+                <div key={line.t} style={{ overflow: 'hidden', marginTop: line.grey ? '0.5em' : 0 }}>
                   <span
                     ref={(el) => {
                       lineRefs.current[i] = el;
                     }}
                     style={{
                       display: 'block',
-                      fontSize: 'clamp(34px, 4.8vw, 80px)',
+                      fontSize: line.grey ? (wide ? 'clamp(16px, 1.3vw, 24px)' : 'clamp(15px, 4.2vw, 20px)') : wide ? 'clamp(54px, 6vw, 116px)' : 'clamp(48px, 15vw, 76px)',
+                      lineHeight: line.grey ? 1.3 : 0.92,
+                      maxWidth: line.grey ? '22em' : undefined,
                       fontWeight: 500,
-                      letterSpacing: '-0.03em',
-                      lineHeight: 1.0,
+                      color: line.grey ? 'rgba(10,10,10,0.45)' : INK,
+                      letterSpacing: '-0.04em',
                       transform: reduceMotion ? 'none' : 'translateY(110%)',
                     }}
                   >
-                    {line}
+                    {line.t === 'red one.' ? <span style={{ color: '#EB3F43' }}>{line.t}</span> : line.t}
                   </span>
                 </div>
               ))}
@@ -234,7 +318,7 @@ export function ProblemCube() {
             <div
               style={{
                 position: 'absolute',
-                ...(wide ? { left: '84%', top: '62vh', transform: 'translateY(-50%)' } : { left: '11%', top: '80vh' }),
+                ...(wide ? { left: '72%', top: '62vh', transform: 'translateY(-50%)' } : { left: '11%', top: '84vh' }),
                 overflow: 'hidden',
                 pointerEvents: 'none',
               }}
@@ -253,11 +337,11 @@ export function ProblemCube() {
                   transform: reduceMotion ? 'none' : 'translateY(110%)',
                 }}
               >
-                Every skill.
+                Strategy. Brand. Web.
                 <br />
-                One collective.
+                Campaigns. Motion.
                 <br />
-                Yours too.
+                Whatever it takes.
               </span>
             </div>
           </div>
@@ -269,7 +353,7 @@ export function ProblemCube() {
               camera={{ position: [0, 0, CAM_Z], fov: FOV }}
             >
               <CubeLighting />
-              <CubeAssembly progressRef={progressRef} heroPRef={heroPRef} offsetRef={offsetRef} pointerRef={pointerRef} />
+              <CubeAssembly progressRef={progressRef} heroPRef={heroPRef} offsetRef={offsetRef} pointerRef={pointerRef} dropRef={dropRef} rollRef={rollRef} />
               {!reduceMotion && (
                 <Suspense fallback={null}>
                   <MarkOccluder heroPRef={heroPRef} />

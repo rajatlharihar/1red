@@ -130,7 +130,17 @@ export function StudioEnvironment({
   }, [onReady]);
 
   const scene = useMemo(() => {
-    const s = gltf.scene;
+    /* A fresh copy per mount (2026-10-04 fix). useLoader caches the parsed
+       glb for the whole session, and this block used to restyle that cached
+       scene in place: it swapped and disposed the glb's own materials and
+       hung edge lines and silhouette shells on its meshes. Coming back to
+       the home page from another route ran it again on the already-styled
+       scene: the material names were gone, so the cyc, the floor and the
+       softbox fronts all fell through to ink, and every line and shell was
+       added a second time (the stray cream boards Rajat kept seeing). The
+       cached original is now never touched: the clone shares its
+       geometries (read-only here) and only the clone is restyled. */
+    const s = gltf.scene.clone(true);
     /* Cut the fallen stand (Tripod_6): a light lying knocked over on the
        floor, not part of the shot Rajat wants. */
     const fallen = s.getObjectByName('Studio_Setup_Tripod_6');
@@ -138,8 +148,9 @@ export function StudioEnvironment({
     s.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh) return;
+      // The glb's own material (shared with the cached original): read its
+      // name, never dispose it.
       const name = (m.material as THREE.Material).name;
-      (m.material as THREE.Material).dispose();
       m.material =
         name === 'paper' ? mats.paper : name === 'floor' ? mats.floor : name === 'glow' ? mats.glow : mats.ink;
     });
@@ -169,6 +180,14 @@ export function StudioEnvironment({
     }
     return s;
   }, [gltf, mats, hull]);
+  // The lines built for this copy are this copy's own; free them on unmount.
+  useEffect(
+    () => () =>
+      scene.traverse((o) => {
+        if (o instanceof LineSegments2) o.geometry.dispose();
+      }),
+    [scene],
+  );
 
   const root = useRef<THREE.Group>(null);
   const lamps = useRef<Lamp[] | null>(null);

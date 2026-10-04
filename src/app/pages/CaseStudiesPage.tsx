@@ -3,18 +3,19 @@ import { Link } from 'react-router';
 import { motion, useReducedMotion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import projectsData from '../data/projects.json';
+import { CASE_STORIES } from '../data/caseStories';
 
 /* ─── /case-studies — the deep stories ─────────────────────────────────────
  * The projects with a page of their own (`page` in projects.json), one row
  * each: the cover plate large on one side, and on the other the number,
  * name, what it was, the one line and what we delivered. The row opens
- * /case-studies/<slug>, the Behance presentation. /work is the wide
+ * /case-studies/<slug>, the brand's story (data/caseStories.ts). /work is the wide
  * showcase; this is where the whole story lives.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const RED = '#EA3323';
+const RED = '#EB3F43';
 const INK = 'rgb(10,10,10)';
-const PAPER = '#F2EFE8';
+const PAPER = '#F3F3F3';
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 type Project = (typeof projectsData)[0] & { hidden?: boolean; page?: boolean; thumb?: string };
@@ -27,10 +28,11 @@ const label: React.CSSProperties = {
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
 };
-const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]';
+const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EB3F43]';
 
 function Row({ p, i, reduceMotion }: { p: Project; i: number; reduceMotion: boolean }) {
   const [hover, setHover] = useState(false);
+  const story = CASE_STORIES[p.id];
   return (
     <motion.li
       initial={reduceMotion ? false : { opacity: 0, y: 32, filter: 'blur(6px)' }}
@@ -61,24 +63,25 @@ function Row({ p, i, reduceMotion }: { p: Project; i: number; reduceMotion: bool
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
               <span style={{ ...label, color: RED }}>{p.number}</span>
               <span style={{ ...label, opacity: 0.45 }}>
-                {p.category} . {p.year}
+                {story?.note ? 'Concept' : p.category} . {p.year}
               </span>
             </div>
-            <h2 style={{ margin: 'clamp(12px, 2vh, 20px) 0 0', fontFamily: 'var(--font-sans)', fontSize: 'clamp(44px, 5.4vw, 96px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 0.95, color: hover ? RED : INK, transition: 'color 300ms ease-out' }}>
-              {p.title}
+            <h2 style={{ margin: 'clamp(12px, 2vh, 20px) 0 0', fontFamily: 'var(--font-sans)', fontSize: 'clamp(44px, 5.4vw, 96px)', fontWeight: 500, letterSpacing: '-0.045em', lineHeight: 0.95, color: hover ? RED : INK, transition: 'color 300ms ease-out' }}>
+              {p.title}.
             </h2>
-            <p style={{ margin: 'clamp(14px, 2.4vh, 24px) 0 0', fontSize: 'clamp(15px, 1.15vw, 18px)', lineHeight: 1.5, opacity: 0.6, maxWidth: 520 }}>{p.overview}</p>
+            {story && <p style={{ margin: '10px 0 0', fontFamily: 'var(--font-sans)', fontSize: 'clamp(22px, 2vw, 32px)', fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.1, opacity: 0.4 }}>{story.tagline}</p>}
+            <p style={{ margin: 'clamp(14px, 2.4vh, 24px) 0 0', fontSize: 'clamp(15px, 1.15vw, 18px)', lineHeight: 1.5, opacity: 0.6, maxWidth: 520 }}>{story ? story.chapters[0].body : p.overview}</p>
           </div>
           <div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
-              {p.deliverables.slice(0, 4).map((d) => (
+              {(story?.scope ?? p.deliverables).slice(0, 4).map((d) => (
                 <span key={d} className="btn-corners" style={{ ...label, fontSize: 9, letterSpacing: '0.16em', padding: '6px 10px', border: '1px solid rgba(10,10,10,0.14)', opacity: 0.7 }}>
                   {d}
                 </span>
               ))}
             </div>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ ...label, fontSize: 11, letterSpacing: '0.16em' }}>Read the case study</span>
+              <span style={{ ...label, fontSize: 11, letterSpacing: '0.16em' }}>Read the story</span>
               <motion.span animate={{ x: hover && !reduceMotion ? 6 : 0 }} transition={{ type: 'spring', bounce: 0, duration: 0.4 }} style={{ display: 'inline-flex' }}>
                 <ArrowRight size={16} strokeWidth={2} color={RED} />
               </motion.span>
@@ -103,9 +106,9 @@ export function CaseStudiesPage() {
               transition={{ duration: 0.8, ease: EASE }}
               style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(40px, 6vw, 104px)', fontWeight: 500, letterSpacing: '-0.035em', lineHeight: 0.98, margin: 0 }}
             >
-              The whole story,
+              The long versions.
               <br />
-              start to finish.
+              <span style={{ opacity: 0.4 }}>Snacks recommended.</span>
             </motion.h1>
           </div>
           <div className="overflow-hidden" style={{ flexShrink: 0, paddingTop: '0.6em' }}>
@@ -125,7 +128,7 @@ export function CaseStudiesPage() {
           <p style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 'clamp(22px, 2.4vw, 36px)', fontWeight: 500, letterSpacing: '-0.03em' }}>More pieces, every discipline.</p>
           <Link to="/work" className={focusRing} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 12, textDecoration: 'none', color: INK }}>
             <span style={{ ...label, opacity: 0.5 }}>See</span>
-            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(22px, 2.4vw, 34px)', fontWeight: 800, letterSpacing: '-0.03em' }}>All work</span>
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(22px, 2.4vw, 34px)', fontWeight: 500, letterSpacing: '-0.03em' }}>All work</span>
             <ArrowRight size={18} strokeWidth={2} color={RED} />
           </Link>
         </div>

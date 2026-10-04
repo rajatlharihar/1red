@@ -48,8 +48,8 @@ const RED = '#FF0000'; // full-intensity red; room and mark skip tone mapping
  * Flat paper-coloured planes; ink edges where two surfaces meet do the
  * describing. The lines are the edges of the real geometry, so they move,
  * foreshorten and cross correctly as the camera travels. */
-const CREAM = '#E7E1CE';
-const CREAM_DOOR = '#E2DCC7';
+const CREAM = '#FFFFFF'; // 2026-10-04: Rajat, no beige anywhere
+const CREAM_DOOR = '#F2F2F2';
 
 const FACADE_COL = CREAM;
 const VOID_COL = '#EDE8D9';

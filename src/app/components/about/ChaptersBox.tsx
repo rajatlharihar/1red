@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { services } from '../ServicesGrid';
-import { Digit, RED, INK, SKY, clamp01, easeInOutSine, label, usePinned, WHO, WHAT, WHY } from './shared';
+import { Digit, RED, INK, clamp01, easeInOutSine, label, usePinned, WHO, WHAT, WHY } from './shared';
 
 /* ─── About, option B: the box turns ───────────────────────────────────────
  * The home page's line, "Collab with the whole box", taken literally: one
@@ -12,6 +12,8 @@ import { Digit, RED, INK, SKY, clamp01, easeInOutSine, label, usePinned, WHO, WH
  * Each turn lifts the box a little as it goes, so it reads as a solid.
  * ────────────────────────────────────────────────────────────────────────── */
 
+/** Type on the red is white now (no cream, 2026-10-04). */
+const SKY = '#FFFFFF';
 const SECTION_VH = 540;
 /** Box orientation at each stop: [rotateX, rotateY] in degrees. */
 const OPEN: [number, number] = [-22, 34];

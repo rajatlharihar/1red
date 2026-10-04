@@ -19,7 +19,7 @@ import { process } from '../data/process';
  * caption is live-region HTML under it.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const RED = '#EA3323';
+const RED = '#EB3F43';
 const INK = '#0a0a0a';
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -86,7 +86,7 @@ export function StudioProcess() {
     <main
       ref={ref}
       style={{
-        background: '#F2EFE8',
+        background: '#FFFFFF',
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
@@ -143,7 +143,7 @@ export function StudioProcess() {
         >
           {/* The horizon: the sheet's lower band is a shade darker, and runs
               off both edges of the page (the SVG overflows; main clips). */}
-          <rect x={-6000} y={HORIZON} width={12000} height={6000} fill="#E9E6DE" />
+          <rect x={-6000} y={HORIZON} width={12000} height={6000} fill="#F4F4F4" />
 
           <defs>
             {/* Rough, printed edge: the block's outline is displaced by noise. */}

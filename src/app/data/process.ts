@@ -29,27 +29,27 @@ const steps: Array<Omit<ProcessStep, 'detail'>> = [
   {
     number: '01',
     title: 'Discover',
-    description: 'Understanding goals, audience, competitors, and the hidden opportunities that make great work possible.',
+    description: 'We ask the awkward questions early: who buys, why, and what your competitors keep getting wrong.',
   },
   {
     number: '02',
     title: 'Define',
-    description: 'Building positioning, content direction, and a creative roadmap that aligns teams and focuses effort.',
+    description: 'One idea, written in one line, that the logo, the site and the ads all have to answer to.',
   },
   {
     number: '03',
     title: 'Design',
-    description: 'Creating visual systems, interfaces, and brand assets that communicate clearly and feel premium.',
+    description: 'Systems, screens and assets. Pretty is the minimum. Clear is the actual job.',
   },
   {
     number: '04',
     title: 'Deliver',
-    description: 'Developing websites, animations, and digital experiences built for performance and longevity.',
+    description: 'Built fast, shipped properly, and tested on the cheap phone too, not just the founder’s.',
   },
   {
     number: '05',
     title: 'Refine',
-    description: 'Optimisation, analytics review, and continuous iteration so results compound over time.',
+    description: 'We watch the numbers after launch. Then we make it better. Then again.',
   },
 ];
 

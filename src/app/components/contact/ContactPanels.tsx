@@ -73,7 +73,7 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   background: 'transparent',
   border: 'none',
-  borderBottom: '1.5px solid rgba(242,239,232,0.55)',
+  borderBottom: '1.5px solid rgba(255,255,255,0.55)',
   color: SKY,
   fontFamily: 'var(--font-sans)',
   fontSize: 'clamp(17px, 1.4vw, 21px)',
@@ -253,7 +253,7 @@ export function BoxMotif() {
   return (
     <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-start' }}>
       <svg viewBox="0 0 100 100" style={{ width: 'clamp(84px, 9vw, 132px)', height: 'auto', display: 'block' }} aria-hidden>
-        <path d="M50 8 L90 30 L50 52 L10 30 Z" fill="#F2EFE8" />
+        <path d="M50 8 L90 30 L50 52 L10 30 Z" fill="#FFFFFF" />
         <path d="M10 30 L50 52 L50 96 L10 74 Z" fill="#DCD4C4" />
         <path d="M90 30 L50 52 L50 96 L90 74 Z" fill="#C4BAA6" />
       </svg>
@@ -274,9 +274,9 @@ export function ContactHead() {
             transition={{ duration: 0.8, ease: EASE }}
             style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(44px, 7vw, 128px)', fontWeight: 500, letterSpacing: '-0.045em', lineHeight: 0.94, margin: 0 }}
           >
-            Got an idea that
+            Spill it.
             <br />
-            needs every <span style={{ color: RED }}>skill?</span>
+            We read <span style={{ color: RED }}>everything.</span>
           </motion.h1>
         </div>
         <div className="overflow-hidden" style={{ flexShrink: 0, paddingTop: '0.8em' }}>

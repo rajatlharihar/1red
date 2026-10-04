@@ -14,9 +14,9 @@ import { motion } from 'motion/react';
 
 const INK = '#0A0A0A';
 const RULE = 'rgba(10,10,10,0.14)';
-const RED = '#EA3323';
+const RED = '#EB3F43';
 const RED_SOFT = '#FF5A4A';
-const SKY = '#F2EFE8';
+const SKY = '#FFFFFF';
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /* Websites and UI/UX are one thing here: the product and the site are
@@ -30,7 +30,7 @@ export const services = [
     eyebrow: 'Web & product',
     title: 'Websites & UI/UX',
     description:
-      'The site and the product, designed as one. Research, flows and prototypes through to a build that is fast, responsive and made to convert.',
+      'The site and the product, designed as one. Research, flows and prototypes through to a build that is fast, responsive and made to convert. No "Welcome to our website". Ever.',
     tags: ['Web Design', 'UI/UX', 'Prototyping', 'Design Systems', 'Webflow', 'E-commerce'],
     video: '/videos/app-showcase.mp4',
   },
@@ -39,7 +39,7 @@ export const services = [
     eyebrow: 'Identity',
     title: 'Brand Identity',
     description:
-      'A mark, a voice and a visual language that hold together everywhere they appear. Logo systems, typography, guidelines: the whole kit.',
+      'A mark, a voice and a visual language that hold together everywhere they appear. Logo systems, typography, guidelines: the whole kit. Works on white. And on everything else.',
     tags: ['Logo Design', 'Visual Identity', 'Brand Strategy', 'Typography', 'Art Direction'],
     video: '/videos/apptile-logomotion.mp4',
   },

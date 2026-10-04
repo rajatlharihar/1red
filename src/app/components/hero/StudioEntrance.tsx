@@ -23,7 +23,7 @@ import { HERO_FOV } from './studioSequence';
  * There is exactly one scroll listener and one source of truth.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const RED = '#EA3323';
+const RED = '#EB3F43';
 export const SCROLL_VH = 600;
 /** Hero progress where section 2 takes over the screen: the "e" gap has
  *  swallowed most of the frame and the red is splitting past the edges. */
@@ -64,7 +64,7 @@ function EntranceFallback() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(180deg, #F6F3EE 0%, #FFFFFF 66%, #121110 66%, #121110 100%)',
+        background: 'linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 66%, #121110 66%, #121110 100%)',
         overflow: 'hidden',
       }}
     >
@@ -237,7 +237,7 @@ export function StudioEntrance() {
                 color: 'rgba(10,10,10,0.5)',
               }}
             >
-              The answer is inside
+              So let's not be safe. Come in.
             </span>
             <motion.span
               animate={{ y: [0, 7, 0] }}

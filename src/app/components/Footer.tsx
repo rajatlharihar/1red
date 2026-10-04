@@ -30,9 +30,9 @@ const tags = [
 ];
 
 const headlineLines = [
-  'Ready to build',
-  'something people',
-  "won't forget?",
+  'Still scrolling?',
+  'That’s a sign.',
+  'Say hi.',
 ];
 
 /* ─── Magnetic CTA button ────────────────────────────────────────────────── */
@@ -448,7 +448,7 @@ export function Footer() {
               opacity: 0.24,
             }}
           >
-            © 2026 Studio. All rights reserved.
+            © 2026 1Red. All rights red-served.
           </motion.p>
         </div>
       </div>

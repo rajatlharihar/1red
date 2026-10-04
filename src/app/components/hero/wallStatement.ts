@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { HERO_FOV, FACADE_Z, doorRimX, facadeFrontZ, sampleSequence } from './studioSequence';
 
 /* ─── The statement on the wall ────────────────────────────────────────────
- * "Got an idea that needs every skill?" lettered on the facade to the
+ * "Nobody remembers the safe one." lettered on the facade: the first
+ * beat of the home story (wall line, then the mark, then the box's answer) to the
  * right of the door, as signage painted on the building rather than a
  * caption over the picture. It lives on the wall plane, so the opening sweep
  * carries it: it foreshortens with the wall and slides out of frame as the
@@ -18,7 +19,7 @@ import { HERO_FOV, FACADE_Z, doorRimX, facadeFrontZ, sampleSequence } from './st
  * jamb). Lines are horizontal on the wall, as painted lettering would be.
  * ────────────────────────────────────────────────────────────────────────── */
 
-export const STATEMENT = 'Got an idea that needs every skill?';
+export const STATEMENT = 'Nobody remembers the safe one.';
 
 const INK = '#0A0A0A';
 const RED = '#FF0000';
@@ -40,9 +41,9 @@ const Y_MAX = 5.2;
 /** Candidate line breaks, longest-first lines are fine; the fitter picks the
  *  set that gives the biggest type for the patch of wall available. */
 const BREAKS: string[][] = [
-  ['GOT AN IDEA', 'THAT NEEDS', 'EVERY SKILL?'],
-  ['GOT AN IDEA', 'THAT NEEDS', 'EVERY', 'SKILL?'],
-  ['GOT AN', 'IDEA', 'THAT', 'NEEDS', 'EVERY', 'SKILL?'],
+  ['NOBODY', 'REMEMBERS', 'THE SAFE ONE.'],
+  ['NOBODY', 'REMEMBERS', 'THE SAFE', 'ONE.'],
+  ['NOBODY', 'REMEM-', 'BERS THE', 'SAFE ONE.'],
 ];
 
 interface Line {
@@ -265,7 +266,7 @@ export function createWallStatement(aspect: number, canvasPx: number): WallState
       let x = (line.x - layout.x0) * pxPerMetre;
       const y = (layout.y1 - line.y) * pxPerMetre;
       for (const chr of line.text) {
-        ctx.fillStyle = chr === '?' ? RED : INK;
+        ctx.fillStyle = chr === '?' || chr === '.' ? RED : INK;
         ctx.fillText(chr, x, y);
         x += ctx.measureText(chr).width + TRACKING * em;
       }

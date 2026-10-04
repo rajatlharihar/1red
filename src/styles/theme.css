@@ -238,5 +238,40 @@
 .fill-btn:hover .fill-btn__label > span:first-child { transform: translateY(-120%); }
 .fill-btn:hover .fill-btn__label > span:nth-child(2) { transform: translateY(0); }
 .fill-btn:hover .fill-btn__icon { transform: translate(2px, -2px); }
-.fill-btn--red { --fill-btn-fg: #fff; --fill-btn-bg: #EA3323; --fill-btn-border: #EA3323; --fill-btn-fill: #0A0A0A; --fill-btn-fill-fg: #fff; }
-.fill-btn--red-outline { --fill-btn-fg: #EA3323; --fill-btn-bg: transparent; --fill-btn-border: #EA3323; --fill-btn-fill: #EA3323; --fill-btn-fill-fg: #fff; }
+.fill-btn--red { --fill-btn-fg: #fff; --fill-btn-bg: #EB3F43; --fill-btn-border: #EB3F43; --fill-btn-fill: #0A0A0A; --fill-btn-fill-fg: #fff; }
+.fill-btn--red-outline { --fill-btn-fg: #EB3F43; --fill-btn-bg: transparent; --fill-btn-border: #EB3F43; --fill-btn-fill: #EB3F43; --fill-btn-fill-fg: #fff; }
+
+/* Film grain (home/Grain.tsx): the tile jumps between offsets in steps,
+   which reads as live grain; transform only, so it stays on the compositor. */
+@keyframes grain-move {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  20% { transform: translate(-15%, 5%); }
+  30% { transform: translate(7%, -25%); }
+  40% { transform: translate(-5%, 25%); }
+  50% { transform: translate(-15%, 10%); }
+  60% { transform: translate(15%, 0%); }
+  70% { transform: translate(0%, 15%); }
+  80% { transform: translate(3%, 35%); }
+  90% { transform: translate(-10%, 10%); }
+  100% { transform: translate(0, 0); }
+}
+.grain-move { animation: grain-move 1s steps(10) infinite; will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .grain-move { animation: none; } }
+
+/* The nav mark as frosted glass (2026-10-04): the nav islands' blur and
+   saturation, tinted 1Red red, cut to the logo's own blocks by a mask of the
+   real vector. A top shine stands in for the islands' inset highlight. */
+.logo-glass { position: relative; display: block; aspect-ratio: 285 / 174; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.28)); }
+.logo-glass__frost, .logo-glass__shine {
+  position: absolute; inset: 0;
+  -webkit-mask: url(/1red-logo.svg) center / 100% 100% no-repeat;
+  mask: url(/1red-logo.svg) center / 100% 100% no-repeat;
+}
+.logo-glass__frost {
+  /* Bold logo red, opaque (Rajat: "bold red, seen on top of anything"). */
+  background: #FF0000;
+}
+.logo-glass__shine {
+  background: linear-gradient(170deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.06) 34%, rgba(255, 255, 255, 0) 60%);
+}

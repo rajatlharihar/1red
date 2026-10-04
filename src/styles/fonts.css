@@ -1,6 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Caveat:wght@500;700&family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
   --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Abril Fatface', ui-serif, serif;
+  --font-hand: 'Caveat', 'Bradley Hand', cursive;
 }

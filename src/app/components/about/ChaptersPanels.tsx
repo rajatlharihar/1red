@@ -1,6 +1,5 @@
 import { useRef } from 'react';
-import { services } from '../ServicesGrid';
-import { Digit, RedPanel, SKY, FLOOR, INK, clamp01, easeInOutSine, label, usePinned, WHO, WHAT, WHY } from './shared';
+import { Digit, RedPanel, INK, clamp01, easeInOutSine, label, usePinned, WHO, WHAT, WHY } from './shared';
 
 /* ─── About, option A: three red panels in depth ───────────────────────────
  * The process print's red panels, three of them, standing in the pale room
@@ -45,9 +44,14 @@ function camera(p: number, vw: number) {
   return { z: stops[i].z + (stops[i + 1].z - stops[i].z) * t, x: stops[i].x + (stops[i + 1].x - stops[i].x) * t };
 }
 
+/* White room (Rajat 2026-10-04: no cream anywhere); the floor reads as the
+ * faintest grey so the panels still stand on something. */
+const SKY = '#FFFFFF';
+const FLOOR = '#F3F3F3';
+
 const CHAPTERS = [
   { n: 1, eyebrow: WHO.eyebrow, line: WHO.line, body: WHO.body },
-  { n: 2, eyebrow: WHAT.eyebrow, line: WHAT.line, list: services.map((s) => ({ title: s.title, line: s.description.split('. ')[0] + '.' })) },
+  { n: 2, eyebrow: WHAT.eyebrow, line: WHAT.line, list: WHAT.list },
   { n: 3, eyebrow: WHY.eyebrow, line: WHY.line, body: WHY.body },
 ];
 

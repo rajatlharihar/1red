@@ -1,6 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion, useInView, useScroll, useTransform, useReducedMotion, type MotionValue } from 'motion/react';
 import { ArrowUpRight } from 'lucide-react';
+import { FillLink } from './home/FillLink';
+import { Grain } from './home/Grain';
 
 /* ─── INVITE — "Let's create" ──────────────────────────────────────────────
  * A sheet of paper. Behind the words, a pencil grid that scrolls slower
@@ -15,7 +17,7 @@ import { ArrowUpRight } from 'lucide-react';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const INK = '#0A0A0A';
-const PAPER = '#F7F4EE';
+const PAPER = '#FFFFFF';
 const STROKE = 2.4;
 
 /* Parallax: how far (px) a layer drifts for the section moving one viewport
@@ -172,6 +174,8 @@ function Sheet({
         bottom: 0,
         pointerEvents: 'none',
         overflow: 'hidden',
+        WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, #000 30%)',
+        maskImage: 'linear-gradient(180deg, transparent 0%, #000 30%)',
       }}
     >
       {/* far: a loose triangle */}
@@ -217,19 +221,6 @@ function Sheet({
 
 /* ─── Fill CTA (styles in theme.css) ────────────────────────────────────── */
 
-function FillButton({ children, outline = false, icon }: { children: string; outline?: boolean; icon?: React.ReactNode }) {
-  return (
-    <button className={`fill-btn btn-corners ${outline ? 'fill-btn--red-outline' : 'fill-btn--red'}`}>
-      <span className="fill-btn__fill" aria-hidden />
-      <span className="fill-btn__label">
-        <span>{children}</span>
-        <span aria-hidden>{children}</span>
-      </span>
-      {icon && <span className="fill-btn__icon">{icon}</span>}
-    </button>
-  );
-}
-
 /* ─── Main section ───────────────────────────────────────────────────────── */
 
 export function WhatsNext() {
@@ -272,9 +263,11 @@ export function WhatsNext() {
         paddingBottom: 'clamp(6rem, 14vh, 10rem)',
         paddingLeft: 'clamp(1.5rem, 4vw, 5rem)',
         paddingRight: 'clamp(1.5rem, 4vw, 5rem)',
-        background: `linear-gradient(180deg, rgba(247,244,238,0) 0%, ${PAPER} 22%, ${PAPER} 100%)`,
+        background: `radial-gradient(70% 55% at 50% 100%, rgba(235,63,67,0.16), rgba(235,63,67,0) 70%), linear-gradient(180deg, #FFFFFF 0%, ${PAPER} 38%, ${PAPER} 100%)`,
+        overflow: 'hidden',
       }}
     >
+      <Grain opacity={0.5} blend="soft-light" />
       <Sheet drawn={drawn} reduce={reduce} narrow={narrow} parallaxFar={farY} parallaxMid={midY} parallaxNear={nearY} />
 
       {/* ── Content ── */}
@@ -304,7 +297,7 @@ export function WhatsNext() {
               color: INK,
             }}
           >
-            Let&rsquo;s create
+            Let&rsquo;s make
           </motion.h2>
         </div>
         <div style={{ overflow: 'hidden' }}>
@@ -322,7 +315,7 @@ export function WhatsNext() {
               opacity: 0.7,
             }}
           >
-            what&rsquo;s next.
+            you the red one.
           </motion.h3>
         </div>
 
@@ -340,8 +333,8 @@ export function WhatsNext() {
             color: INK,
           }}
         >
-          We partner with ambitious brands to create experiences that stand out, scale faster, and leave a lasting
-          impression.
+          Tell us the idea, the deadline and the budget. We&rsquo;ll tell you, honestly, whether we&rsquo;re the right box.
+          If we&rsquo;re not, we&rsquo;ll point you to who is.
         </motion.p>
 
         <motion.div
@@ -350,8 +343,8 @@ export function WhatsNext() {
           transition={{ duration: 0.68, ease: EASE, delay: 0.36 }}
           style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginTop: 44 }}
         >
-          <FillButton icon={<ArrowUpRight size={15} strokeWidth={2} />}>Start a project</FillButton>
-          <FillButton outline>Book a call</FillButton>
+          <FillLink to="/contact" icon={<ArrowUpRight size={15} strokeWidth={2} />}>Start a project</FillLink>
+          <FillLink to="mailto:hi@1red.in?subject=Let%27s%20talk" outline>Book a call</FillLink>
         </motion.div>
       </div>
 

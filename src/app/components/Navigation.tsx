@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useScroll, useMotionValue, useSpring, useTransform, motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { LayoutGrid, BookOpen, Box, Users, ArrowUpRight, Menu, X } from 'lucide-react';
-import { Logo } from './Logo';
+import { ArrowUpRight, Menu, X } from 'lucide-react';
+import { WorkIcon, CasesIcon, BoxIcon, AboutIcon } from './NavIcons';
+import { SCROLL_VH as HERO_VH } from './hero/StudioEntrance';
 
-/* ─── 1Red floating navigation — two independent glass islands ────────────
+/* 2026-10-04 (Rajat, after ogilvy.com): links on the left, the logo in the
+ * centre, the call to action alone in the right corner. Three glass islands
+ * now. On the home page the whole nav waits until the beige wall has gone
+ * by (about one screen of scroll), then glides in.
+ *
+ * ─── 1Red floating navigation — two independent glass islands ────────────
  * Deliberately not one bar spanning the viewport: a small logo island
  * (top-left) and a segmented nav island (top-right) read as distinct
  * floating instruments rather than a conventional attached navbar.
@@ -37,7 +43,7 @@ import { Logo } from './Logo';
  * opacity) — never layout properties — so there's no reflow, ever.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const RED = '#EA3323';
+const RED = '#EB3F43';
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SPRING = { type: 'spring', stiffness: 420, damping: 34, mass: 0.6 } as const;
 
@@ -45,16 +51,16 @@ const SPRING = { type: 'spring', stiffness: 420, damping: 34, mass: 0.6 } as con
    deep pages), The Box (how we work, was Studio), About. Home is the logo.
    "Start a project" sits apart as the one call to action. */
 const NAV_ITEMS = [
-  { label: 'Work', path: '/work', icon: LayoutGrid },
-  { label: 'Case studies', path: '/case-studies', icon: BookOpen },
-  { label: 'The Box', path: '/the-box', icon: Box },
-  { label: 'About', path: '/about', icon: Users },
+  { label: 'Work', path: '/work', icon: WorkIcon },
+  { label: 'Case studies', path: '/case-studies', icon: CasesIcon },
+  { label: 'The Box', path: '/the-box', icon: BoxIcon },
+  { label: 'About', path: '/about', icon: AboutIcon },
 ];
 const CTA = { label: 'Start a project', path: '/contact' };
 /** The nav item a path belongs to: a case study page lights Case studies. */
 const sectionOf = (pathname: string) => NAV_ITEMS.find((i) => pathname === i.path || pathname.startsWith(i.path + '/'))?.path ?? pathname;
 
-const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EA3323] focus-visible:rounded-[10px]';
+const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EB3F43] focus-visible:rounded-[10px]';
 
 /* Fluid stagger for the mobile menu items */
 const listVariants = {
@@ -69,10 +75,10 @@ const itemVariants = {
 /* Shared glass recipe for both islands — light, warm-tinted, thin
    red-hinted border, soft shadow with a bright inset top edge. */
 const glassStyle: React.CSSProperties = {
-  background: 'rgba(255,253,251,0.74)',
+  background: 'rgba(255,255,255,0.74)',
   backdropFilter: 'blur(18px) saturate(165%)',
   WebkitBackdropFilter: 'blur(18px) saturate(165%)',
-  border: '1px solid rgba(234,51,35,0.14)',
+  border: '1px solid rgba(235,63,67,0.14)',
   borderRadius: 14,
   boxShadow: '0 20px 44px rgba(0,0,0,0.08), 0 2px 10px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.7)',
 };
@@ -112,23 +118,23 @@ function NavSegment({
           style={{
             position: 'absolute',
             inset: 4,
-            background: active ? 'rgba(234,51,35,0.08)' : 'rgba(0,0,0,0.045)',
-            border: active ? '1px solid rgba(234,51,35,0.16)' : '1px solid transparent',
+            background: active ? 'rgba(235,63,67,0.08)' : 'rgba(0,0,0,0.045)',
+            border: active ? '1px solid rgba(235,63,67,0.16)' : '1px solid transparent',
             zIndex: 0,
           }}
         />
       )}
 
-      <span className="relative z-10 flex flex-col items-center" style={{ padding: '12px 16px 10px', gap: 5 }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <Icon size={14} strokeWidth={1.5} color={active ? RED : `rgba(10,10,10,${indicated ? 0.85 : 0.55})`} style={{ transition: 'color 200ms ease-out' }} />
+      <span className="relative z-10 flex flex-col items-center" style={{ padding: '14px 18px 11px', gap: 6 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <Icon size={21} strokeWidth={1.5} color={active ? RED : `rgba(10,10,10,${indicated ? 0.95 : 0.78})`} style={{ transition: 'color 200ms ease-out' }} />
           <span
             style={{
               fontFamily: 'var(--font-sans)',
-              fontSize: 13,
-              fontWeight: 500,
+              fontSize: 15,
+              fontWeight: 600,
               whiteSpace: 'nowrap',
-              color: active ? 'rgb(10,10,10)' : `rgba(10,10,10,${indicated ? 0.85 : 0.55})`,
+              color: active ? 'rgb(10,10,10)' : `rgba(10,10,10,${indicated ? 0.95 : 0.78})`,
               transition: 'color 200ms ease-out',
             }}
           >
@@ -189,7 +195,11 @@ export function Navigation() {
     lastYRef.current = scrollY.get();
     const unsub = scrollY.on('change', (y) => {
       if (isHome) {
-        const p = Math.max(0, Math.min(1, (y - 90) / 60));
+        const vh = window.innerHeight;
+        // The whole studio intro (wall, door, studio, the zoom through the
+        // mark) plays with no nav; it arrives as the site proper begins.
+        const start = vh * ((HERO_VH - 100) / 100) * 0.97;
+        const p = Math.max(0, Math.min(1, (y - start) / (vh * 0.35)));
         entranceRaw.set(reduceMotion ? 1 : p);
       }
 
@@ -207,6 +217,18 @@ export function Navigation() {
     });
     return unsub;
   }, [scrollY, isHome, reduceMotion, entranceRaw, compactRaw]);
+
+  /* The nav outlives the route: arriving anywhere but home it must be fully
+     present, and arriving home it starts from wherever the scroll is. */
+  useEffect(() => {
+    if (!isHome || reduceMotion) {
+      entranceRaw.set(1);
+      return;
+    }
+    const vh = window.innerHeight;
+    const start = vh * ((HERO_VH - 100) / 100) * 0.97;
+    entranceRaw.set(Math.max(0, Math.min(1, (window.scrollY - start) / (vh * 0.35))));
+  }, [isHome, reduceMotion, entranceRaw]);
 
   /* Close the mobile menu on route change */
   useEffect(() => {
@@ -232,37 +254,44 @@ export function Navigation() {
         pointerEvents: 'none',
       }}
     >
-      {/* ══════════ Logo island — top-left, floats independently; steps aside for the footer ══════════ */}
+      {/* ══════════ Logo — top-centre, big, out of the box (Rajat 2026-10-04): no
+          card and no halo; the blocks of the mark are themselves frosted glass
+          (theme.css .logo-glass). Steps aside for the footer. ══════════ */}
       <motion.div
         style={{
           position: 'fixed',
-          top: 'clamp(14px, 2.6vw, 26px)',
-          left: 'clamp(14px, 2.6vw, 26px)',
+          top: 'clamp(6px, 1.4vw, 14px)',
+          left: '50%',
+          x: '-50%',
           opacity: logoOpacity,
           y: islandY,
           scale: logoScale,
           pointerEvents: logoPointer,
-          ...glassStyle,
         }}
       >
         <Link
           to="/"
           aria-label="1Red, home"
           className={focusRing}
-          style={{ display: 'flex', alignItems: 'center', lineHeight: 0, textDecoration: 'none', padding: '10px 12px' }}
+          style={{ position: 'relative', display: 'block', lineHeight: 0, padding: '8px 10px' }}
         >
-          <Logo width={60} />
+          {/* Every block of the mark is frosted glass, the nav islands'
+              material tinted red: the page blurs through the letters. */}
+          <span className="logo-glass" style={{ width: 'clamp(86px, 8vw, 124px)' }}>
+            <span className="logo-glass__frost" />
+            <span className="logo-glass__shine" />
+          </span>
         </Link>
       </motion.div>
 
-      {/* ══════════ Desktop nav island — top-right, segmented, magnetic indicator ══════════ */}
+      {/* ══════════ Desktop nav island — top-left, segmented, magnetic indicator ══════════ */}
       <motion.div
         className="hidden lg:block"
         onMouseLeave={() => setHoverPath(null)}
         style={{
           position: 'fixed',
           top: 'clamp(14px, 2.6vw, 26px)',
-          right: 'clamp(14px, 2.6vw, 26px)',
+          left: 'clamp(14px, 2.6vw, 26px)',
           opacity: islandOpacity,
           y: islandY,
           scale: islandScale,
@@ -282,16 +311,32 @@ export function Navigation() {
               />
             </div>
           ))}
-          <div style={{ display: 'flex', alignItems: 'center', padding: '0 6px 0 4px' }}>
+        </div>
+      </motion.div>
+
+      {/* ══════════ Desktop call to action — alone in the top-right corner ══════════ */}
+      <motion.div
+        className="hidden lg:block"
+        style={{
+          position: 'fixed',
+          top: 'clamp(14px, 2.6vw, 26px)',
+          right: 'clamp(14px, 2.6vw, 26px)',
+          opacity: islandOpacity,
+          y: islandY,
+          scale: islandScale,
+          pointerEvents,
+          ...glassStyle,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', padding: 6 }}>
             <Link
               to={CTA.path}
-              onMouseEnter={() => setHoverPath(null)}
               className={`${focusRing} btn-corners`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 7,
-                padding: '10px 14px',
+                padding: '12px 16px',
                 background: RED,
                 color: 'white',
                 textDecoration: 'none',
@@ -305,7 +350,6 @@ export function Navigation() {
               {CTA.label}
               <ArrowUpRight size={14} strokeWidth={2} />
             </Link>
-          </div>
         </div>
       </motion.div>
 

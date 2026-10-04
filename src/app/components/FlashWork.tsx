@@ -31,7 +31,7 @@ import projectsData from '../data/projects.json';
  * ────────────────────────────────────────────────────────────────────────── */
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-const RED = '#EA3323';
+const RED = '#EB3F43';
 
 /* Fine film-grain texture — a tiled SVG feTurbulence noise, not a raster
    asset — the same texture used across this project's other card surfaces. */
@@ -58,7 +58,17 @@ const grainOverlayStyle: React.CSSProperties = {
    page, a CTA and the badge; Ground and Terrabarn just show name,
    category and their film. */
 type Proj = (typeof projectsData)[0] & { hidden?: boolean; page?: boolean; thumb?: string };
-const projects = (projectsData as Proj[]).filter((p) => !p.hidden);
+/* 2026-10-04 (Rajat): only Apptile, Yui and Illusdoodle are whole brands
+   we built. Ground and Terrabarn are showcases, one for motion and one for
+   socials, and the list says so instead of dressing them up as clients. */
+const DISPLAY: Record<string, Partial<Proj>> = {
+  apptile: { category: 'Brand identity' },
+  yui: { category: 'Brand + website' },
+  illusdoodle: { category: 'Brand strategy' },
+  ground: { category: 'Showcase: motion', overview: 'A logo that refuses to sit still. Here to show what our motion team does when nobody is watching.', deliverables: ['Logo animation', 'Motion design', 'Sound sync'] },
+  terrabarn: { category: 'Showcase: socials', overview: 'Reels and posts for a jewellery feed. Here to show how we do the scroll-stopping bit.', deliverables: ['Reels', 'Ad creatives', 'Feed design'] },
+};
+const projects = (projectsData as Proj[]).filter((p) => !p.hidden).map((p) => ({ ...p, ...DISPLAY[p.id] }) as Proj);
 const WORK_COUNT = projects.length;
 
 /* Shared by the list rows and the visual, which lines up with the headline
@@ -109,7 +119,7 @@ function ProjectRow({
   onHover: (i: number) => void;
 }) {
   const closeness = useTransform(activeValue, (v) => Math.max(0, 1 - Math.abs(v - index)));
-  const titleColor = useTransform(closeness, [0, 1], ['rgba(234,51,35,0.32)', RED]);
+  const titleColor = useTransform(closeness, [0, 1], ['rgba(235,63,67,0.32)', RED]);
   const metaOpacity = useTransform(closeness, [0, 1], [0.28, 0.6]);
   const underlineScale = useTransform(closeness, [0, 1], [0.08, 1]);
   const underlineOpacity = useTransform(closeness, [0, 1], [0.14, 1]);
@@ -139,7 +149,7 @@ function ProjectRow({
       onFocus={(e: React.FocusEvent<HTMLElement>) => {
         if (e.currentTarget.matches(':focus-visible')) onJump(index);
       }}
-      className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]"
+      className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EB3F43]"
       style={rowStyle}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16 }}>
@@ -279,7 +289,7 @@ function ExploreBadge({ x, y, hovered, to }: { x: MotionValue<number>; y: Motion
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 14px 30px rgba(234,51,35,0.4)',
+          boxShadow: '0 14px 30px rgba(235,63,67,0.4)',
         }}
       >
         <ArrowUpRight color="white" size={22} strokeWidth={2.2} />
@@ -374,7 +384,7 @@ function VisualPanel({ project }: { project: (typeof projects)[0] }) {
 function StaticRow({ project, children }: { project: Proj; children: React.ReactNode }) {
   const style: React.CSSProperties = { display: 'block', padding: '18px 0', textDecoration: 'none', color: 'rgb(10,10,10)' };
   return project.page ? (
-    <Link to={`/case-studies/${project.id}`} className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]" style={style}>
+    <Link to={`/case-studies/${project.id}`} className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EB3F43]" style={style}>
       {children}
     </Link>
   ) : (
@@ -397,10 +407,10 @@ function StaticWorkList() {
               playsInline
               preload="metadata"
               poster={project.thumb}
-              style={{ display: 'block', width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', marginBottom: 14, background: '#F2EFE8' }}
+              style={{ display: 'block', width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', marginBottom: 14, background: '#FFFFFF' }}
             />
           ) : project.thumb ? (
-            <img src={project.thumb} alt="" loading="lazy" style={{ display: 'block', width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', marginBottom: 14, background: '#F2EFE8' }} />
+            <img src={project.thumb} alt="" loading="lazy" style={{ display: 'block', width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', marginBottom: 14, background: '#FFFFFF' }} />
           ) : null}
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
@@ -566,7 +576,7 @@ export function FlashWork() {
             // Identical to the cube poster's headline (ProblemCube): 500, -0.03em, leading 1.
             style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(32px, 4.1vw, 68px)', fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.0, margin: 0, color: 'rgb(10,10,10)' }}
           >
-            Here's what<br />we made together.
+            Receipts.<br /><span style={{ opacity: 0.4 }}>Three brands, two cameos.</span>
           </motion.h2>
         </div>
         <div className="overflow-hidden" style={{ flexShrink: 0, paddingTop: '0.5em' }}>
@@ -653,7 +663,7 @@ export function FlashWork() {
                 borderRadius: 22,
                 overflow: 'hidden',
                 border: `1px solid ${GLASS.border.idle}`,
-                boxShadow: '0 34px 68px rgba(234,51,35,0.14), 0 8px 24px rgba(0,0,0,0.09)',
+                boxShadow: '0 34px 68px rgba(235,63,67,0.14), 0 8px 24px rgba(0,0,0,0.09)',
                 background: 'rgba(10,10,10,0.04)',
               }}
             >

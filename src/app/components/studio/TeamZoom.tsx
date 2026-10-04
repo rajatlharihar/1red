@@ -19,7 +19,7 @@ const SECTION_VH = 300;
 /** The lens, as in ProcessSpace. */
 const P = 1200;
 /** Tile size at the start, as a share of the frame; full-bleed is 1. */
-const START_SCALE = 0.3;
+const START_SCALE = 1; // 2026-10-04: opens full bleed, the board's dive ends on this frame
 const START_DEPTH = P / START_SCALE - P;
 /** Section progress at which the tile fills the frame; then a hold, and
  *  from EXIT_P the camera keeps going: the film grows past the frame and
@@ -44,6 +44,8 @@ export function TeamZoom() {
   const tileRef = useRef<HTMLDivElement>(null);
   const wordsRef = useRef<HTMLSpanElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const wasLive = useRef(false);
   const reduceMotion = useReducedMotion() ?? false;
 
   // The poster is fetched ahead, so the tile never shows blank while the
@@ -76,7 +78,18 @@ export function TeamZoom() {
       const top = el.getBoundingClientRect().top + glide.raw;
       const scrollable = (SECTION_VH / 100 - 1) * window.innerHeight;
       if (scrollable <= 0) return;
-      const p = clamp01((glide.y - top) / scrollable);
+      const raw = glide.y - top;
+      const p = clamp01(raw / scrollable);
+      const live = raw >= 0;
+      if (sectionRef.current) sectionRef.current.style.visibility = live ? 'visible' : 'hidden';
+      const v = videoRef.current;
+      if (v) {
+        if (live && !wasLive.current) {
+          v.currentTime = 0;
+          v.play().catch(() => {});
+        } else if (!live && wasLive.current) v.pause();
+      }
+      wasLive.current = live;
       const depth =
         p < EXIT_P
           ? START_DEPTH * (1 - easeInOutSine(clamp01(p / ARRIVE_P)))
@@ -139,7 +152,10 @@ export function TeamZoom() {
   }
 
   return (
-    <section style={{ position: 'relative', background: BG }}>
+    // Overlaps the evidence board's last screen (marginTop -100vh) so it
+    // pins on the very scroll the board lets go; hidden until then, and
+    // its first frame is the board's last.
+    <section ref={sectionRef} style={{ position: 'relative', marginTop: '-100vh', visibility: 'hidden', zIndex: 1 }}>
       <div ref={wrapRef} style={{ height: `${SECTION_VH}vh`, position: 'relative' }}>
         <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', perspective: `${P}px`, perspectiveOrigin: '50% 50%' }}>
           <div
@@ -148,7 +164,7 @@ export function TeamZoom() {
               position: 'absolute',
               inset: 0,
               boxSizing: 'border-box',
-              border: `1px solid ${INK}`,
+              border: '0',
               background: BG,
               overflow: 'hidden',
               willChange: 'transform',

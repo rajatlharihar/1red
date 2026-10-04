@@ -1,12 +1,16 @@
 import { StudioEntrance } from '../components/hero/StudioEntrance';
 import { ProblemCube } from '../components/cube/ProblemCube';
-import { FlashWork } from '../components/FlashWork';
 import { WhatsNext } from '../components/WhatsNext';
+import { RedFlags } from '../components/home/RedFlags';
+import { TheDeal } from '../components/home/TheDeal';
 
 /* Homepage chapters:
  *   ENTER    — StudioEntrance: the door into Studio.glb
  *   THINK    — ProblemCube: the frictions, and how this studio answers them
- *   PROVE    — FlashWork: the work itself
+ *   WHO      — inside ProblemCube now: the box falls, lands and rolls out under the paragraph
+ *   (Receipts/FlashWork removed from home 2026-10-04; the work lives on /work and /case-studies)
+ *   EMPATHISE — RedFlags: the self-audit, our thinking as proof
+ *   TRUST    — TheDeal: being new, said out loud
  *   INVITE   — WhatsNext
  *
  * The cube used to sit here as a second portfolio device, playing project
@@ -20,7 +24,8 @@ export function HomePage() {
     <>
       <StudioEntrance />
       <ProblemCube />
-      <FlashWork />
+      <RedFlags />
+      <TheDeal />
       <WhatsNext />
     </>
   );

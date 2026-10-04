@@ -18,9 +18,9 @@ import { WORKS, WORK_FILTERS, type WorkFilter, type WorkPiece } from '../data/wo
  * The filter is kept in the URL (?f=), so Back returns to the same view.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const RED = '#EA3323';
+const RED = '#EB3F43';
 const INK = 'rgb(10,10,10)';
-const PAPER = '#F2EFE8';
+const PAPER = '#FFFFFF';
 const EASE = [0.22, 1, 0.36, 1] as const;
 const GLIDE = { type: 'spring', bounce: 0, duration: 0.6 } as const;
 
@@ -31,7 +31,7 @@ const label: React.CSSProperties = {
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
 };
-const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EA3323]';
+const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EB3F43]';
 
 const SLUG: Record<string, WorkFilter> = Object.fromEntries(WORK_FILTERS.map((f) => [f.toLowerCase().replace(/\s+/g, '-'), f]));
 const slugOf = (f: WorkFilter) => f.toLowerCase().replace(/\s+/g, '-');
@@ -94,7 +94,7 @@ function CaseTag() {
   return (
     <span
       className="btn-corners"
-      style={{ ...label, fontSize: 9, letterSpacing: '0.18em', padding: '5px 9px', background: 'rgba(255,253,251,0.86)', color: RED, border: '1px solid rgba(234,51,35,0.22)', whiteSpace: 'nowrap' }}
+      style={{ ...label, fontSize: 9, letterSpacing: '0.18em', padding: '5px 9px', background: 'rgba(255,255,255,0.86)', color: RED, border: '1px solid rgba(235,63,67,0.22)', whiteSpace: 'nowrap' }}
     >
       Case study
     </span>
@@ -165,8 +165,8 @@ function Lightbox({ list, index, onClose, onStep }: { list: WorkPiece[]; index: 
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'rgba(255,253,251,0.9)',
-    border: '1px solid rgba(234,51,35,0.16)',
+    background: 'rgba(255,255,255,0.9)',
+    border: '1px solid rgba(235,63,67,0.16)',
     cursor: 'pointer',
     color: INK,
   };
@@ -186,7 +186,7 @@ function Lightbox({ list, index, onClose, onStep }: { list: WorkPiece[]; index: 
         position: 'fixed',
         inset: 0,
         zIndex: 90,
-        background: 'rgba(247,244,238,0.94)',
+        background: 'rgba(255,255,255,0.94)',
         backdropFilter: 'blur(14px)',
         WebkitBackdropFilter: 'blur(14px)',
         display: 'flex',
@@ -296,9 +296,9 @@ export function WorksPage() {
               transition={{ duration: 0.8, ease: EASE }}
               style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(40px, 6vw, 104px)', fontWeight: 500, letterSpacing: '-0.035em', lineHeight: 0.98, margin: 0 }}
             >
-              Everything
+              Everything,
               <br />
-              we make.
+              all at once.
             </motion.h1>
           </div>
           <div className="overflow-hidden" style={{ flexShrink: 0, paddingTop: '0.6em' }}>
@@ -334,7 +334,7 @@ export function WorksPage() {
                     layoutId="work-filter"
                     className="btn-corners"
                     transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-                    style={{ position: 'absolute', inset: 0, background: on ? 'rgba(234,51,35,0.08)' : 'rgba(0,0,0,0.045)', border: on ? '1px solid rgba(234,51,35,0.2)' : '1px solid transparent' }}
+                    style={{ position: 'absolute', inset: 0, background: on ? 'rgba(235,63,67,0.08)' : 'rgba(0,0,0,0.045)', border: on ? '1px solid rgba(235,63,67,0.2)' : '1px solid transparent' }}
                   />
                 )}
                 <span style={{ position: 'relative', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap', opacity: on ? 1 : 0.6, transition: 'opacity 200ms ease-out' }}>
