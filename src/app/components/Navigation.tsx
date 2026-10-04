@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router';
 import { useScroll, useMotionValue, useSpring, useTransform, motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { WorkIcon, CasesIcon, BoxIcon, AboutIcon } from './NavIcons';
-import { SCROLL_VH as HERO_VH } from './hero/StudioEntrance';
+import { SCROLL_VH as HERO_VH } from './hero/heroLength';
 
 /* 2026-10-04 (Rajat, after ogilvy.com): links on the left, the logo in the
  * centre, the call to action alone in the right corner. Three glass islands

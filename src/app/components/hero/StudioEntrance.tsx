@@ -24,7 +24,8 @@ import { HERO_FOV } from './studioSequence';
  * ────────────────────────────────────────────────────────────────────────── */
 
 const RED = '#EB3F43';
-export const SCROLL_VH = 600;
+import { SCROLL_VH } from './heroLength';
+export { SCROLL_VH };
 /** Hero progress where section 2 takes over the screen: the "e" gap has
  *  swallowed most of the frame and the red is splitting past the edges. */
 export const HANDOFF_P = 0.945;

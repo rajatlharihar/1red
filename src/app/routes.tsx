@@ -1,6 +1,5 @@
 import { createBrowserRouter, Navigate, useParams } from 'react-router';
 import { Layout } from './components/Layout';
-import { HomePage } from './pages/HomePage';
 
 /** Old project URLs (/work/<slug>, live until 2026-09-30) keep working. */
 function OldCaseStudy() {
@@ -21,7 +20,9 @@ export const router = createBrowserRouter([
     path: '/',
     Component: Layout,
     children: [
-      { index: true, Component: HomePage },
+      // Lazy like every other route, so /work, /contact and the rest never
+      // download three.js and the hero; home fetches it in parallel at start.
+      { index: true, lazy: () => import('./pages/HomePage').then((m) => ({ Component: m.HomePage })) },
       { path: 'work', lazy: () => import('./pages/WorksPage').then((m) => ({ Component: m.WorksPage })) },
       { path: 'work/:slug', Component: OldCaseStudy },
       { path: 'case-studies', lazy: () => import('./pages/CaseStudiesPage').then((m) => ({ Component: m.CaseStudiesPage })) },
