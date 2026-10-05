@@ -7,15 +7,14 @@ import { StudioWord } from './StudioWord';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-// Real contact details don't exist yet — one deliberate placeholder set,
-// exported so the standalone /contact page (Contact.tsx) reuses the exact
-// same values instead of duplicating them.
-export const CONTACT_EMAIL = 'hi@1red.in';
+// The one source of 1Red's contact details, exported so the /contact page
+// and the rest of the site reuse the exact same values.
+export const CONTACT_EMAIL = '1red.agency@gmail.com';
+export const CONTACT_PHONE = '+91 98862 56661';
+export const CONTACT_WHATSAPP = 'https://wa.me/919886256661';
 export const socialLinks = [
-  { label: 'LinkedIn',  href: '#' },
-  { label: 'Instagram', href: '#' },
-  { label: 'Behance',   href: '#' },
-  { label: 'Dribbble',  href: '#' },
+  { label: 'LinkedIn',  href: 'https://www.linkedin.com/in/1redstudio' },
+  { label: 'Instagram', href: 'https://www.instagram.com/1red.studio/' },
 ];
 
 const secondaryLinks = ['Work', 'Case studies', 'The Box', 'About', 'Careers', 'Contact', 'Privacy Policy'];
@@ -118,6 +117,8 @@ function SocialLink({ label, href, delay }: { label: string; href: string; delay
     <motion.a
       ref={ref}
       href={href}
+      target="_blank"
+      rel="noreferrer"
       initial={{ opacity: 0, y: 16 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.62, ease: EASE, delay }}
@@ -287,7 +288,7 @@ export function Footer() {
           transition={{ duration: 0.68, ease: EASE, delay: 0.32 }}
         >
           <a
-            href="mailto:hi@1red.in"
+            href={`mailto:${CONTACT_EMAIL}`}
             onMouseEnter={() => setEmailHovered(true)}
             onMouseLeave={() => setEmailHovered(false)}
             style={{
@@ -302,7 +303,7 @@ export function Footer() {
               position: 'relative',
             }}
           >
-            hi@1red.in
+            {CONTACT_EMAIL}
             <motion.div
               animate={{ scaleX: emailHovered ? 1 : 0 }}
               transition={{ duration: 0.36, ease: EASE }}
@@ -428,7 +429,7 @@ export function Footer() {
                 <motion.a
                   key={link}
                   {...motionProps}
-                  href={link === 'Careers' ? 'mailto:hi@1red.in?subject=Careers%20at%201Red' : '#'}
+                  href={link === 'Careers' ? `mailto:${CONTACT_EMAIL}?subject=Careers%20at%201Red` : '#'}
                   style={sharedStyle}
                 >
                   {link}

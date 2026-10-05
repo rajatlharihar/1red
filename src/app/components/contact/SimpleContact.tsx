@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowUpRight, Copy, Check } from 'lucide-react';
-import { CONTACT_EMAIL, socialLinks } from '../Footer';
+import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_WHATSAPP, socialLinks } from '../Footer';
 
 /* ─── Start a project, kept simple (Rajat, 2026-10-04) ─────────────────────
  * "Not easy to understand; the numbers and boxes are not needed." So: one
@@ -12,8 +12,8 @@ import { CONTACT_EMAIL, socialLinks } from '../Footer';
 const RED = '#EB3F43';
 const INK = '#0A0A0A';
 const LINE = 'rgba(10,10,10,0.14)';
-const PHONE = '+91 00000 00000'; // placeholder until Rajat gives the number
-const WHATSAPP = ''; // e.g. 'https://wa.me/91XXXXXXXXXX'
+const PHONE = CONTACT_PHONE;
+const WHATSAPP = CONTACT_WHATSAPP;
 const LOCATION = 'India. Working with clients worldwide.';
 const SERVICES = ['Branding', 'Website', 'UI/UX', 'Motion', 'Campaigns', 'Video', 'Something else'];
 const BUDGETS = ['Under ₹50K', '₹50K to ₹1.5L', '₹1.5L to ₹5L', '₹5L+', 'Not sure yet'];

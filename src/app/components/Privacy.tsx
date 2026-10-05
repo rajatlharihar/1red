@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion, useInView, useScroll, useSpring } from 'motion/react';
 import { ArrowUpRight } from 'lucide-react';
+import { CONTACT_EMAIL } from './Footer';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -46,7 +47,7 @@ const sections = [
     title: 'Contact',
     body: 'Questions regarding privacy or data handling? We\'re happy to help.',
     items: [],
-    contact: 'hello@yourdomain.com',
+    contact: CONTACT_EMAIL,
   },
 ];
 
@@ -342,7 +343,7 @@ export function Privacy() {
             </p>
 
             <motion.a
-              href="mailto:hello@yourdomain.com"
+              href={`mailto:${CONTACT_EMAIL}`}
               whileHover={{ scale: 1.04 }}
               transition={{ duration: 0.25, ease: EASE }}
               className="btn-corners"

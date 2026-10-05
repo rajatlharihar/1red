@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { ArrowUpRight, Check, Copy } from 'lucide-react';
 import { glide, subscribeGlide } from '../scrollGlide';
-import { CONTACT_EMAIL, socialLinks } from '../Footer';
+import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_WHATSAPP, socialLinks } from '../Footer';
 import { Digit, roughRect, RED, RED_SOFT, INK, SKY, EASE, clamp01, easeOutCubic, label, focusRing } from '../about/shared';
 
 /* ─── /contact, in 1Red's own language ─────────────────────────────────────
@@ -18,8 +18,8 @@ import { Digit, roughRect, RED, RED_SOFT, INK, SKY, EASE, clamp01, easeOutCubic,
  * CONTACT_EMAIL, then shows the thank-you.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const PHONE = '+91 00000 00000'; // placeholder until Rajat gives the number
-const WHATSAPP = ''; // e.g. 'https://wa.me/91XXXXXXXXXX'
+const PHONE = CONTACT_PHONE;
+const WHATSAPP = CONTACT_WHATSAPP;
 const LOCATION = 'India. Working with clients worldwide.';
 const SERVICES = ['Branding', 'Web Design', 'UI/UX', 'Motion', 'Campaigns', 'Video', 'Something else'];
 

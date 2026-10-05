@@ -3,6 +3,7 @@ import { motion, useInView, useScroll, useTransform, useReducedMotion, type Moti
 import { ArrowUpRight } from 'lucide-react';
 import { FillLink } from './home/FillLink';
 import { Grain } from './home/Grain';
+import { CONTACT_EMAIL } from './Footer';
 
 /* ─── INVITE — "Let's create" ──────────────────────────────────────────────
  * A sheet of paper. Behind the words, a pencil grid that scrolls slower
@@ -344,7 +345,7 @@ export function WhatsNext() {
           style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginTop: 44 }}
         >
           <FillLink to="/contact" icon={<ArrowUpRight size={15} strokeWidth={2} />}>Start a project</FillLink>
-          <FillLink to="mailto:hi@1red.in?subject=Let%27s%20talk" outline>Book a call</FillLink>
+          <FillLink to={`mailto:${CONTACT_EMAIL}?subject=Let%27s%20talk`} outline>Book a call</FillLink>
         </motion.div>
       </div>
 
