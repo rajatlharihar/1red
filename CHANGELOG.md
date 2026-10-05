@@ -6,6 +6,13 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-10-05: real contact details, pushed
+
+Pushed to `main` as `b51e7dd`, verified in the live bundle on https://1red.vercel.app.
+
+- **Contact details are real now, from one place** (`Footer.tsx`): `CONTACT_EMAIL` 1red.agency@gmail.com, `CONTACT_PHONE` +91 98862 56661, `CONTACT_WHATSAPP` wa.me/919886256661, `socialLinks` LinkedIn (linkedin.com/in/1redstudio) and Instagram (instagram.com/1red.studio). Reused by /contact (`SimpleContact.tsx`), `ContactPanels.tsx`, the footer (email, Careers mail, socials), the "Book a call" button (`WhatsNext.tsx`) and /privacy (was `hello@yourdomain.com`).
+- Behance and Dribbble placeholder links removed until Rajat gives the URLs. Footer social links open in a new tab.
+
 ## 2026-09-30 — Shrikar's fixes, the agency IA, About and Contact in 1Red's language — pushed
 
 Pushed to `main` as `14b7339` (from `fa17853`), Vercel green, all routes 200 on https://1red.vercel.app.
