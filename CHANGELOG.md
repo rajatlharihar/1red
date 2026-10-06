@@ -6,6 +6,17 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-10-06/07: home story polish, phone pass, perf pass, pushed
+
+Pushed to `main` as `f56b57d`, `99fdca2`, `b96a6b7`, the wild-card copy commit, the phone wall/dpr commit and the phone Deal commit; each checked live on https://1red.vercel.app (Vercel commit status + live bundle strings).
+
+- **Cube (ProblemCube):** pinned 250vh with a two-piece Hermite pace (tunnel in the first 36%, the gather gets the rest and slows into the lock). Rajat first asked for "one scroll" (160vh), then said that was "too harsh and fast, show everything". The poster holds 80vh, centred, no rule. The landing box casts a real VSM shadow (light always casting) plus a contact blob. "Who we are" types in letter by letter with a text-shadow ink bleed on a dot-grid page.
+- **Stacked cards:** RedFlags is a dark grainy card sliding over the cube's last frame (paper exhibits with hand notes, red backs, sticky at its bottom); TheDeal is the next white card over it (no rule, hand-written labels, numerals rise as it lands). Both tilt in like yuiii.vercel.app's menu (`home/useTiltIn.ts`). 6px corners.
+- **The Box:** UNO-style corner powers in Lilita One with outline and extrusion, a proper reverse glyph; first subtitle is now "We brought the wild card." (no UNO trademark in copy).
+- **Phones:** hero widens its FOV in portrait so the whole gate fits (`heroFov` in studioSequence, also used to fit the wall statement), easing back to HERO_FOV by p 0.704; Our process board runs vertically (transposed layout, thread loops round the cards); TheDeal scaled down; 3D dpr capped at 1.3.
+- **Fixes:** footer STUDIO used the sheet's E as its D; irritated face lost its white patches; crying tears sit in the eyes; WhatsNext line starts at the figure's pencil; nav logo has no focus box; case studies "popcorn recommended." in red hand.
+- **Perf:** Our process thread on its own layer (was repainting the board: 30fps desktop, ~12fps phone, now 60). Measured per section in Brave across desktop, laptop, iPad (2x CPU), iPhone and Pixel (4x CPU). Safari/WebKit can't be automated on this macOS 12 iMac.
+
 ## 2026-10-05: real contact details, pushed
 
 Pushed to `main` as `b51e7dd`, verified in the live bundle on https://1red.vercel.app.
