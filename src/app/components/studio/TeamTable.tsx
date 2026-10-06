@@ -75,7 +75,7 @@ const TABLE = { x: 260, y: 200, w: 3080, h: 170, r: 60 };
    so the old in-card captions and the power strip can never collide. */
 type Power = 'wild' | 'plus2' | 'skip' | 'reverse' | 'plus4';
 const SUBS: Array<{ at: number; power: Power; text: string; red?: boolean }> = [
-  { at: 0, power: 'wild', text: 'Everyone else plays by the rules. We brought UNO.' },
+  { at: 0, power: 'wild', text: 'Everyone else plays by the rules. We brought the wild card.' },
   { at: 0.12, power: 'plus2', text: 'Web and UI/UX at this end. Draw two: more designers, same invoice.' },
   { at: 0.3, power: 'skip', text: 'Brand, two seats down. Skip the hand-offs. All of them.' },
   { at: 0.48, power: 'reverse', text: '2D and 3D, mid-table. Reverse the brief until it makes sense.' },
