@@ -130,12 +130,13 @@ function PowerGlyph({ power }: { power: Power }) {
       </UnoInk>
     );
   if (power === 'reverse')
+    // UNO's reverse: two bent arrows chasing each other on the diagonal.
     return (
       <UnoInk w={34}>
         {(l) => (
-          <g {...inkStyle(l)}>
-            <path d="M3 13 14 3v6h10a6 6 0 0 1 6 6v3h-6v-2a1 1 0 0 0-1-1H14v6Z" />
-            <path d="M31 21 20 31v-6H10a6 6 0 0 1-6-6v-3h6v2a1 1 0 0 0 1 1h9v-6Z" />
+          <g transform="translate(2 2) rotate(-45 15 15)" {...inkStyle(l)}>
+            <path d="M20 2 L28.5 8.5 L20 15 L20 11 L11 11 L11 13.5 L5 13.5 L5 6 L20 6Z" />
+            <path d="M10 28 L1.5 21.5 L10 15 L10 19 L19 19 L19 16.5 L25 16.5 L25 24 L10 24Z" />
           </g>
         )}
       </UnoInk>

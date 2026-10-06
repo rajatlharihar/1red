@@ -46,6 +46,22 @@ const TITLE = { x: 780, y: 780, w: 760, h: 620, rot: -3 };
 const CARDS = [0, 1, 2, 3, 4].map((i) => ({ x: 1820 + i * 900, y: i % 2 ? 900 : 700, w: 560, h: 640, rot: [2.5, -2, 3, -3.5, 2][i] }));
 const POLAROID = { x: 6260, y: 820, ph: 470, rot: 0 };
 
+/** On the vertical board the next pin is straight below, through the card;
+ *  the string loops out round the card's side instead, alternating sides. */
+function around(a: Pin, b: Pin, i: number) {
+  const side = i % 2 ? 1 : -1;
+  const out = 640 * side;
+  return `M${a.x} ${a.y} C${a.x + out} ${a.y - 90} ${b.x + out} ${b.y - 380} ${b.x} ${b.y}`;
+}
+
+/** Phones scroll vertically (Rajat, 2026-10-06: a sideways camera on a phone
+ *  makes people start swiping sideways). The same board, every centre
+ *  transposed, so the thread runs down the page and the camera follows it. */
+function boardLayout(swap: boolean) {
+  const t = <T extends { x: number; y: number }>(c: T): T => (swap ? { ...c, x: c.y, y: c.x } : c);
+  return { W: swap ? H : W, H: swap ? W : H, TITLE: t(TITLE), CARDS: CARDS.map(t), POLAROID: t(POLAROID) };
+}
+
 function pinOf(c: { x: number; y: number; h: number }): Pin {
   return { x: c.x, y: c.y - c.h / 2 + 36 };
 }
@@ -89,7 +105,7 @@ function scribble(r: () => number, w: number) {
   return d;
 }
 
-function Decor({ photoOk }: { photoOk: Record<string, boolean> }) {
+function Decor({ photoOk, swap }: { photoOk: Record<string, boolean>; swap: boolean }) {
   // Clippings scattered over the whole board, seeded so it never reshuffles.
   const items = useMemo(() => {
     const r = rng(11);
@@ -112,10 +128,13 @@ function Decor({ photoOk }: { photoOk: Record<string, boolean> }) {
     <>
       {items.map((it, i) => {
         const r = rng(it.seed);
+        // On a phone the board runs down instead of across: centres transposed.
+        const cx = swap ? it.y : it.x;
+        const cy = swap ? it.x : it.y;
         const base: React.CSSProperties = {
           position: 'absolute',
-          left: it.x - it.w / 2,
-          top: it.y - it.h / 2,
+          left: cx - it.w / 2,
+          top: cy - it.h / 2,
           width: it.w,
           height: it.h,
           transform: `rotate(${it.rot.toFixed(2)}deg)`,
@@ -166,6 +185,8 @@ export function EvidenceBoard() {
   const segRefs = useRef<Array<SVGPathElement | null>>([]);
   const [vp, setVp] = useState({ w: 1440, h: 900 });
   const [photoOk, setPhotoOk] = useState<Record<string, boolean>>({});
+  const swap = vp.w < 768 && vp.h > vp.w;
+  const L = useMemo(() => boardLayout(swap), [swap]);
 
   useEffect(() => {
     const on = () => setVp({ w: window.innerWidth, h: window.innerHeight });
@@ -191,10 +212,10 @@ export function EvidenceBoard() {
   const polW = photoW + 60;
   const polH = photoH + 150;
 
-  const stops: Stop[] = useMemo(() => [{ x: TITLE.x, y: TITLE.y }, ...CARDS.map((c) => ({ x: c.x, y: c.y })), { x: POLAROID.x, y: POLAROID.y }], []);
+  const stops: Stop[] = useMemo(() => [{ x: L.TITLE.x, y: L.TITLE.y }, ...L.CARDS.map((c) => ({ x: c.x, y: c.y })), { x: L.POLAROID.x, y: L.POLAROID.y }], [L]);
   const pins: Pin[] = useMemo(
-    () => [pinOf(TITLE), ...CARDS.map(pinOf), { x: POLAROID.x, y: POLAROID.y - polH / 2 + 30 }],
-    [polH],
+    () => [pinOf(L.TITLE), ...L.CARDS.map(pinOf), { x: L.POLAROID.x, y: L.POLAROID.y - polH / 2 + 30 }],
+    [polH, L],
   );
 
   useEffect(() => {
@@ -235,11 +256,11 @@ export function EvidenceBoard() {
       const d = Math.max(0, (p - TRAVEL_END) / (1 - TRAVEL_END));
       if (d > 0) {
         const t = d < 1 ? -(Math.cos(Math.PI * d) - 1) / 2 : 1;
-        const photoCy = POLAROID.y - polH / 2 + 30 + photoH / 2;
+        const photoCy = L.POLAROID.y - polH / 2 + 30 + photoH / 2;
         const zFill = Math.max(vw / (photoW * scale), vh / (photoH * scale)) * 1.002;
         z = Math.exp(Math.log(zFill) * t);
-        cy = POLAROID.y + (photoCy - POLAROID.y) * t;
-        cx = POLAROID.x;
+        cy = L.POLAROID.y + (photoCy - L.POLAROID.y) * t;
+        cx = L.POLAROID.x;
         rot = 0;
       }
 
@@ -251,10 +272,11 @@ export function EvidenceBoard() {
       segRefs.current.forEach((path, i) => {
         if (!path) return;
         const k = Math.max(0, Math.min(1, ahead - i));
-        path.style.strokeDashoffset = `${(lens[i] * (1 - k)).toFixed(1)}`;
+        const v = `${(lens[i] * (1 - k)).toFixed(0)}`;
+        if (path.style.strokeDashoffset !== v) path.style.strokeDashoffset = v;
       });
     });
-  }, [reduceMotion, stops, polH, photoH, photoW]);
+  }, [reduceMotion, stops, polH, photoH, photoW, L]);
 
   // Static decorative strings between scattered clippings.
   const decoStrings = useMemo(() => {
@@ -262,9 +284,9 @@ export function EvidenceBoard() {
     return Array.from({ length: 22 }, () => {
       const a = { x: r() * W, y: r() * H };
       const b = { x: a.x + (r() - 0.5) * 1400, y: r() * H };
-      return { a, b };
+      return swap ? { a: { x: a.y, y: a.x }, b: { x: b.y, y: b.x } } : { a, b };
     });
-  }, []);
+  }, [swap]);
 
   if (reduceMotion) {
     return (
@@ -289,16 +311,16 @@ export function EvidenceBoard() {
     <section aria-label="Our process" style={{ position: 'relative', background: INK }}>
       <div ref={wrapRef} style={{ height: `${SECTION_VH}vh`, position: 'relative' }}>
         <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', background: INK }}>
-          <div ref={boardRef} style={{ position: 'absolute', left: 0, top: 0, width: W, height: H, transformOrigin: '0 0', willChange: 'transform' }}>
+          <div ref={boardRef} style={{ position: 'absolute', left: 0, top: 0, width: L.W, height: L.H, transformOrigin: '0 0', willChange: 'transform' }}>
             {/* The cork: black, grainy. */}
             <div style={{ position: 'absolute', inset: -800, background: INK }}>
               <div style={grainStyle(0.6)} />
             </div>
-            <Decor photoOk={photoOk} />
+            <Decor photoOk={photoOk} swap={swap} />
 
             {/* Scattered threads between clippings: under the exhibits and the
                 polaroid, so only the thread we follow ever crosses them. */}
-            <svg width={W} height={H} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none' }}>
+            <svg width={L.W} height={L.H} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none' }}>
               {decoStrings.map(({ a, b }, i) => (
                 <g key={i}>
                   <path d={sag(a, b, 0.05)} fill="none" stroke="#7E0E12" strokeWidth={3} opacity={0.75} />
@@ -308,7 +330,7 @@ export function EvidenceBoard() {
             </svg>
 
             {/* Title card */}
-            <div style={{ position: 'absolute', left: TITLE.x - TITLE.w / 2, top: TITLE.y - TITLE.h / 2, width: TITLE.w, height: TITLE.h, background: PAPER, transform: `rotate(${TITLE.rot}deg)`, boxShadow: '0 18px 40px rgba(0,0,0,0.5)', padding: 56, boxSizing: 'border-box' }}>
+            <div style={{ position: 'absolute', left: L.TITLE.x - L.TITLE.w / 2, top: L.TITLE.y - L.TITLE.h / 2, width: TITLE.w, height: TITLE.h, background: PAPER, transform: `rotate(${TITLE.rot}deg)`, boxShadow: '0 18px 40px rgba(0,0,0,0.5)', padding: 56, boxSizing: 'border-box' }}>
               <div style={{ ...cardText, fontSize: 18, fontWeight: 600, letterSpacing: '0.28em', textTransform: 'uppercase' }}>Case file 1RED/26</div>
               <div style={{ ...cardText, fontSize: 150, fontWeight: 600, letterSpacing: '-0.05em', lineHeight: 0.9, marginTop: 40 }}>
                 Our
@@ -320,7 +342,7 @@ export function EvidenceBoard() {
             </div>
 
             {/* The exhibits */}
-            {CARDS.map((c, i) => {
+            {L.CARDS.map((c, i) => {
               const s = STEPS[i];
               return (
                 <div key={s.number} style={{ position: 'absolute', left: c.x - c.w / 2, top: c.y - c.h / 2, width: c.w, height: c.h, background: PAPER, transform: `rotate(${c.rot}deg)`, boxShadow: '0 18px 40px rgba(0,0,0,0.5)', padding: '70px 48px 40px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
@@ -345,7 +367,7 @@ export function EvidenceBoard() {
             })}
 
             {/* The usual suspects */}
-            <div style={{ position: 'absolute', left: POLAROID.x - polW / 2, top: POLAROID.y - polH / 2, width: polW, height: polH, background: PAPER, boxShadow: '0 22px 50px rgba(0,0,0,0.55)', padding: 30, paddingTop: 30, boxSizing: 'border-box' }}>
+            <div style={{ position: 'absolute', left: L.POLAROID.x - polW / 2, top: L.POLAROID.y - polH / 2, width: polW, height: polH, background: PAPER, boxShadow: '0 22px 50px rgba(0,0,0,0.55)', padding: 30, paddingTop: 30, boxSizing: 'border-box' }}>
               <div style={{ width: photoW, height: photoH, overflow: 'hidden', background: '#fff' }}>
                 <img src="/images/team-poster.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
@@ -354,15 +376,18 @@ export function EvidenceBoard() {
               </div>
             </div>
 
-            {/* String: scattered red threads, then the one we follow. */}
-            <svg width={W} height={H} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none' }}>
+            {/* String: scattered red threads, then the one we follow. Its own
+                compositing layer: the thread draws every frame, and sharing a
+                layer with the board repainted every clipping and grain with it
+                (measured 2026-10-07: 30fps desktop, ~12fps phone; 60 alone). */}
+            <svg width={L.W} height={L.H} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none', willChange: 'transform', transform: 'translateZ(0)' }}>
               {pins.slice(0, -1).map((a, i) => (
                 <path
                   key={i}
                   ref={(el) => {
                     segRefs.current[i] = el;
                   }}
-                  d={sag(a, pins[i + 1])}
+                  d={swap ? around(a, pins[i + 1], i) : sag(a, pins[i + 1])}
                   fill="none"
                   stroke={RED}
                   strokeWidth={6}

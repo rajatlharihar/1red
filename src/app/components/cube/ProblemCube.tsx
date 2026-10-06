@@ -25,7 +25,7 @@ import { glide, subscribeGlide } from '../scrollGlide';
    The timeline below was tuned at 390vh, so the seam with the hero keeps
    that rate: `sectionP` starts at it and eases up to a faster, steady rate
    once the "e" blocks are gone, instead of scaling everything uniformly. */
-const SECTION_VH = 160; // 2026-10-06: Rajat, the cube arrays in one scroll (was 210, 280 before that)
+const SECTION_VH = 250; // 2026-10-07: Rajat, smoother, show every step (160 was too harsh; 210, 280 before)
 /** Pinned tail after the poster: the box falls out of the frame's bottom,
  *  into the next section (home/RedLine.tsx catches it). */
 export const DROP_VH = 90;
@@ -62,17 +62,25 @@ const STRIKES = (() => {
 const CHARS = STRIKES.reduce((a, w) => a + w.length + 1, 0);
 /** Pinned scroll (vh) the timeline was designed against. */
 const DESIGN_VH = 390;
-/** Scroll (vh) over which the rate eases from the design rate to the
- *  section's own: past the hand-off, which lasts ~25vh of hero zoom. */
-const SEAM_VH = 50;
-/** Timeline progress at `s` vh into the pinned scroll. Rate starts at
- *  1/DESIGN_VH, eases (cosine) to a steady `r1` by SEAM_VH, ends at 1. */
+/** Timeline progress at `s` vh into the pinned scroll. Two Hermite pieces
+ *  joined with a matching rate, so the speed never jumps: it starts at the
+ *  hero's own rate (1/DESIGN_VH) for a seamless hand-off, runs the tunnel in
+ *  the first TUNNEL_U of the scroll, then gives the gather the larger share
+ *  and slows into the lock (Rajat, 2026-10-07: "too harsh and fast, show
+ *  everything"). */
+const TUNNEL_U = 0.36;
+const TUNNEL_P = 0.46; // = GATHER_START in CubeAssembly
+function hermite(t: number, p0: number, p1: number, m0: number, m1: number, h: number) {
+  const t2 = t * t, t3 = t2 * t;
+  return (2 * t3 - 3 * t2 + 1) * p0 + (t3 - 2 * t2 + t) * h * m0 + (-2 * t3 + 3 * t2) * p1 + (t3 - t2) * h * m1;
+}
 function sectionP(s: number) {
   const L = SECTION_VH - 100;
-  const r0 = 1 / DESIGN_VH;
-  const r1 = (1 - (r0 * SEAM_VH) / 2) / (L - SEAM_VH / 2);
-  const g = s < SEAM_VH ? s / 2 + (SEAM_VH / (2 * Math.PI)) * Math.sin((Math.PI * s) / SEAM_VH) : SEAM_VH / 2;
-  return r1 * s + (r0 - r1) * g;
+  const u = Math.max(0, Math.min(1, s / L));
+  const m0 = L / DESIGN_VH;
+  const mJoin = (1 - TUNNEL_P) / (1 - TUNNEL_U);
+  if (u < TUNNEL_U) return hermite(u / TUNNEL_U, 0, TUNNEL_P, m0, mJoin, TUNNEL_U);
+  return hermite((u - TUNNEL_U) / (1 - TUNNEL_U), TUNNEL_P, 1, mJoin, 0.45, 1 - TUNNEL_U);
 }
 const BG = '#FFFFFF';
 const INK = '#0A0A0A';

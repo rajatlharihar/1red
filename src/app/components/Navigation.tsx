@@ -272,7 +272,9 @@ export function Navigation() {
         <Link
           to="/"
           aria-label="1Red, home"
-          className={focusRing}
+          // No box round the mark (Rajat, 2026-10-06): keyboard focus shows as
+          // a soft red glow on the letters instead.
+          className="outline-none focus-visible:[filter:drop-shadow(0_0_8px_rgba(235,63,67,0.9))]"
           style={{ position: 'relative', display: 'block', lineHeight: 0, padding: '8px 10px' }}
         >
           {/* Every block of the mark is frosted glass, the nav islands'

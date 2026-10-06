@@ -801,14 +801,12 @@ export function CubeAssembly({
         sc.far = 14 * L;
         sc.updateProjectionMatrix();
         sun.current.shadow.radius = 4 + 12 * (1 - near);
-        sun.current.castShadow = true;
       }
     } else {
       cam.rotation.set(0, 0, 0);
       physRef.current = { k: 0, th: 0, w: 0 };
       if (shadow.current) shadow.current.visible = false;
       if (floor.current) floor.current.visible = false;
-      if (sun.current) sun.current.castShadow = false;
     }
 
     const edgeBuf = lines.geometry.attributes.instanceStart.data as THREE.InstancedInterleavedBuffer;
@@ -850,8 +848,9 @@ export function CubeAssembly({
         <meshBasicMaterial color="#FFFFFF" toneMapped={false} />
       </mesh>
       <instancedMesh ref={mesh} args={[geo, mat, COUNT]} frustumCulled={false} castShadow />
-      {/* Intensity 0: it only casts; the box keeps its own lighting. */}
-      <directionalLight ref={sun} intensity={0} castShadow={false} shadow-mapSize={[512, 512]} shadow-bias={-0.0004} shadow-blurSamples={8} />
+      {/* Intensity 0: it only casts; the box keeps its own lighting. Always
+          casting: toggling it recompiles every shader mid-scroll (a hitch). */}
+      <directionalLight ref={sun} intensity={0} castShadow shadow-mapSize={[512, 512]} shadow-bias={-0.0004} shadow-blurSamples={8} />
       <mesh ref={floor} rotation={[-Math.PI / 2, 0, 0]} visible={false} receiveShadow renderOrder={-2} frustumCulled={false}>
         <planeGeometry args={[1, 1]} />
         <shadowMaterial transparent opacity={0} color="#1A0A0A" depthWrite={false} />

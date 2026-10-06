@@ -62,6 +62,34 @@ function Eyes({ mood, pupils }: { mood: Mood; pupils: React.RefObject<SVGGElemen
     );
   }
   const pupil = (e: { x: number; y: number }, s = 1) => <ellipse cx={e.x} cy={e.y + 1} rx={3.6 * s} ry={5.6 * s} fill={INK} />;
+  if (mood === 'irritated') {
+    /* Lidded: only the eye below a flat lid line is drawn, so nothing
+       white has to cover the top half (it showed on the paper cards). */
+    const w = Math.sqrt(EYE_R0 * EYE_R0 - 16);
+    const lid = (e: { x: number; y: number }) => `M${e.x - w} ${e.y - 4} L${e.x + w} ${e.y - 4} A${EYE_R0} ${EYE_R0} 0 1 1 ${e.x - w} ${e.y - 4} Z`;
+    return (
+      <g>
+        <defs>
+          <clipPath id="bf-lid">
+            <path d={lid(EYE_L)} />
+            <path d={lid(EYE_R)} />
+          </clipPath>
+        </defs>
+        {[EYE_L, EYE_R].map((e, i) => (
+          <path key={i} d={lid(e)} fill="#fff" />
+        ))}
+        <g clipPath="url(#bf-lid)">
+          <g ref={pupils}>
+            {pupil(EYE_L)}
+            {pupil(EYE_R)}
+          </g>
+        </g>
+        {[EYE_L, EYE_R].map((e, i) => (
+          <path key={i} d={lid(e)} fill="none" stroke={INK} strokeWidth={sw} strokeLinejoin="round" />
+        ))}
+      </g>
+    );
+  }
   return (
     <g>
       {[EYE_L, EYE_R].map((e, i) => (
@@ -85,14 +113,6 @@ function Eyes({ mood, pupils }: { mood: Mood; pupils: React.RefObject<SVGGElemen
         <g fill="#fff" stroke={INK} strokeWidth={sw} strokeLinejoin="round">
           <path d={`M${EYE_L.x - EYE_R0 - 1} ${EYE_L.y} A${EYE_R0} ${EYE_R0} 0 0 1 ${EYE_L.x + EYE_R0 + 1} ${EYE_L.y} Z`} />
           <path d={`M${EYE_R.x - EYE_R0 - 1} ${EYE_R.y} A${EYE_R0} ${EYE_R0} 0 0 1 ${EYE_R.x + EYE_R0 + 1} ${EYE_R.y} Z`} />
-        </g>
-      )}
-      {mood === 'irritated' && (
-        <g fill="#fff" stroke={INK} strokeWidth={sw} strokeLinejoin="round">
-          <path d={`M${EYE_L.x - EYE_R0 - 1} ${EYE_L.y - 4} L${EYE_L.x + EYE_R0 + 1} ${EYE_L.y - 4} L${EYE_L.x + EYE_R0 + 1} ${EYE_L.y - EYE_R0 - 2} L${EYE_L.x - EYE_R0 - 1} ${EYE_L.y - EYE_R0 - 2} Z`} stroke="none" />
-          <path d={`M${EYE_R.x - EYE_R0 - 1} ${EYE_R.y - 4} L${EYE_R.x + EYE_R0 + 1} ${EYE_R.y - 4} L${EYE_R.x + EYE_R0 + 1} ${EYE_R.y - EYE_R0 - 2} L${EYE_R.x - EYE_R0 - 1} ${EYE_R.y - EYE_R0 - 2} Z`} stroke="none" />
-          <path d={`M${EYE_L.x - EYE_R0} ${EYE_L.y - 4} L${EYE_L.x + EYE_R0} ${EYE_L.y - 4}`} fill="none" />
-          <path d={`M${EYE_R.x - EYE_R0} ${EYE_R.y - 4} L${EYE_R.x + EYE_R0} ${EYE_R.y - 4}`} fill="none" />
         </g>
       )}
     </g>
@@ -138,8 +158,12 @@ function Extras({ mood }: { mood: Mood }) {
       return (
         <g>
           <path d="M32 64 Q40 58 48 64" {...s} />
-          <path d="M14 38 Q12 52 15 72" fill="none" stroke={TEAR} strokeWidth={3.2} strokeLinecap="round" />
-          <path d="M66 38 Q68 52 65 72" fill="none" stroke={TEAR} strokeWidth={3.2} strokeLinecap="round" />
+          {/* Tears welling up inside the eyes, not running down the face. */}
+          {[EYE_L, EYE_R].map((e, i) => {
+            const r = EYE_R0 - 1.3;
+            const w = Math.sqrt(r * r - 9);
+            return <path key={i} d={`M${e.x - w} ${e.y + 3} Q${e.x - w / 2} ${e.y + 1.6} ${e.x} ${e.y + 3} T${e.x + w} ${e.y + 3} A${r} ${r} 0 0 1 ${e.x - w} ${e.y + 3} Z`} fill={TEAR} opacity={0.9} />;
+          })}
         </g>
       );
     case 'irritated':

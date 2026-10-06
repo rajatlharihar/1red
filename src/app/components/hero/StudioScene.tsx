@@ -8,6 +8,7 @@ import { StudioEnvironment, type RoomMaterials } from './StudioEnvironment';
 import { INK, FILL_OFFSET, createInkLineMaterial, inkEdges } from './inkLines';
 import { buildLogoGeometry } from './logoGeometry';
 import {
+  HERO_FOV,
   sampleSequence,
   lerp,
   RESTING_STATE,
@@ -34,6 +35,13 @@ import {
   PANEL_TILT0,
   PANEL_TILT,
 } from './studioSequence';
+
+/** Portrait framing: tan of the half-width the gate needs (its foot plus a
+ *  margin of facade, at the hold distance), and the progress span over which
+ *  the widened view hands back to HERO_FOV (door fully open -> end of push). */
+const GATE_HALF_TAN = 0.6;
+const WIDE_UNTIL = 0.496;
+const WIDE_BACK = 0.704;
 
 /* ─── The entrance to Studio.glb ───────────────────────────────────────────
  * The supplied model IS the studio. Everything built here is only what the
@@ -411,6 +419,22 @@ export function StudioScene({
 
     camera.position.set(s.camX, s.camY, s.camZ);
     camera.lookAt(s.lookX, s.lookY, s.lookZ);
+    /* A portrait frame sees a narrow strip at HERO_FOV, so a phone lost the
+       sides of the gate (Rajat, 2026-10-07). Widen the view until the gate
+       fits across, through the door opening, then ease back to HERO_FOV
+       over the push into the room: the mark's zoom and the cube hand-off
+       are measured at HERO_FOV and stay exact. */
+    const cam = camera as THREE.PerspectiveCamera;
+    const aspect = size.width / size.height;
+    const baseTan = Math.tan(THREE.MathUtils.degToRad(HERO_FOV / 2));
+    const wantTan = Math.min(Math.tan(THREE.MathUtils.degToRad(50)), Math.max(baseTan, GATE_HALF_TAN / aspect));
+    const p = reduceMotion ? 1 : progressRef.current;
+    const back = p <= WIDE_UNTIL ? 0 : p >= WIDE_BACK ? 1 : (1 - Math.cos(Math.PI * (p - WIDE_UNTIL) / (WIDE_BACK - WIDE_UNTIL))) / 2;
+    const fov = THREE.MathUtils.radToDeg(2 * Math.atan(wantTan + (baseTan - wantTan) * back));
+    if (Math.abs(cam.fov - fov) > 0.01) {
+      cam.fov = fov;
+      cam.updateProjectionMatrix();
+    }
     camera.rotateZ(s.camRoll);
 
     // The garage door: all panels rise together and vanish into the header.

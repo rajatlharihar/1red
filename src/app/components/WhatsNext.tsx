@@ -129,7 +129,9 @@ const FIGURE_LINES = [
 
 const LINE = pencil(
   [
-    [13.5, 4], [13, 1], [14.5, 0.5], [14, 3], [13, 5], [12.5, 6], [12, 7], [13.5, 6.5], [13, 8], [11.5, 7.5],
+    // From his pencil tip, up and away to the left: never across him
+    // (Rajat, 2026-10-06: it used to run through his head and legs).
+    [13.5, 4], [14, 2.6], [13.2, 1.1], [11.4, 1.3], [10.2, 2.8], [10.6, 4.8], [9.6, 6.8], [7.5, 7.6],
     [4.5, 7.5], [2.5, 5.5], [1, 4.5], [2.5, 3], [1.5, 2],
   ],
   2.2, 21
