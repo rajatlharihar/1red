@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { HERO_FOV, FACADE_Z, doorRimX, facadeFrontZ, sampleSequence } from './studioSequence';
+import { FACADE_Z, doorRimX, facadeFrontZ, heroFov, sampleSequence } from './studioSequence';
 
 /* ─── The statement on the wall ────────────────────────────────────────────
  * "Nobody remembers the safe one." lettered on the facade: the first
@@ -72,7 +72,7 @@ export interface WallStatementLayout {
  *  onto the (leaning) facade face; the images of the frame's straight edges
  *  are straight on the plane, so the region is a convex quad. */
 function visibleWall(aspect: number) {
-  const cam = new THREE.PerspectiveCamera(HERO_FOV, aspect, 0.05, 60);
+  const cam = new THREE.PerspectiveCamera(heroFov(aspect, 0), aspect, 0.05, 60);
   const s = sampleSequence(0);
   cam.position.set(s.camX, s.camY, s.camZ);
   cam.lookAt(s.lookX, s.lookY, s.lookZ);

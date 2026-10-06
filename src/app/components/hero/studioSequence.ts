@@ -108,6 +108,21 @@ export const LIGHTS_ON = 0.706;
 /** The hero camera's vertical field of view. Exported because the hand-off
  *  has to work out how big the gap in the "e" is on screen. */
 export const HERO_FOV = 45;
+/* A portrait frame sees a narrow strip at HERO_FOV, so a phone lost the
+   sides of the gate (Rajat, 2026-10-07). The view widens until the gate fits
+   across, through the door opening, then eases back to HERO_FOV over the
+   push into the room: the mark's zoom and the cube hand-off are measured at
+   HERO_FOV and stay exact. Shared by the camera and the wall statement's
+   fitting, so the lettering is sized for the frame actually shown. */
+const GATE_HALF_TAN = 0.6;
+const WIDE_UNTIL = 0.496;
+const WIDE_BACK = 0.704;
+export function heroFov(aspect: number, p: number) {
+  const baseTan = Math.tan(((HERO_FOV / 2) * Math.PI) / 180);
+  const wantTan = Math.min(Math.tan((50 * Math.PI) / 180), Math.max(baseTan, GATE_HALF_TAN / aspect));
+  const back = p <= WIDE_UNTIL ? 0 : p >= WIDE_BACK ? 1 : (1 - Math.cos((Math.PI * (p - WIDE_UNTIL)) / (WIDE_BACK - WIDE_UNTIL))) / 2;
+  return (2 * Math.atan(wantTan + (baseTan - wantTan) * back) * 180) / Math.PI;
+}
 const GLOW_FROM = 0.56;
 const GLOW_LEVEL = 0.38;
 

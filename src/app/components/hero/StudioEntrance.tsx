@@ -41,6 +41,9 @@ export const TAIL_VH = 100;
    drops to ~1x only on very large windows. */
 const PIXEL_BUDGET = 3.2e6;
 export function budgetDpr(max: number) {
+  // Phones: a small screen held close hides the difference between 1.3x and
+  // 1.75x, and their GPUs feel it (2026-10-07 device pass).
+  if (window.matchMedia('(pointer: coarse) and (max-width: 767px)').matches) max = Math.min(max, 1.3);
   const px = window.innerWidth * window.innerHeight;
   return Math.max(0.75, Math.min(max, window.devicePixelRatio || 1, Math.sqrt(PIXEL_BUDGET / px)));
 }
