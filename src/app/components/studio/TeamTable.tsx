@@ -85,31 +85,73 @@ const SUBS: Array<{ at: number; power: Power; text: string; red?: boolean }> = [
 ];
 const RANK_ROLL = 'transform 0.9s cubic-bezier(0.37, 0, 0.63, 1)';
 
-/** A power, drawn in white at 1em: no numbers anywhere on our card. */
+/** A power in UNO's own voice: chunky white, a thick black outline and a
+ *  hard black extrusion down and to the right, like the printed card. Every
+ *  glyph is drawn three times (extrusion, outline, fill) from one shape. */
+const UNO_FONT = "'Lilita One', var(--font-sans)";
+function UnoInk({ children, w = 32 }: { children: (layer: 'depth' | 'line' | 'fill') => React.ReactNode; w?: number }) {
+  const depth = [1, 2, 3, 4];
+  return (
+    <svg viewBox={`-4 -4 ${w + 10} 42`} style={{ height: '1.2em', width: 'auto', overflow: 'visible' }} aria-hidden>
+      {depth.map((d) => (
+        <g key={d} transform={`translate(${d * 0.7} ${d * 0.7})`}>{children('depth')}</g>
+      ))}
+      {children('line')}
+      {children('fill')}
+    </svg>
+  );
+}
+const inkStyle = (layer: 'depth' | 'line' | 'fill') =>
+  layer === 'fill'
+    ? { fill: '#FFFFFF', stroke: 'none' }
+    : { fill: '#0A0A0A', stroke: '#0A0A0A', strokeWidth: 5.5, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
+
 function PowerGlyph({ power }: { power: Power }) {
-  const t = { fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: '0.78em', letterSpacing: '-0.04em', lineHeight: 1 } as const;
-  if (power === 'plus2' || power === 'plus4') return <span style={t}>{power === 'plus2' ? '+2' : '+4'}</span>;
+  if (power === 'plus2' || power === 'plus4')
+    return (
+      <UnoInk w={34}>
+        {(l) => (
+          <text x={17} y={30} textAnchor="middle" fontFamily={UNO_FONT} fontSize={34} letterSpacing={-1} {...inkStyle(l)}>
+            {power === 'plus2' ? '+2' : '+4'}
+          </text>
+        )}
+      </UnoInk>
+    );
   if (power === 'skip')
     return (
-      <svg viewBox="0 0 24 24" style={{ width: '0.8em', height: '0.8em' }} aria-hidden>
-        <circle cx="12" cy="12" r="9" fill="none" stroke="#fff" strokeWidth="3" />
-        <path d="M6 18 18 6" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
-      </svg>
+      <UnoInk w={34}>
+        {(l) => (
+          <path
+            fillRule="evenodd"
+            d="M17 2a15 15 0 1 1 0 30a15 15 0 1 1 0-30ZM10.6 22.9 21.4 8.9a9 9 0 0 0-10.8 14ZM13 25.4 23.8 11.4a9 9 0 0 1-10.8 14Z"
+            {...inkStyle(l)}
+          />
+        )}
+      </UnoInk>
     );
   if (power === 'reverse')
     return (
-      <svg viewBox="0 0 24 24" style={{ width: '0.8em', height: '0.8em' }} aria-hidden>
-        <path d="M4 9h12l-3-3m3 3-3 3M20 15H8l3 3m-3-3 3-3" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <UnoInk w={34}>
+        {(l) => (
+          <g {...inkStyle(l)}>
+            <path d="M3 13 14 3v6h10a6 6 0 0 1 6 6v3h-6v-2a1 1 0 0 0-1-1H14v6Z" />
+            <path d="M31 21 20 31v-6H10a6 6 0 0 1-6-6v-3h6v2a1 1 0 0 0 1 1h9v-6Z" />
+          </g>
+        )}
+      </UnoInk>
     );
   // WILD: four blocks, one with the logo's rounded corner.
   return (
-    <svg viewBox="0 0 24 24" style={{ width: '0.8em', height: '0.8em' }} aria-hidden>
-      <path d="M7 2h4v9H2V7a5 5 0 0 1 5-5Z" fill="#fff" />
-      <rect x="13" y="2" width="9" height="9" fill="#fff" opacity="0.55" />
-      <rect x="2" y="13" width="9" height="9" fill="#fff" opacity="0.55" />
-      <rect x="13" y="13" width="9" height="9" fill="#fff" />
-    </svg>
+    <UnoInk w={32}>
+      {(l) => (
+        <g {...inkStyle(l)}>
+          <path d="M9 2h6v13H2V9a7 7 0 0 1 7-7Z" />
+          <rect x="18" y="2" width="13" height="13" />
+          <rect x="2" y="18" width="13" height="13" />
+          <rect x="18" y="18" width="13" height="13" />
+        </g>
+      )}
+    </UnoInk>
   );
 }
 
@@ -328,17 +370,15 @@ function Index({ flip, rankRef }: { flip?: boolean; rankRef: (el: HTMLSpanElemen
         color: '#FFFFFF',
         fontFamily: 'var(--font-sans)',
         fontWeight: 700,
-        fontSize: 'clamp(22px, 3.2vw, 56px)',
+        fontSize: 'clamp(30px, 4.4vw, 76px)',
         lineHeight: 1,
         letterSpacing: '-0.04em',
-        // UNO's corner index: bold white with a hard black offset outline.
-        filter: 'drop-shadow(0.06em 0.06em 0 #0A0A0A) drop-shadow(-0.02em -0.02em 0 #0A0A0A)',
       }}
     >
-      <span style={{ display: 'block', height: '1em', overflow: 'hidden', minWidth: '1.2em', textAlign: 'center' }}>
+      <span style={{ display: 'block', height: '1.3em', overflow: 'hidden', minWidth: '1.5em', textAlign: 'center', paddingTop: '0.05em', boxSizing: 'border-box' }}>
         <span ref={rankRef} style={{ display: 'flex', flexDirection: 'column', transition: RANK_ROLL, willChange: 'transform' }}>
           {SUBS.map((sub, i) => (
-            <span key={i} style={{ display: 'flex', height: '1em', alignItems: 'center', justifyContent: 'center' }}>
+            <span key={i} style={{ display: 'flex', height: '1.3em', alignItems: 'center', justifyContent: 'center' }}>
               <PowerGlyph power={sub.power} />
             </span>
           ))}
@@ -447,7 +487,7 @@ export function TeamTable() {
     };
   }, [reduceMotion]);
 
-  const setRank = (i: number) => rankRefs.current.forEach((el) => el && (el.style.transform = `translateY(${-i}em)`));
+  const setRank = (i: number) => rankRefs.current.forEach((el) => el && (el.style.transform = `translateY(${-i * 1.3}em)`));
 
   useEffect(() => {
     if (reduceMotion) return;

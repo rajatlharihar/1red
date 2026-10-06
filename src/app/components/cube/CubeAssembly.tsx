@@ -196,7 +196,7 @@ const DRIFT_Y = 0.35;
 /** How far the camera rises as the box settles, so the box sits lower in
  *  the frame under the copy (world units). */
 const BOX_DROP = 0.6;
-const BOX_DROP_WIDE = 1.0;
+const BOX_DROP_WIDE = 0.3; // 2026-10-06: Rajat, poster up to the centre (was 1.0)
 /** ...and to the right on a wide frame, into the poster's empty lower-right
  *  column beside the headline: the camera slides left by this share of the
  *  frame's half-width at the box's depth. A portrait frame keeps it centred. */
@@ -362,8 +362,8 @@ const HALF_PI = Math.PI / 2;
    centre; the box drifts LAND_Z back as it falls, so it lands smaller, the
    way something dropped away from you does. The camera lifts RISE, backs
    off BACK and tips down PITCH so the floor reads and the box shows its top. */
-const FLOOR_Y = -3.6;
-const FLOOR_Y_PORTRAIT = -5;
+const FLOOR_Y = -4.1; // 2026-10-06: Rajat, the box a little lower (was -3.6)
+const FLOOR_Y_PORTRAIT = -5.4;
 const LAND_Z = -3.2; // farther back: the box lands smaller (Rajat: "a little smaller")
 const LAND_T = 0.74;
 const LAND_YAW = -0.42;
@@ -404,6 +404,12 @@ export function CubeAssembly({
 }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const shadow = useRef<THREE.Mesh>(null);
+  /* A real cast shadow once the box drops: a light that rides above the
+     box (so its shadow camera only ever has to cover the box) and an
+     invisible floor that only shows the shadow. The radial blob stays as
+     the contact shadow, tight under the base. */
+  const floor = useRef<THREE.Mesh>(null);
+  const sun = useRef<THREE.DirectionalLight>(null);
   const physRef = useRef({ k: 0, th: 0, w: 0 });
   const shadowTex = useMemo(() => {
     const c = document.createElement('canvas');
@@ -411,7 +417,8 @@ export function CubeAssembly({
     const g = c.getContext('2d')!;
     const r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
     r.addColorStop(0, 'rgba(0,0,0,1)');
-    r.addColorStop(0.45, 'rgba(0,0,0,0.55)');
+    r.addColorStop(0.3, 'rgba(0,0,0,0.6)');
+    r.addColorStop(0.6, 'rgba(0,0,0,0.15)');
     r.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = r;
     g.fillRect(0, 0, 128, 128);
@@ -770,17 +777,38 @@ export function CubeAssembly({
         w.pos.applyQuaternion(_qInv).applyQuaternion(_qBody).add(_cBody);
         w.quat.premultiply(_qInv).premultiply(_qBody);
       }
+      const near = clamp01(1 - (_cBody.y - landY) / (2.5 * L));
       if (shadow.current) {
-        const near = clamp01(1 - (_cBody.y - landY) / (2.5 * L));
+        // Contact shadow: tight and dark at the base when down, gone in the air.
         shadow.current.visible = true;
-        shadow.current.position.set(_cBody.x, floorY + 0.002, _cBody.z);
-        shadow.current.scale.setScalar(L * (1.15 + 0.9 * (1 - near)));
-        (shadow.current.material as THREE.MeshBasicMaterial).opacity = 0.5 * near * near * smoothstep(0.08, 0.4, drop);
+        shadow.current.position.set(_cBody.x, floorY + 0.003, _cBody.z);
+        shadow.current.scale.setScalar(L * (0.95 + 0.6 * (1 - near)));
+        (shadow.current.material as THREE.MeshBasicMaterial).opacity = 0.55 * Math.pow(near, 4) * smoothstep(0.08, 0.4, drop);
+      }
+      if (floor.current && sun.current) {
+        floor.current.visible = true;
+        floor.current.position.set(_cBody.x, floorY + 0.001, _cBody.z);
+        floor.current.scale.setScalar(L * 4.4);
+        // Sharper and darker as the box nears the floor, like a real one.
+        (floor.current.material as THREE.ShadowMaterial).opacity = (0.05 + 0.25 * near * near) * smoothstep(0.05, 0.35, drop);
+        sun.current.position.set(_cBody.x - 1.6 * L, floorY + 7 * L, _cBody.z + 2.2 * L);
+        sun.current.target.position.set(_cBody.x, floorY, _cBody.z);
+        sun.current.target.updateMatrixWorld();
+        const sc = sun.current.shadow.camera;
+        sc.left = sc.bottom = -2.6 * L;
+        sc.right = sc.top = 2.6 * L;
+        sc.near = 0.1;
+        sc.far = 14 * L;
+        sc.updateProjectionMatrix();
+        sun.current.shadow.radius = 4 + 12 * (1 - near);
+        sun.current.castShadow = true;
       }
     } else {
       cam.rotation.set(0, 0, 0);
       physRef.current = { k: 0, th: 0, w: 0 };
       if (shadow.current) shadow.current.visible = false;
+      if (floor.current) floor.current.visible = false;
+      if (sun.current) sun.current.castShadow = false;
     }
 
     const edgeBuf = lines.geometry.attributes.instanceStart.data as THREE.InstancedInterleavedBuffer;
@@ -821,7 +849,13 @@ export function CubeAssembly({
         <planeGeometry args={[BACKDROP_DIST * TAN_HALF * 2 * 6, BACKDROP_DIST * TAN_HALF * 2 * 1.2]} />
         <meshBasicMaterial color="#FFFFFF" toneMapped={false} />
       </mesh>
-      <instancedMesh ref={mesh} args={[geo, mat, COUNT]} frustumCulled={false} />
+      <instancedMesh ref={mesh} args={[geo, mat, COUNT]} frustumCulled={false} castShadow />
+      {/* Intensity 0: it only casts; the box keeps its own lighting. */}
+      <directionalLight ref={sun} intensity={0} castShadow={false} shadow-mapSize={[512, 512]} shadow-bias={-0.0004} shadow-blurSamples={8} />
+      <mesh ref={floor} rotation={[-Math.PI / 2, 0, 0]} visible={false} receiveShadow renderOrder={-2} frustumCulled={false}>
+        <planeGeometry args={[1, 1]} />
+        <shadowMaterial transparent opacity={0} color="#1A0A0A" depthWrite={false} />
+      </mesh>
       <mesh ref={shadow} rotation={[-Math.PI / 2, 0, 0]} visible={false} renderOrder={-1} frustumCulled={false}>
         <planeGeometry args={[1.6, 1.6]} />
         <meshBasicMaterial map={shadowTex} transparent depthWrite={false} opacity={0} toneMapped={false} />

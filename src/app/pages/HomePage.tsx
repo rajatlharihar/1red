@@ -21,12 +21,14 @@ import { TheDeal } from '../components/home/TheDeal';
  * FlashWork and /case-studies/:slug. */
 export function HomePage() {
   return (
-    <>
+    // clip, not hidden: the tilting cards must not widen the page, and
+    // `hidden` would break every sticky section inside.
+    <div style={{ overflowX: 'clip' }}>
       <StudioEntrance />
       <ProblemCube />
       <RedFlags />
       <TheDeal />
       <WhatsNext />
-    </>
+    </div>
   );
 }

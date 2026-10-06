@@ -25,10 +25,16 @@ import { glide, subscribeGlide } from '../scrollGlide';
    The timeline below was tuned at 390vh, so the seam with the hero keeps
    that rate: `sectionP` starts at it and eases up to a faster, steady rate
    once the "e" blocks are gone, instead of scaling everything uniformly. */
-const SECTION_VH = 210; // 2026-10-04: Rajat, the gather can be shorter (was 280)
+const SECTION_VH = 160; // 2026-10-06: Rajat, the cube arrays in one scroll (was 210, 280 before that)
 /** Pinned tail after the poster: the box falls out of the frame's bottom,
  *  into the next section (home/RedLine.tsx catches it). */
 export const DROP_VH = 90;
+/** The finished poster holds, pinned, before the box drops: the page scrolls
+ *  on but the frame stays put (Rajat, 2026-10-06: "come and hold"). */
+const HOLD_VH = 80;
+/** The last frame holds while the red flags card slides up over it
+ *  (RedFlags pulls itself up by 100vh). */
+const COVER_VH = 100;
 /** Then the reading stretch: "who we are" inks in while the same box rolls
  *  off the frame's right edge (this was home/RedLine.tsx, merged in so the
  *  box never leaves its own renderer). */
@@ -43,6 +49,17 @@ const WHO: Word[] = [
   ...'impossible to scroll past.'.split(' ').map((t) => ({ t, tone: 'red' as const })),
   ...'The logo, the website and the campaign, made by the same people, so they finally sound like the same brand.'.split(' ').map((t) => ({ t })),
 ];
+/* Typed, not faded (Rajat, 2026-10-06: "like the typewriter got it"):
+   every character strikes on its own as the reading runs, at a slightly
+   uneven ink weight and a hair off the baseline, the way a typebar lands,
+   and every character bleeds a little ink into the paper. Seeded, so the
+   page types the same way every time. */
+const STRIKES = (() => {
+  let n = 7;
+  const r = () => ((n = (n * 9301 + 49297) % 233280) / 233280);
+  return WHO.map((w) => [...w.t].map(() => ({ ink: 0.8 + r() * 0.2, dy: (r() - 0.5) * 0.05 })));
+})();
+const CHARS = STRIKES.reduce((a, w) => a + w.length + 1, 0);
 /** Pinned scroll (vh) the timeline was designed against. */
 const DESIGN_VH = 390;
 /** Scroll (vh) over which the rate eases from the design rate to the
@@ -78,7 +95,6 @@ const LINE_REVEAL: Array<[number, number]> = [
   [0.82, 0.94],
   [0.88, 0.98],
 ];
-const RULE_REVEAL: [number, number] = [0.88, 0.99];
 const smooth = (a: number, b: number, v: number) => {
   const t = Math.max(0, Math.min(1, (v - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -93,7 +109,6 @@ export function ProblemCube() {
   const sheetRef = useRef<HTMLDivElement>(null);
   const lineRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const labelRef = useRef<HTMLSpanElement>(null);
-  const ruleRef = useRef<HTMLDivElement>(null);
   // The grid: headline on eight of twelve columns beside the label on a
   // wide frame; on a phone the headline takes the full width and the label
   // sits under the rule, clear of the nav.
@@ -108,7 +123,8 @@ export function ProblemCube() {
   const dropRef = useRef(0);
   const rollRef = useRef(0);
   const whoRef = useRef<HTMLDivElement>(null);
-  const wordRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const charRefs = useRef<Array<Array<HTMLSpanElement | null>>>([]);
+  const dotsRef = useRef<HTMLDivElement>(null);
   /** The hero's own progress at this scroll position, unclamped, so the
    *  canvas can place the mark where the hero has it and know when the
    *  frame behind the mark has gone white. */
@@ -156,8 +172,8 @@ export function ProblemCube() {
       const s = ((glide.y - top) / window.innerHeight) * 100;
       const p = s <= 0 ? 0 : s >= SECTION_VH - 100 ? 1 : sectionP(s);
       progressRef.current = p;
-      const drop = Math.max(0, Math.min(1, (s - (SECTION_VH - 100)) / DROP_VH));
-      const roll = Math.max(0, Math.min(1, (s - (SECTION_VH - 100) - DROP_VH) / ROLL_VH));
+      const drop = Math.max(0, Math.min(1, (s - (SECTION_VH - 100) - HOLD_VH) / DROP_VH));
+      const roll = Math.max(0, Math.min(1, (s - (SECTION_VH - 100) - HOLD_VH - DROP_VH) / ROLL_VH));
       dropRef.current = drop;
       rollRef.current = smooth(0.06, 0.94, roll);
       // The poster leaves upward into its masks as the box starts to fall;
@@ -168,11 +184,19 @@ export function ProblemCube() {
         whoRef.current.style.opacity = a.toFixed(3);
         whoRef.current.style.transform = `translateY(${((1 - a) * 24).toFixed(1)}px)`;
       }
-      const read = smooth(0.02, 0.8, roll) * (WHO.length + 2);
-      wordRefs.current.forEach((w, i) => {
-        if (!w) return;
-        const k = Math.max(0, Math.min(1, read - i));
-        w.style.opacity = (0.16 + 0.84 * k).toFixed(3);
+      const read = smooth(0.02, 0.8, roll) * (CHARS + 2);
+      if (dotsRef.current) dotsRef.current.style.opacity = smooth(0.2, 0.8, drop).toFixed(3);
+      let at = 0;
+      STRIKES.forEach((word, i) => {
+        word.forEach((c, j) => {
+          const el = charRefs.current[i]?.[j];
+          const on = read > at;
+          at += 1;
+          if (!el || (el.dataset.on === '1') === on) return;
+          el.dataset.on = on ? '1' : '0';
+          el.style.opacity = on ? String(c.ink) : '0';
+        });
+        at += 1;
       });
       // The hero animates over `HERO_VH - 100`, at its own rate.
       heroPRef.current = HANDOFF_P + s / (HERO_VH - 100);
@@ -189,9 +213,6 @@ export function ProblemCube() {
       if (labelRef.current) {
         const t = smooth(LINE_REVEAL[0][0], LINE_REVEAL[0][1], p);
         labelRef.current.style.transform = `translateY(${((1 - t) * 110 - out * 110).toFixed(2)}%)`;
-      }
-      if (ruleRef.current) {
-        ruleRef.current.style.transform = `scaleX(${(smooth(RULE_REVEAL[0], RULE_REVEAL[1], p) * (1 - out)).toFixed(4)})`;
       }
     });
   }, [reduceMotion]);
@@ -218,7 +239,7 @@ export function ProblemCube() {
         background: reduceMotion ? BG : 'transparent',
       }}
     >
-      <div ref={wrapRef} style={{ height: reduceMotion ? '100vh' : `${SECTION_VH + DROP_VH + ROLL_VH}vh`, position: 'relative' }}>
+      <div ref={wrapRef} style={{ height: reduceMotion ? '100vh' : `${SECTION_VH + HOLD_VH + DROP_VH + ROLL_VH + COVER_VH}vh`, position: 'relative' }}>
         <div
           onMouseMove={onPointerMove}
           style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}
@@ -227,14 +248,27 @@ export function ProblemCube() {
               gone; until then the canvas paints its own white for the mark
               to cut. */}
           <div ref={sheetRef} style={{ position: 'absolute', inset: 0, background: BG, opacity: reduceMotion ? 1 : 0 }}>
-            {/* Who we are: arrives as the box lands, inks in as it rolls away. */}
+            {/* Dot-grid notebook paper behind the reading, in as the box drops. */}
+            <div
+              ref={dotsRef}
+              aria-hidden
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: reduceMotion ? 1 : 0,
+                backgroundImage: 'radial-gradient(circle, rgba(10,10,10,0.22) 1.1px, transparent 1.6px)',
+                backgroundSize: '26px 26px',
+                backgroundPosition: 'center center',
+              }}
+            />
+            {/* Who we are: arrives as the box lands, types in as it rolls away. */}
             <div
               ref={whoRef}
               style={{
                 position: 'absolute',
                 left: 0,
                 right: 0,
-                top: 'clamp(6rem, 17vh, 11rem)',
+                top: 'clamp(8rem, 25vh, 15rem)',
                 padding: '0 clamp(1rem, 4vw, 5rem)',
                 display: 'flex',
                 justifyContent: 'center',
@@ -242,21 +276,33 @@ export function ProblemCube() {
                 pointerEvents: 'none',
               }}
             >
-              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(24px, min(3.3vw, 5.2vh), 58px)', fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.12, margin: 0, maxWidth: '21em', color: INK, textAlign: 'center' }}>
+              <p aria-label={WHO.map((w) => w.t).join(' ')} style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(24px, min(3.3vw, 5.2vh), 58px)', fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.12, margin: 0, maxWidth: '21em', color: INK, textAlign: 'center',
+                // Ink bleed: a tight halo of each character's own ink, as it
+                // wicks into the paper. Text shadows, not an SVG filter: the
+                // filter re-ran on every keystrike and halved the frame rate.
+                textShadow: '0 0 0.6px currentColor, 0 0 1.4px currentColor, 0.4px 0.5px 2.4px rgba(10,10,10,0.18)' }}>
                 {WHO.map((w, i) => (
-                  <span key={i}>
+                  <span key={i} aria-hidden>
                     <span
-                      ref={(el) => {
-                        wordRefs.current[i] = el;
-                      }}
                       style={{
-                        opacity: reduceMotion ? 1 : 0.16,
                         color: w.tone === 'red' ? '#EB3F43' : w.tone === 'beige' ? BEIGE : INK,
                         textDecoration: w.tone === 'beige' ? 'line-through' : 'none',
                         textDecorationThickness: '0.06em',
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      {w.t}
+                      {[...w.t].map((ch, j) => (
+                        <span
+                          key={j}
+                          data-on={reduceMotion ? '1' : '0'}
+                          ref={(el) => {
+                            (charRefs.current[i] ??= [])[j] = el;
+                          }}
+                          style={{ position: 'relative', top: `${STRIKES[i][j].dy}em`, opacity: reduceMotion ? STRIKES[i][j].ink : 0 }}
+                        >
+                          {ch}
+                        </span>
+                      ))}
                     </span>{' '}
                   </span>
                 ))}
@@ -269,24 +315,11 @@ export function ProblemCube() {
                 weight immediately right of the box, centred on it. Lines
                 rise out of masks as the box locks; the rule draws. */}
             <div
-              ref={ruleRef}
-              style={{
-                position: 'absolute',
-                left: '11%',
-                right: '11%',
-                top: wide ? '28vh' : '36vh',
-                height: 1,
-                background: 'rgba(10,10,10,0.35)',
-                transformOrigin: 'left center',
-                transform: reduceMotion ? 'none' : 'scaleX(0)',
-              }}
-            />
-            <div
               aria-hidden={!reduceMotion}
               style={{
                 position: 'absolute',
                 left: wide ? '6%' : '11%',
-                top: wide ? '58vh' : '24vh',
+                top: wide ? '50vh' : '24vh',
                 transform: 'translateY(-50%)',
                 width: wide ? '29vw' : '80vw',
                 pointerEvents: 'none',
@@ -318,7 +351,7 @@ export function ProblemCube() {
             <div
               style={{
                 position: 'absolute',
-                ...(wide ? { left: '72%', top: '62vh', transform: 'translateY(-50%)' } : { left: '11%', top: '84vh' }),
+                ...(wide ? { left: '72%', top: '50vh', transform: 'translateY(-50%)' } : { left: '11%', top: '84vh' }),
                 overflow: 'hidden',
                 pointerEvents: 'none',
               }}
@@ -348,6 +381,7 @@ export function ProblemCube() {
           <div style={{ position: 'absolute', inset: 0 }}>
             <Canvas
               frameloop={inView ? 'always' : 'never'}
+              shadows="variance"
               dpr={dpr}
               gl={{ antialias: true, powerPreference: 'high-performance' }}
               camera={{ position: [0, 0, CAM_Z], fov: FOV }}
