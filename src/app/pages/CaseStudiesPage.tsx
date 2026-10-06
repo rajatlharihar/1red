@@ -107,8 +107,10 @@ export function CaseStudiesPage() {
               style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(40px, 6vw, 104px)', fontWeight: 500, letterSpacing: '-0.035em', lineHeight: 0.98, margin: 0 }}
             >
               The long versions.
-              <br />
-              <span style={{ opacity: 0.4 }}>Snacks recommended.</span>
+              {/* The hand-written red aside, as on the red flags and the deal. */}
+              <span style={{ display: 'block', fontFamily: 'var(--font-hand)', fontWeight: 700, fontSize: '0.62em', letterSpacing: 0, color: '#EB3F43', marginTop: '0.18em', transform: 'rotate(-3deg)', transformOrigin: 'left' }}>
+                popcorn recommended.
+              </span>
             </motion.h1>
           </div>
           <div className="overflow-hidden" style={{ flexShrink: 0, paddingTop: '0.6em' }}>
