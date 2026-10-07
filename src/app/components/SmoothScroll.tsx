@@ -31,8 +31,18 @@ export function SmoothScroll() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     lenis = new Lenis({
-      lerp: 0.075,
+      // 2026-10-07 round 2 (Rajat: smoother, ease in and out, fast scrolls
+      // still fast but every cube beat visible): a softer catch-up, and each
+      // wheel step capped so a hard flick runs the scenes quickly instead of
+      // skipping them. The shared glide (scrollGlide.ts) eases on top of
+      // this, which gives the start of a move its ease-in.
+      lerp: 0.06,
       wheelMultiplier: 0.9,
+      virtualScroll: (d) => {
+        const cap = 70;
+        d.deltaY = Math.max(-cap, Math.min(cap, d.deltaY));
+        return true;
+      },
       smoothWheel: true,
       syncTouch: false,
       allowNestedScroll: true,

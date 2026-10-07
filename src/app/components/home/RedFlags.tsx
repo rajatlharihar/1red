@@ -90,7 +90,7 @@ function Panel({ i, flipped, onFlip, onHover, reduceMotion }: { i: number; flipp
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <Digit n={i + 1} height="clamp(34px, 4vw, 56px)" fill={INK} />
-                <span style={{ ...label, fontSize: 9, opacity: 0.7, display: 'block', marginTop: 10 }}>Red flag</span>
+                <span style={{ ...label, fontSize: 'clamp(11px, 0.85vw, 13px)', opacity: 0.8, display: 'block', marginTop: 10 }}>Red flag</span>
               </div>
               <BoxFace mood={f.mood} variant="white" size={faceSize} delay={i} reduceMotion={reduceMotion} />
             </div>
@@ -105,18 +105,16 @@ function Panel({ i, flipped, onFlip, onHover, reduceMotion }: { i: number; flipp
           <div style={{ ...inner, color: '#FFFFFF' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
               <div>
-                <span style={{ ...label, fontSize: 9, opacity: 0.75 }}>The rulebook says</span>
-                <p style={{ margin: '6px 0 0', fontSize: 'clamp(13px, 1vw, 15px)', opacity: 0.75, textDecoration: 'line-through', textDecorationColor: INK, textDecorationThickness: 2 }}>{f.rule}</p>
+                <span style={{ ...label, fontSize: 'clamp(11px, 0.85vw, 13px)', opacity: 0.85 }}>The rulebook says</span>
+                <p style={{ margin: '6px 0 0', fontSize: 'clamp(15px, 1.15vw, 18px)', opacity: 0.85, textDecoration: 'line-through', textDecorationColor: INK, textDecorationThickness: 2 }}>{f.rule}</p>
               </div>
               <BoxFace mood="triumph" variant="white" size={faceSize} delay={i + 3} reduceMotion={reduceMotion} />
             </div>
             <div>
               <span style={{ fontFamily: 'var(--font-hand)', fontSize: 'clamp(24px, 2.2vw, 34px)', fontWeight: 700, color: INK, display: 'inline-block', transform: 'rotate(-3deg)' }}>we say:</span>
               <p style={{ margin: '6px 0 12px', fontSize: 'clamp(17px, 1.5vw, 23px)', fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{f.us}</p>
-              <span style={{ ...label, fontSize: 9, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ width: 6, height: 6, background: '#FFFFFF', display: 'inline-block' }} />
-                {f.who}
-              </span>
+              {/* 2026-10-07 (Rajat): the service names read clearly now, no square. */}
+              <span style={{ ...label, fontSize: 'clamp(13px, 1.05vw, 16px)', fontWeight: 600 }}>{f.who}</span>
             </div>
           </div>
         </div>

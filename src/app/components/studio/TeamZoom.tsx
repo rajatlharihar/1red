@@ -12,7 +12,8 @@ import { glide, subscribeGlide } from '../scrollGlide';
 
 const INK = '#0A0A0A';
 const BG = '#FFFFFF';
-const CLIP = '/videos/Fg-01_3.mp4';
+// Every frame a keyframe, so scrubbing it with the scroll seeks cleanly.
+const CLIP = '/videos/team-scrub.mp4';
 const POSTER = '/images/team-poster.jpg';
 
 const SECTION_VH = 300;
@@ -31,6 +32,9 @@ const EXIT_DEPTH = -0.4 * P;
 /** The words rise on this window of progress. */
 const TEXT_FROM = 0.36;
 const TEXT_TO = 0.52;
+/** 2026-10-07 (Rajat): the film plays with the scroll, not on its own
+ *  clock, so it can be timed. It runs start to end over 0..FILM_END. */
+const FILM_END = 0.85;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (a: number, b: number, v: number) => {
@@ -55,20 +59,43 @@ export function TeamZoom() {
     img.src = POSTER;
   }, []);
 
-  // The clip runs only while the section is on screen.
-  useEffect(() => {
+  /* Phones see the whole team: the 16:9 film is fitted to the width there
+     and the bands above and below take the film's own edge colours, read
+     from the current frame after each seek (the film's ground changes). */
+  const tintBands = () => {
     const v = videoRef.current;
-    if (!v || reduceMotion) return;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) v.play().catch(() => {});
-        else v.pause();
-      },
-      { threshold: 0.1 }
-    );
-    io.observe(v);
-    return () => io.disconnect();
-  }, [reduceMotion]);
+    const tile = tileRef.current;
+    if (!v || !tile || !v.videoWidth || window.innerWidth >= window.innerHeight) return;
+    const c = document.createElement('canvas');
+    c.width = 1;
+    c.height = 2;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    ctx.drawImage(v, 0, 0, v.videoWidth, 8, 0, 0, 1, 1);
+    ctx.drawImage(v, 0, v.videoHeight - 8, v.videoWidth, 8, 0, 1, 1, 1);
+    const d = ctx.getImageData(0, 0, 1, 2).data;
+    tile.style.background = `linear-gradient(rgb(${d[0]},${d[1]},${d[2]}) 50%, rgb(${d[4]},${d[5]},${d[6]}) 50%)`;
+  };
+  const seekTo = useRef<number | null>(null);
+  const scrub = (t: number) => {
+    const v = videoRef.current;
+    if (!v || !v.duration) return;
+    const target = Math.min(v.duration - 0.05, t * v.duration);
+    if (v.seeking) {
+      seekTo.current = target;
+      return;
+    }
+    if (Math.abs(v.currentTime - target) > 1 / 60) v.currentTime = target;
+  };
+  const onSeeked = () => {
+    const v = videoRef.current;
+    tintBands();
+    if (v && seekTo.current !== null) {
+      const t = seekTo.current;
+      seekTo.current = null;
+      if (Math.abs(v.currentTime - t) > 1 / 60) v.currentTime = t;
+    }
+  };
 
   useEffect(() => {
     if (reduceMotion) return;
@@ -82,13 +109,7 @@ export function TeamZoom() {
       const p = clamp01(raw / scrollable);
       const live = raw >= 0;
       if (sectionRef.current) sectionRef.current.style.visibility = live ? 'visible' : 'hidden';
-      const v = videoRef.current;
-      if (v) {
-        if (live && !wasLive.current) {
-          v.currentTime = 0;
-          v.play().catch(() => {});
-        } else if (!live && wasLive.current) v.pause();
-      }
+      if (live || wasLive.current) scrub(clamp01(p / FILM_END));
       wasLive.current = live;
       const depth =
         p < EXIT_P
@@ -176,15 +197,18 @@ export function TeamZoom() {
               src={CLIP}
               poster={POSTER}
               muted
-              loop
               playsInline
-              preload="metadata"
-              style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }}
+              preload="auto"
+              onSeeked={onSeeked}
+              onLoadedData={onSeeked}
+              className="team-film"
+              style={{ display: 'block', width: '100%', height: '100%' }}
             />
           </div>
           {words}
         </div>
       </div>
+      <style>{`.team-film{object-fit:cover}@media (orientation: portrait){.team-film{object-fit:contain}}`}</style>
     </section>
   );
 }
