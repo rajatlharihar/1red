@@ -103,8 +103,8 @@ export function TheDeal() {
         }}
       >
         <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: narrow ? '34px' : 'clamp(38px, min(6vw, 9.5vh), 104px)', fontWeight: 500, letterSpacing: '-0.045em', lineHeight: 0.95, margin: 0 }}>
-          <span style={{ display: 'block' }}>Built fresh.</span>
-          <span style={{ display: 'block', color: 'rgba(10,10,10,0.35)' }}>Built together.</span>
+          <span style={{ display: 'block' }}>Putting the red</span>
+          <span style={{ display: 'block', color: 'rgba(10,10,10,0.35)' }}>in credible.</span>
         </h2>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', columnGap: 'clamp(24px, 4vw, 72px)', rowGap: narrow ? 36 : 48 }}>
