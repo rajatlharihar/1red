@@ -91,7 +91,7 @@ const INK = '#0A0A0A';
  * Rajat placed it before: flush-left in the band beside the box, which now
  * sits dead centre. Three ink lines, then a grey kicker. */
 const LINES: Array<{ t: string; lead?: boolean }> = [
-  { t: 'In a sea of grey,', lead: true },
+  { t: 'Another grey brand? No thanks.', lead: true },
   { t: 'be the' },
   { t: 'red one.' },
 ];

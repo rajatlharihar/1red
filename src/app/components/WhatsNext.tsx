@@ -300,7 +300,7 @@ export function WhatsNext() {
               color: INK,
             }}
           >
-            Another grey brand? No thanks.
+            Be the red one.
           </motion.h2>
         </div>
         <div style={{ overflow: 'hidden' }}>
@@ -318,7 +318,7 @@ export function WhatsNext() {
               opacity: 0.7,
             }}
           >
-            Be the red one.
+            Don&rsquo;t blend into the grey area.
           </motion.h3>
         </div>
 
