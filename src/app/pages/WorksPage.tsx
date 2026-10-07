@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowLeft, ArrowRight, ArrowUpRight, X } from 'lucide-react';
+import { lockScroll } from '../components/SmoothScroll';
 import { WORKS, WORK_FILTERS, type WorkFilter, type WorkPiece } from '../data/works';
 
 /* ─── /work — everything we make, filterable ───────────────────────────────
@@ -153,9 +154,11 @@ function Lightbox({ list, index, onClose, onStep }: { list: WorkPiece[]; index: 
     const html = document.documentElement;
     const prev = html.style.overflow;
     html.style.overflow = 'hidden';
+    lockScroll(true);
     return () => {
       window.removeEventListener('keydown', onKey);
       html.style.overflow = prev;
+      lockScroll(false);
     };
   }, [onClose, onStep]);
 

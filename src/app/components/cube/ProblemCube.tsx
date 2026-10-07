@@ -39,15 +39,15 @@ const COVER_VH = 100;
  *  off the frame's right edge (this was home/RedLine.tsx, merged in so the
  *  box never leaves its own renderer). */
 export const ROLL_VH = 240;
-const BEIGE = '#C9BDA4';
-type Word = { t: string; tone?: 'red' | 'beige' };
+const GREY = '#9A9A9A';
+type Word = { t: string; tone?: 'red' | 'grey' };
 const WHO: Word[] = [
-  ...'1Red is a creative collective from India. Strategists, designers, animators, developers and editors at one table.'.split(' ').map((t) => ({ t })),
+  ...'1Red is a creative agency from India. Strategists, designers, animators, developers, and editors, all at one table.'.split(' ').map((t) => ({ t })),
   ...'Most brands play it'.split(' ').map((t) => ({ t })),
-  { t: 'beige:', tone: 'beige' },
-  ...'safe, polite, forgotten by Tuesday. We make yours'.split(' ').map((t) => ({ t })),
-  ...'impossible to scroll past.'.split(' ').map((t) => ({ t, tone: 'red' as const })),
-  ...'The logo, the website and the campaign, made by the same people, so they finally sound like the same brand.'.split(' ').map((t) => ({ t })),
+  { t: 'grey:', tone: 'grey' },
+  ...'safe, polite, and forgotten by Tuesday. We make yours'.split(' ').map((t) => ({ t })),
+  ...'the one people notice first.'.split(' ').map((t) => ({ t, tone: 'red' as const })),
+  ...'The logo, the website, and the campaign, made by the one team, so your brand speaks with the same voice.'.split(' ').map((t) => ({ t })),
 ];
 /* Typed, not faded (Rajat, 2026-10-06: "like the typewriter got it"):
    every character strikes on its own as the reading runs, at a slightly
@@ -90,12 +90,12 @@ const INK = '#0A0A0A';
 /* The answer to the wall ("Everyone says think outside the box."), set as
  * Rajat placed it before: flush-left in the band beside the box, which now
  * sits dead centre. Three ink lines, then a grey kicker. */
-const LINES: Array<{ t: string; grey?: boolean }> = [
-  { t: 'Be the' },
+const LINES: Array<{ t: string; lead?: boolean }> = [
+  { t: 'In a sea of grey,', lead: true },
+  { t: 'be the' },
   { t: 'red one.' },
-  { t: 'Strategy, brand, websites and campaigns, built to be remembered.', grey: true },
 ];
-const LABEL = 'Strategy. Brand. Web. Campaigns. Motion. Whatever it takes.';
+const LABEL = "Strategy. Brand. Web. Campaigns. Motion. We've got it all.";
 /** Section progress over which each line rises out of its mask; the label
  *  rides with the first line, the rule draws after the second. */
 const LINE_REVEAL: Array<[number, number]> = [
@@ -293,8 +293,8 @@ export function ProblemCube() {
                   <span key={i} aria-hidden>
                     <span
                       style={{
-                        color: w.tone === 'red' ? '#EB3F43' : w.tone === 'beige' ? BEIGE : INK,
-                        textDecoration: w.tone === 'beige' ? 'line-through' : 'none',
+                        color: w.tone === 'red' ? '#EB3F43' : w.tone === 'grey' ? GREY : INK,
+                        textDecoration: w.tone === 'grey' ? 'line-through' : 'none',
                         textDecorationThickness: '0.06em',
                         whiteSpace: 'nowrap',
                       }}
@@ -335,18 +335,17 @@ export function ProblemCube() {
               }}
             >
               {LINES.map((line, i) => (
-                <div key={line.t} style={{ overflow: 'hidden', marginTop: line.grey ? '0.5em' : 0 }}>
+                <div key={line.t} style={{ overflow: 'hidden', marginBottom: line.lead ? '0.35em' : 0 }}>
                   <span
                     ref={(el) => {
                       lineRefs.current[i] = el;
                     }}
                     style={{
                       display: 'block',
-                      fontSize: line.grey ? (wide ? 'clamp(16px, 1.3vw, 24px)' : 'clamp(15px, 4.2vw, 20px)') : wide ? 'clamp(54px, 6vw, 116px)' : 'clamp(48px, 15vw, 76px)',
-                      lineHeight: line.grey ? 1.3 : 0.92,
-                      maxWidth: line.grey ? '22em' : undefined,
-                      fontWeight: 500,
-                      color: line.grey ? 'rgba(10,10,10,0.45)' : INK,
+                      fontSize: line.lead ? (wide ? 'clamp(24px, 2.4vw, 46px)' : 'clamp(22px, 6vw, 30px)') : wide ? 'clamp(54px, 6vw, 116px)' : 'clamp(48px, 15vw, 76px)',
+                      lineHeight: line.lead ? 1.1 : 0.92,
+                                            fontWeight: 500,
+                      color: line.lead ? GREY : INK,
                       letterSpacing: '-0.04em',
                       transform: reduceMotion ? 'none' : 'translateY(110%)',
                     }}
@@ -382,7 +381,7 @@ export function ProblemCube() {
                 <br />
                 Campaigns. Motion.
                 <br />
-                Whatever it takes.
+                <span style={{ color: '#EB3F43', fontWeight: 500 }}>We've got it all.</span>
               </span>
             </div>
           </div>

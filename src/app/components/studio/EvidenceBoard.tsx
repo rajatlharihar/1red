@@ -297,6 +297,7 @@ export function EvidenceBoard() {
             <div key={s.number} style={{ background: PAPER, padding: 24 }}>
               <Digit n={i + 1} height="48px" fill={INK} />
               <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: 32, margin: '12px 0 6px' }}>{s.title}</h3>
+              <p style={{ margin: '0 0 6px', fontSize: 13, letterSpacing: '0.2em', textTransform: 'uppercase', color: RED }}>{s.tag}</p>
               <p style={{ margin: 0, fontSize: 18 }}>{s.description}</p>
             </div>
           ))}
@@ -356,7 +357,8 @@ export function EvidenceBoard() {
                       <path d="M6 22 C 4 6, 60 -2, 92 12 C 104 20, 90 38, 50 38 C 18 38, 0 30, 10 14" fill="none" stroke={RED} strokeWidth={1.6} vectorEffect="non-scaling-stroke" />
                     </svg>
                   </div>
-                  <p style={{ ...cardText, fontSize: 27, lineHeight: 1.35, margin: '20px 0 0', fontWeight: 500 }}>{s.description}</p>
+                  <span style={{ ...cardText, fontSize: 17, fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', color: RED, marginTop: 22 }}>{s.tag}</span>
+                  <p style={{ ...cardText, fontSize: 25, lineHeight: 1.35, margin: '12px 0 0', fontWeight: 500 }}>{s.description}</p>
                   <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 14 }}>
                     <div style={{ height: 18, width: 170, background: INK }} />
                     <div style={{ fontFamily: 'var(--font-hand)', fontSize: 40, fontWeight: 700, color: RED, transform: 'rotate(-3deg)' }}>{NOTES[i]}</div>

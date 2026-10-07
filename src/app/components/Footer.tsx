@@ -13,8 +13,8 @@ export const CONTACT_EMAIL = '1red.agency@gmail.com';
 export const CONTACT_PHONE = '+91 98862 56661';
 export const CONTACT_WHATSAPP = 'https://wa.me/919886256661';
 export const socialLinks = [
-  { label: 'LinkedIn',  href: 'https://www.linkedin.com/in/1redstudio' },
   { label: 'Instagram', href: 'https://www.instagram.com/1red.studio/' },
+  { label: 'LinkedIn',  href: 'https://www.linkedin.com/in/1redstudio' },
 ];
 
 const secondaryLinks = ['Work', 'Case studies', 'The Box', 'About', 'Careers', 'Contact', 'Privacy Policy'];
@@ -215,7 +215,7 @@ export function Footer() {
         flexDirection: 'column',
         justifyContent: 'space-between',
         borderTop: '1px solid rgba(255,255,255,0.1)',
-        paddingTop: 'clamp(3rem, 7vh, 6rem)',
+        paddingTop: 'clamp(7rem, 13vh, 9rem)', // clear of the fixed nav (Deeksha, 2026-10-07)
         paddingBottom: 'clamp(2rem, 5vh, 4rem)',
         paddingLeft: 'clamp(1.5rem, 4vw, 5rem)',
         paddingRight: 'clamp(1.5rem, 4vw, 5rem)',
@@ -449,7 +449,7 @@ export function Footer() {
               opacity: 0.24,
             }}
           >
-            © 2026 1Red. All rights red-served.
+            © 2026 1Red. All rights reserved.
           </motion.p>
         </div>
       </div>

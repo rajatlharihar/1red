@@ -124,7 +124,7 @@ export const WHAT = {
 };
 export const WHY = {
   eyebrow: 'Why we bother',
-  line: 'Beige is expensive. It just hides the bill.',
+  line: 'Grey is expensive. It just hides the bill.',
   body: 'Every forgettable logo, polite website and copy‑paste ad costs a brand the one thing it paid for: being noticed. We would rather you were the red one. Cheaper in the long run, and frankly more fun.',
 };
 

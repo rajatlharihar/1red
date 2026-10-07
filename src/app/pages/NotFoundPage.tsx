@@ -57,7 +57,7 @@ export function NotFoundPage() {
             been <span style={{ color: RED }}>red</span>‑acted.
           </h1>
           <p style={{ fontSize: 'clamp(16px, 1.4vw, 22px)', lineHeight: 1.5, marginTop: 28, maxWidth: 520 }}>
-            Either it <Redacted>never existed</Redacted>, or it was so <Redacted>beige</Redacted> we had to take it down. Hover the bars if you must know.
+            Either it <Redacted>never existed</Redacted>, or it was so <Redacted>grey</Redacted> we had to take it down. Hover the bars if you must know.
           </p>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 36 }}>
             <FillLink to="/" icon={<ArrowUpRight size={15} strokeWidth={2} />}>Take me home</FillLink>

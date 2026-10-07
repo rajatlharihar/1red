@@ -300,7 +300,7 @@ export function WhatsNext() {
               color: INK,
             }}
           >
-            Let&rsquo;s make
+            Be the red one.
           </motion.h2>
         </div>
         <div style={{ overflow: 'hidden' }}>
@@ -318,7 +318,7 @@ export function WhatsNext() {
               opacity: 0.7,
             }}
           >
-            you the red one.
+            Don&rsquo;t blend into the grey area.
           </motion.h3>
         </div>
 
@@ -336,8 +336,7 @@ export function WhatsNext() {
             color: INK,
           }}
         >
-          Tell us the idea, the deadline and the budget. We&rsquo;ll tell you, honestly, whether we&rsquo;re the right box.
-          If we&rsquo;re not, we&rsquo;ll point you to who is.
+          We&rsquo;re a creative agency for brands too ambitious to play it safe. Bring us the idea. We&rsquo;ll bring the whole team.
         </motion.p>
 
         <motion.div

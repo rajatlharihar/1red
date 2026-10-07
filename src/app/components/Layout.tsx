@@ -3,10 +3,12 @@ import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { ScrollToTop } from './ScrollToTop';
 import { CustomCursor } from './CustomCursor';
+import { SmoothScroll } from './SmoothScroll';
 
 export function Layout() {
   return (
     <div className="min-h-screen bg-white" style={{ overflowX: 'clip' }}>
+      <SmoothScroll />
       <ScrollToTop />
       <CustomCursor />
       <Navigation />

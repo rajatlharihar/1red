@@ -12,6 +12,7 @@ import {
 import { Link } from 'react-router';
 import { ArrowUpRight } from 'lucide-react';
 import { GLASS } from './GlassLayers';
+import { smoothScrollTo } from './SmoothScroll';
 import projectsData from '../data/projects.json';
 
 /* ─── "Selected Work" — pinned scroll-through list + swapping visual ────────
@@ -512,7 +513,7 @@ export function FlashWork() {
       if (scrollable <= 0) return;
       const wrapTop = window.scrollY + el.getBoundingClientRect().top;
       const targetY = wrapTop + progressForIndex(i) * scrollable;
-      window.scrollTo({ top: targetY, behavior: reduceMotion ? 'auto' : 'smooth' });
+      smoothScrollTo(targetY, reduceMotion);
     },
     [reduceMotion]
   );

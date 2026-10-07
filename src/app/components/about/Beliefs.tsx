@@ -11,7 +11,7 @@ import { RED, INK, EASE, label } from './shared';
  * ────────────────────────────────────────────────────────────────────────── */
 
 const BELIEFS = [
-  { title: 'Beige is a choice.', tag: 'On taste', why: 'Safe looks cheap the second everyone picks it. We pick on purpose.' },
+  { title: 'Grey is a choice.', tag: 'On taste', why: 'Safe looks cheap the second everyone picks it. We pick on purpose.' },
   { title: 'One table beats three agencies.', tag: 'On process', why: 'Whoever names your brand sits next to whoever animates it. Nothing dies in a forwarded email.' },
   { title: 'The rulebook is the starting line.', tag: 'On craft', why: 'Best practice is why every ad looks the same. We follow it, then do the bit after.' },
   { title: 'Pretty is the minimum.', tag: 'On design', why: 'Clear is the actual job. Gorgeous and confusing is just expensive wallpaper.' },

@@ -39,12 +39,12 @@ const grainLayer = (o: number, blend: React.CSSProperties['mixBlendMode'] = 'mul
 });
 
 const FLAGS: Array<{ flag: string; rule: string; us: string; who: string; mood: Mood }> = [
-  { flag: 'Your logo only works on a white background.', rule: 'Make a dark-mode version.', us: 'Build a mark that survives a 40px app icon, a crumpled tote and a cricket jersey. Dark mode is the easy bit.', who: 'Brand identity', mood: 'nervous' },
-  { flag: 'Your homepage opens with \u201cWelcome to our website\u201d.', rule: 'Write a better headline.', us: 'Make the homepage do the selling: what you do in five seconds, why you in fifty.', who: 'Websites & UI/UX', mood: 'tired' },
-  { flag: 'Your ads look like everyone else\u2019s ads.', rule: 'Follow platform best practices.', us: 'Best practices are why they all look the same. We test the weird one too.', who: 'Ads & campaigns', mood: 'confused' },
-  { flag: 'Three agencies. Three fonts. One very confused customer.', rule: 'Write brand guidelines.', us: 'Guidelines nobody reads won\u2019t save you. One table that makes all of it will.', who: 'The whole box', mood: 'wtf' },
-  { flag: 'Your reels have nine views. Four of them are your mum.', rule: 'Post more consistently.', us: 'More of the same is just louder beige. Hook in the first second, made for the thumb.', who: 'Motion & video', mood: 'crying' },
-  { flag: 'Someone said \u201cmake the logo bigger\u201d this week.', rule: 'Make the logo bigger.', us: 'We make the idea bigger. The logo can stay where it is.', who: 'Strategy', mood: 'irritated' },
+  { flag: 'Your logo only works on a white background.', rule: 'Make a dark mode version.', us: 'Make a logo that works on a tiny app icon, a crumpled tote and a cricket jersey.', who: 'Brand identity', mood: 'nervous' },
+  { flag: 'Your website opens with \u201cwelcome to our website\u201d.', rule: 'Fix your hero section.', us: 'Make every scroll worth it. Gain attention, then keep it.', who: 'Websites & UI/UX', mood: 'tired' },
+  { flag: 'Your ads look like every other TV ad.', rule: 'Follow the best practices.', us: 'The best practices are why they all look the same. We make the weird ones land.', who: 'Ads & campaigns', mood: 'confused' },
+  { flag: 'Three agencies. Three fonts. One team would\u2019ve done it better.', rule: 'Write brand guidelines.', us: 'Guidelines aren\u2019t what keep a brand consistent. The team behind it does.', who: 'The whole box', mood: 'wtf' },
+  { flag: 'Your social media gets nine views. Four of them are from your mom.', rule: 'Post more consistently.', us: 'More of the same is just the same old grey. We give you something worth the watch.', who: 'Motion & video', mood: 'crying' },
+  { flag: '\u201cMake the logo bigger.\u201d Translation: we have no brand strategy.', rule: 'Make the logo bigger.', us: 'Make the idea itself bigger. The logo can stay where it is.', who: 'Strategy', mood: 'irritated' },
 ];
 
 function Panel({ i, flipped, onFlip, onHover, reduceMotion }: { i: number; flipped: boolean; onFlip: () => void; onHover: (on: boolean) => void; reduceMotion: boolean }) {
@@ -160,7 +160,7 @@ export function RedFlags() {
         ? `${count} spotted. Could be a phase.`
         : count < 6
           ? `${count} spotted. Okay, we should talk.`
-          : 'All six. Bestie, we need to talk.';
+          : 'All six. We definitely need to talk.';
 
   return (
     <section
@@ -184,7 +184,7 @@ export function RedFlags() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, flexWrap: 'wrap', marginBottom: 'clamp(2rem, 6vh, 4rem)' }}>
           <div>
             <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(40px, 6.4vw, 112px)', fontWeight: 500, letterSpacing: '-0.045em', lineHeight: 0.92, margin: 0 }}>
-              Red flags
+              <span style={{ color: '#9A9A9A' }}>Grey areas</span>
               <br />
               we <span style={{ color: RED }}>love</span> to fix.
             </h2>
@@ -192,7 +192,7 @@ export function RedFlags() {
           </div>
           <div style={{ maxWidth: 360 }}>
             <p style={{ margin: 0, fontSize: 'clamp(14px, 1.1vw, 17px)', lineHeight: 1.6, opacity: 0.7 }}>
-              Anyone can follow the rulebook. We read it, then do the bit after. Turn a panel over to see the difference.
+              Everyone can follow a rulebook. We read it, then go above and beyond. Turn a panel over to see what we bring to the table.
             </p>
             <p aria-live="polite" style={{ ...label, marginTop: 18, color: count >= 3 ? RED : '#FFFFFF', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ display: 'inline-flex', gap: 3 }}>
@@ -220,15 +220,15 @@ export function RedFlags() {
 
         <motion.div
           initial={false}
-          animate={{ height: count >= 3 ? 'auto' : 0, opacity: count >= 3 ? 1 : 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
           transition={{ type: 'spring', bounce: 0, duration: 0.6 }}
           style={{ overflow: 'hidden' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap', marginTop: 'clamp(2rem, 5vh, 3rem)' }}>
             <p style={{ margin: 0, fontSize: 'clamp(22px, 2.4vw, 38px)', fontWeight: 500, letterSpacing: '-0.03em' }}>
-              Three or more? Bold strategy. Let&rsquo;s see how it plays out.
+              Tell us what you need. We&rsquo;ll handle the rest.
             </p>
-            <FillLink to="/contact" icon={<ArrowUpRight size={15} strokeWidth={2} />}>Or, you know, call us</FillLink>
+            <FillLink to="/contact" icon={<ArrowUpRight size={15} strokeWidth={2} />}>Let&rsquo;s talk</FillLink>
           </div>
         </motion.div>
       </div>

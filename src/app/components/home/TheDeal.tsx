@@ -18,9 +18,9 @@ import { useTiltIn } from './useTiltIn';
 const SECTION_VH = 150;
 
 const DEALS = [
-  { n: [0], unit: 'years of bad habits', body: 'We’re new. Nothing here runs on autopilot, and nobody has said “we’ve always done it this way”. Yet.' },
-  { n: [1], unit: 'table', body: 'Strategy, design, motion, code and edit sit together. You get a chair too. Bring snacks.' },
-  { n: [2, 4], unit: 'hours to reply, max', body: 'Our client list is short. So is our inbox. You talk to the people making the thing.' },
+  { n: [0], unit: 'years of bad habits', body: 'We’re new. Nothing here runs on autopilot, and nobody has said “we’ve always done it this way”.' },
+  { n: [1], unit: 'table', body: 'Strategy, design, socials, and user experience all sit together. You get a chair too. Bring snacks.' },
+  { n: [1, 0, 0], unit: 'percent makers, no middlemen', body: 'Our client list is short. So is the chain of command. You talk to the people doing the work.' },
 ];
 
 export function TheDeal() {
@@ -94,15 +94,17 @@ export function TheDeal() {
           flexDirection: 'column',
           justifyContent: 'center',
           gap: narrow ? '2rem' : 'clamp(2.5rem, 7vh, 5rem)',
-          padding: narrow ? '4.5rem 1.25rem 3rem' : 'clamp(5rem, 11vh, 8rem) clamp(1rem, 4vw, 5rem) clamp(2.5rem, 6vh, 4rem)',
+          // Clear of the nav bar and the logo with real breathing room (Deeksha,
+          // 2026-10-07: the headline sat right under the nav on a laptop).
+          padding: narrow ? '6.5rem 1.25rem 3rem' : 'clamp(8.5rem, 16vh, 11rem) clamp(1rem, 4vw, 5rem) clamp(2.5rem, 6vh, 4rem)',
           maxWidth: 1400,
           margin: '0 auto',
           boxSizing: 'border-box',
         }}
       >
-        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: narrow ? '34px' : 'clamp(38px, 6vw, 104px)', fontWeight: 500, letterSpacing: '-0.045em', lineHeight: 0.95, margin: 0 }}>
-          <span style={{ display: 'block' }}>No 75-year legacy.</span>
-          <span style={{ display: 'block', color: 'rgba(10,10,10,0.35)' }}>No 75-step approval chain.</span>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: narrow ? '34px' : 'clamp(38px, min(6vw, 9.5vh), 104px)', fontWeight: 500, letterSpacing: '-0.045em', lineHeight: 0.95, margin: 0 }}>
+          <span style={{ display: 'block' }}>Built fresh.</span>
+          <span style={{ display: 'block', color: 'rgba(10,10,10,0.35)' }}>Built together.</span>
         </h2>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', columnGap: 'clamp(24px, 4vw, 72px)', rowGap: narrow ? 36 : 48 }}>
@@ -114,7 +116,7 @@ export function TheDeal() {
                   return (
                     <div key={k} style={{ overflow: 'hidden' }}>
                       <div ref={(el) => { digitRefs.current[k] = el; }} style={rise('translateY(104%)')}>
-                        <Digit n={n} height={narrow ? '96px' : 'clamp(130px, 24vh, 250px)'} fill={RED} />
+                        <Digit n={n} height={narrow ? '96px' : 'clamp(100px, 21vh, 250px)'} fill={RED} />
                       </div>
                     </div>
                   );
@@ -129,7 +131,7 @@ export function TheDeal() {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <p style={{ margin: 0, fontFamily: 'var(--font-hand)', fontSize: narrow ? 26 : 'clamp(28px, 2.6vw, 44px)', fontWeight: 700, color: INK, transform: 'rotate(-1.5deg)', transformOrigin: 'left' }}>Everyone starts somewhere. We started at the deep end, on purpose.</p>
+          <p style={{ margin: 0, fontFamily: 'var(--font-hand)', fontSize: narrow ? 26 : 'clamp(28px, 2.6vw, 44px)', fontWeight: 700, color: INK, transform: 'rotate(-1.5deg)', transformOrigin: 'left' }}>We&rsquo;re new. We&rsquo;re sharp. We&rsquo;re distinct.</p>
           <FillLink to="/about" outline icon={<ArrowUpRight size={15} strokeWidth={2} />}>Meet the box</FillLink>
         </div>
       </div>

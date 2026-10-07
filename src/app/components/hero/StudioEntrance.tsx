@@ -241,7 +241,7 @@ export function StudioEntrance() {
                 color: 'rgba(10,10,10,0.5)',
               }}
             >
-              So let's not be safe. Come in.
+              Take a walk with us…
             </span>
             <motion.span
               animate={{ y: [0, 7, 0] }}

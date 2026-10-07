@@ -20,6 +20,8 @@
 export interface ProcessStep {
   number: string;
   title: string;
+  /** Short label under the title (Deeksha's content audit, 2026-10-07). */
+  tag: string;
   description: string;
   /** Alias of `description` — see note above. */
   detail: string;
@@ -29,27 +31,32 @@ const steps: Array<Omit<ProcessStep, 'detail'>> = [
   {
     number: '01',
     title: 'Discover',
-    description: 'We ask the awkward questions early: who buys, why, and what your competitors keep getting wrong.',
+    tag: 'Research and strategy',
+    description: 'We start with the awkward questions: who buys, why they buy, and what your competitors keep getting wrong.',
   },
   {
     number: '02',
     title: 'Define',
-    description: 'One idea, written in one line, that the logo, the site and the ads all have to answer to.',
+    tag: 'Brand idea',
+    description: 'We boil everything down to one idea, in one line. Your logo, website and campaign all work from it.',
   },
   {
     number: '03',
     title: 'Design',
-    description: 'Systems, screens and assets. Pretty is the minimum. Clear is the actual job.',
+    tag: 'Brand identity, web and motion',
+    description: 'We design the logo, the website, the films and the socials. Pretty is the bare minimum. Clear is the job.',
   },
   {
     number: '04',
     title: 'Deliver',
-    description: 'Built fast, shipped properly, and tested on the cheap phone too, not just the founder’s.',
+    tag: 'Build and launch',
+    description: 'We build it, test it on every screen and launch it properly. Including the cheap phone, not just the founder’s.',
   },
   {
     number: '05',
     title: 'Refine',
-    description: 'We watch the numbers after launch. Then we make it better. Then again.',
+    tag: 'Tracking and optimisation',
+    description: 'After launch, we track what’s working and what isn’t. Then we make it better. Then again.',
   },
 ];
 
