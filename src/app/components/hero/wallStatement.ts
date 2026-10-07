@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { FACADE_Z, doorRimX, facadeFrontZ, heroFov, sampleSequence } from './studioSequence';
 
 /* ─── The statement on the wall ────────────────────────────────────────────
- * "Done blending in? We're glad." lettered on the facade: the first
+ * "Done blending in?" lettered on the facade: the first
  * beat of the home story (wall line, then the mark, then the box's answer) to the
  * right of the door, as signage painted on the building rather than a
  * caption over the picture. It lives on the wall plane, so the opening sweep
@@ -19,7 +19,7 @@ import { FACADE_Z, doorRimX, facadeFrontZ, heroFov, sampleSequence } from './stu
  * jamb). Lines are horizontal on the wall, as painted lettering would be.
  * ────────────────────────────────────────────────────────────────────────── */
 
-export const STATEMENT = "Done blending in? We're glad.";
+export const STATEMENT = "Done blending in?";
 
 const INK = '#0A0A0A';
 const RED = '#FF0000';
@@ -41,9 +41,9 @@ const Y_MAX = 5.2;
 /** Candidate line breaks, longest-first lines are fine; the fitter picks the
  *  set that gives the biggest type for the patch of wall available. */
 const BREAKS: string[][] = [
-  ['DONE', 'BLENDING IN?', "WE'RE GLAD."],
-  ['DONE', 'BLENDING', 'IN?', "WE'RE GLAD."],
-  ['DONE BLEND-', 'ING IN?', "WE'RE GLAD."],
+  ['DONE', 'BLENDING IN?'],
+  ['DONE', 'BLENDING', 'IN?'],
+  ['DONE BLEND-', 'ING IN?'],
 ];
 
 interface Line {
