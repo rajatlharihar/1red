@@ -300,7 +300,7 @@ export function WhatsNext() {
               color: INK,
             }}
           >
-            Be the red one.
+            Grey&rsquo;s had its chance&hellip;
           </motion.h2>
         </div>
         <div style={{ overflow: 'hidden' }}>
@@ -318,7 +318,7 @@ export function WhatsNext() {
               opacity: 0.7,
             }}
           >
-            Don&rsquo;t blend into the grey area.
+            <span style={{ color: '#EB3F43' }}>Red</span> does a better job.
           </motion.h3>
         </div>
 
