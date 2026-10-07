@@ -55,8 +55,8 @@ const steps: Array<Omit<ProcessStep, 'detail'>> = [
   {
     number: '05',
     title: 'Refine',
-    tag: 'Tracking and optimisation',
-    description: 'After launch, we track what’s working and what isn’t. Then we make it better. Then again.',
+    tag: 'The follow through',
+    description: 'Launch day is the start, not the finish. We watch what works, fix what doesn’t, and keep going. Unlike the agency that ghosted you after the launch party.',
   },
 ];
 
