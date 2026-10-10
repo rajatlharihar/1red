@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { glide, subscribeGlide } from '../scrollGlide';
-import { CardDeck, FELT, grainTile, driveDeck, type Flight, type Flipper, PLAYS, playFaceUrl, pickFlippers, turnCard, pileCardHeight, WILD_BACK_URL } from './CardDeck';
+import { CardDeck, FELT, grainTile, driveDeck, type Flight, type Flipper, PLAYS, playFaceUrl, pickFlippers, turnCard, pileCardHeight } from './CardDeck';
 
 /* ─── The table ────────────────────────────────────────────────────────────
  * The last chapter. Out of the team film one card arrives from depth and
@@ -35,6 +35,12 @@ import { CardDeck, FELT, grainTile, driveDeck, type Flight, type Flipper, PLAYS,
  * with the deck as one more face-down card (same black back as the rest),
  * then is picked up: it lifts off the table, turns face up and grows to the
  * front, straightening as it comes.
+ *
+ * 2026-10-10 (Rajat, later): face down it is no longer one of the crowd.
+ * Its back is UNO's back in our red (tilted oval, chunky outlined word)
+ * with RED from the logo where UNO's name would be
+ * (public/wild-card-back.svg), so it stands out in the black pile and then
+ * flips to the face.
  * ────────────────────────────────────────────────────────────────────────── */
 
 const INK = '#0A0A0A';
@@ -578,9 +584,10 @@ export function TeamTable() {
         willChange: 'transform',
       }}
     >
-      {/* The back: the pile's black lattice, so face down it is one of them. */}
+      {/* The back: UNO's back in our red with RED from the logo, the one
+          card in the black pile that is not like the others. */}
       <img
-        src={WILD_BACK_URL}
+        src="/wild-card-back.svg"
         alt=""
         draggable={false}
         style={{

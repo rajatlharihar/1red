@@ -78,12 +78,6 @@ function backArt(w: number, h: number, inset: number) {
   );
 }
 const CARD_URLS = [0.32, 0.14, 0].map(cardUrl);
-/** The same back, landscape, no shadow margin: the wild card's own back, so
- *  face down it is just another card in the pile. */
-export const WILD_BACK_URL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CH} ${CW}" preserveAspectRatio="none">${backArt(CH, CW, 11)}</svg>`
-)}`;
-
 /* ─── Faces: the cards that turn over (2026-10-04, final) ───────────────────
  * Rajat: "everyone else is a normal deck of playing cards; we are the UNO
  * card, we experiment and write our own rules." So the table is ordinary:
