@@ -6,6 +6,10 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-10-10
+
+- The Box, table chapter: every card back on the table is now black patterned (was red). The wild card is drawn from the pile: it rides up with the deck as one more face-down card with the same black back, then is lifted, turned face up and brought to the front, straightening as it comes. Subtitles wait until it is in hand. (`studio/CardDeck.tsx`, `studio/TeamTable.tsx`)
+
 ## 2026-10-06/07: home story polish, phone pass, perf pass, pushed
 
 Pushed to `main` as `f56b57d`, `99fdca2`, `b96a6b7`, the wild-card copy commit, the phone wall/dpr commit and the phone Deal commit; each checked live on https://1red.vercel.app (Vercel commit status + live bundle strings).

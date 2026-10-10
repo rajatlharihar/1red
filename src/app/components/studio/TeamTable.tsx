@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { glide, subscribeGlide } from '../scrollGlide';
-import { CardDeck, FELT, grainTile, driveDeck, type Flight, type Flipper, PLAYS, playFaceUrl, pickFlippers, turnCard } from './CardDeck';
+import { CardDeck, FELT, grainTile, driveDeck, type Flight, type Flipper, PLAYS, playFaceUrl, pickFlippers, turnCard, pileCardHeight, WILD_BACK_URL } from './CardDeck';
 
 /* ─── The table ────────────────────────────────────────────────────────────
  * The last chapter. Out of the team film one card arrives from depth and
@@ -30,6 +30,11 @@ import { CardDeck, FELT, grainTile, driveDeck, type Flight, type Flipper, PLAYS,
  * Our card's corner index shows no numbers: it rolls through UNO powers
  * (WILD, +2, SKIP, REVERSE, +4). Every line of copy is a subtitle under the
  * card, one at a time, on a single track.
+ *
+ * 2026-10-10 (Rajat): the wild card is drawn from the pile. It comes up
+ * with the deck as one more face-down card (same black back as the rest),
+ * then is picked up: it lifts off the table, turns face up and grows to the
+ * front, straightening as it comes.
  * ────────────────────────────────────────────────────────────────────────── */
 
 const INK = '#0A0A0A';
@@ -39,19 +44,21 @@ const BG = '#FFFFFF';
 
 const SECTION_VH = 400;
 const P = 1200;
-/** The card rises from below the frame, lying back a little, and settles
- *  flat and centred over this share of the section on one ease-out curve:
- *  a glide, no bounce. */
-const ARRIVE_P = 0.2;
-const RISE = { y: 1.1, tiltX: -14 };
+/** The deck lands over [0, DECK_P] of the section; the wild card lies in
+ *  it face down, then is picked up over [PICK_FROM, PICK_TO]: lifted, turned
+ *  face up and brought to the front on one eased curve, no bounce. */
+const DECK_P = 0.15;
+const PICK_FROM = 0.13;
+const PICK_TO = 0.28;
+/** How the wild card lies in the pile: turned near-portrait like the rest. */
+const PILE_ANGLE = 83;
+/** How high it is lifted mid-pick, in frame heights (toward the viewer). */
+const PICK_LIFT = 0.28;
 /** The section starts this far before the team film's section ends, so
  *  the card comes up through the film as the camera passes into it, with
  *  no dead scroll between the two (Rajat). Its frame is transparent and
  *  sits above the film's. */
 const OVERLAP_VH = 160;
-/** The table surface leads the card up by this share of the frame, so the
- *  card lands on the deck rather than the deck sliding under it. */
-const DECK_LEAD = 0.08;
 /** Per-layer parallax over the section (far, mid, near), in frame heights. */
 const DECK_DRIFT = [0.03, 0.06, 0.1];
 /** The pan runs over this window; the rest is the end hold. */
@@ -500,15 +507,22 @@ export function TeamTable() {
       if (scrollable <= 0) return;
       const p = clamp01((glide.y - top) / scrollable);
       if (cardRef.current) {
-        const t = easeOutCubic(clamp01(p / ARRIVE_P));
-        const u = 1 - t;
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const uw = Math.min(0.84 * vw, 1300, 1.08 * vh);
+        // In the pile: the card's long side matches a pile card's height.
+        const s0 = pileCardHeight(vw, vh) / uw;
+        const q = clamp01(p / DECK_P);
+        // Rides up with the deck like a middle-row card.
+        const rideT = clamp01((Math.min(1, q / 0.85) - 0.325) / 0.35);
+        const y = (1 - easeOutCubic(rideT)) * vh * 0.85;
+        const k = easeInOutSine(smooth(PICK_FROM, PICK_TO, p));
+        const turn = easeInOutSine(clamp01((k - 0.1) / 0.7));
         cardRef.current.style.transform =
-          `translate(-50%, -50%) translate3d(0, ${(RISE.y * u * window.innerHeight).toFixed(1)}px, 0) rotateX(${(RISE.tiltX * u).toFixed(2)}deg)`;
-        // The deck: the same curve, a step ahead, so it covers the frame
-        // just before the card settles on it.
-        driveDeck(flightsRef.current, feltRef.current, clamp01(p / (ARRIVE_P * (1 - DECK_LEAD))), window.innerHeight);
+          `translate(-50%, -50%) translate3d(0, ${y.toFixed(1)}px, ${(Math.sin(Math.PI * k) * PICK_LIFT * vh).toFixed(1)}px) ` +
+          `rotateZ(${(PILE_ANGLE * (1 - k)).toFixed(2)}deg) rotateY(${(180 * (1 - turn)).toFixed(2)}deg) scale(${(s0 + (1 - s0) * k).toFixed(4)})`;
+        driveDeck(flightsRef.current, feltRef.current, q, vh);
         layerRefs.current.forEach((el, i) => {
-          if (el) el.style.transform = `translate3d(0, ${((0.5 - p) * DECK_DRIFT[i] * window.innerHeight).toFixed(1)}px, 0)`;
+          if (el) el.style.transform = `translate3d(0, ${((0.5 - p) * DECK_DRIFT[i] * vh).toFixed(1)}px, 0)`;
         });
       }
       let panT = 0;
@@ -524,7 +538,8 @@ export function TeamTable() {
       });
       subRefs.current.forEach((el, i) => {
         if (!el) return;
-        const on = i === live;
+        // No subtitle until the wild card is in hand.
+        const on = i === live && p > PICK_TO - 0.02;
         el.style.opacity = on ? '1' : '0';
         el.style.transform = on ? 'translate(-50%, 0)' : 'translate(-50%, 0.5em)';
       });
@@ -555,18 +570,43 @@ export function TeamTable() {
         top: '50%',
         width: 'min(84vw, 1300px, 108vh)',
         aspectRatio: '1.45 / 1',
-        background: '#FFFFFF',
-        borderRadius: '4.2% / 6.1%',
-        boxShadow: '0 34px 70px rgba(0,0,0,0.20), 0 8px 22px rgba(0,0,0,0.10), 0 0 0 1px rgba(10,10,10,0.08)',
         transform: reduceMotion
           ? 'translate(-50%, -50%)'
-          : `translate(-50%, -50%) translate3d(0, ${RISE.y * 100}vh, 0) rotateX(${RISE.tiltX}deg)`,
+          : `translate(-50%, -50%) translate3d(0, 100vh, 0) rotateZ(${PILE_ANGLE}deg) rotateY(180deg) scale(0.2)`,
         transformOrigin: '50% 50%',
-        backfaceVisibility: 'hidden',
+        transformStyle: 'preserve-3d',
         willChange: 'transform',
-        overflow: 'hidden',
       }}
     >
+      {/* The back: the pile's black lattice, so face down it is one of them. */}
+      <img
+        src={WILD_BACK_URL}
+        alt=""
+        draggable={false}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          borderRadius: '4.2% / 6.1%',
+          boxShadow: '0 6px 16px rgba(0,0,0,0.14)',
+          transform: 'rotateY(180deg)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: '#FFFFFF',
+          borderRadius: '4.2% / 6.1%',
+          boxShadow: '0 34px 70px rgba(0,0,0,0.20), 0 8px 22px rgba(0,0,0,0.10), 0 0 0 1px rgba(10,10,10,0.08)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          overflow: 'hidden',
+        }}
+      >
       {/* The red field inside the white border: the window onto the table
           (the picture is wider than the card and pans behind it), then the
           field painted over it with the UNO oval cut out. */}
@@ -580,6 +620,7 @@ export function TeamTable() {
       </div>
       <Index rankRef={(el) => (rankRefs.current[0] = el)} />
       <Index flip rankRef={(el) => (rankRefs.current[1] = el)} />
+      </div>
     </div>
   );
 

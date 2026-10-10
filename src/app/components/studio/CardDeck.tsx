@@ -15,6 +15,7 @@ import { useEffect, useRef, type CSSProperties } from 'react';
 
 const RED = '#EB3F43';
 const PAPER = '#FFFFFF';
+const BACK_INK = '#0A0A0A';
 export const FELT = '#FFFFFF';
 
 function rng(seed: number) {
@@ -58,18 +59,30 @@ function cardUrl(shade: number) {
   const inset = 11;
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-PAD} ${-PAD} ${CW + 2 * PAD} ${CH + 2 * PAD}">` +
-    `<defs><pattern id="l" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">` +
-    `<rect width="14" height="14" fill="${PAPER}"/><path d="M0 0H14M0 0V14" stroke="${RED}" stroke-width="1.3"/>` +
-    `<path d="M7 4.2L8 7L7 9.8L6 7Z M4.2 7L7 6L9.8 7L7 8Z" fill="${RED}"/></pattern></defs>` +
     `<rect x="3" y="6" width="${CW}" height="${CH}" rx="12" fill="#000" opacity="0.08"/>` +
-    `<rect width="${CW}" height="${CH}" rx="12" fill="${PAPER}" stroke="rgba(10,10,10,0.1)"/>` +
-    `<rect x="${inset}" y="${inset}" width="${CW - 2 * inset}" height="${CH - 2 * inset}" rx="5" fill="url(#l)" stroke="${RED}" stroke-width="2.2"/>` +
-    `<rect x="${inset + 7}" y="${inset + 7}" width="${CW - 2 * inset - 14}" height="${CH - 2 * inset - 14}" rx="3" fill="none" stroke="${RED}" stroke-width="1.2"/>` +
+    backArt(CW, CH, inset) +
     (shade ? `<rect width="${CW}" height="${CH}" rx="12" fill="#FFFFFF" opacity="${shade}"/>` : '') +
     `</svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
+/** The back's artwork in a w x h card: paper, ruled inset, lattice. Black
+ *  ink (Rajat 2026-10-10: every card back on the table is black patterned). */
+function backArt(w: number, h: number, inset: number) {
+  return (
+    `<defs><pattern id="l" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">` +
+    `<rect width="14" height="14" fill="${PAPER}"/><path d="M0 0H14M0 0V14" stroke="${BACK_INK}" stroke-width="1.3"/>` +
+    `<path d="M7 4.2L8 7L7 9.8L6 7Z M4.2 7L7 6L9.8 7L7 8Z" fill="${BACK_INK}"/></pattern></defs>` +
+    `<rect width="${w}" height="${h}" rx="12" fill="${PAPER}" stroke="rgba(10,10,10,0.1)"/>` +
+    `<rect x="${inset}" y="${inset}" width="${w - 2 * inset}" height="${h - 2 * inset}" rx="5" fill="url(#l)" stroke="${BACK_INK}" stroke-width="2.2"/>` +
+    `<rect x="${inset + 7}" y="${inset + 7}" width="${w - 2 * inset - 14}" height="${h - 2 * inset - 14}" rx="3" fill="none" stroke="${BACK_INK}" stroke-width="1.2"/>`
+  );
+}
 const CARD_URLS = [0.32, 0.14, 0].map(cardUrl);
+/** The same back, landscape, no shadow margin: the wild card's own back, so
+ *  face down it is just another card in the pile. */
+export const WILD_BACK_URL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CH} ${CW}" preserveAspectRatio="none">${backArt(CH, CW, 11)}</svg>`
+)}`;
 
 /* ─── Faces: the cards that turn over (2026-10-04, final) ───────────────────
  * Rajat: "everyone else is a normal deck of playing cards; we are the UNO
@@ -184,6 +197,12 @@ export function turnCard(fl: Flipper, f: number) {
 /* The deck's frame, in deck units: everything is laid out in this box and
  * the box is scaled to cover the viewport. */
 const VX = -120, VY = -120, VW = 1840, VH = 1240;
+
+/** A pile card's height on screen at this frame size (mirrors the deck box). */
+export function pileCardHeight(vw: number, vh: number) {
+  const boxW = Math.max(1.08 * vw, 1.08 * vh * (VW / VH));
+  return (CH / VH) * ((boxW * VH) / VW);
+}
 
 /* How the pile arrives (2026-10-04, Rajat: "the cards should not be cut,
  * the cards should come as they are"). No rectangle wipes in any more: every
