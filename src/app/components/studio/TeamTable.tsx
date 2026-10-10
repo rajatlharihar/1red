@@ -37,7 +37,7 @@ import { CardDeck, FELT, grainTile, driveDeck, type Flight, type Flipper, PLAYS,
  * front, straightening as it comes.
  *
  * 2026-10-10 (Rajat, later): face down it is no longer one of the crowd.
- * Its back is UNO's back in our red (tilted oval, chunky outlined word)
+ * Its back is UNO's back (black field, plain red tilted oval)
  * with RED from the logo where UNO's name would be
  * (public/wild-card-back.svg), so it stands out in the black pile and then
  * flips to the face.
@@ -584,7 +584,7 @@ export function TeamTable() {
         willChange: 'transform',
       }}
     >
-      {/* The back: UNO's back in our red with RED from the logo, the one
+      {/* The back: UNO's back, black with a red oval and RED from the logo, the one
           card in the black pile that is not like the others. */}
       <img
         src="/wild-card-back.svg"
