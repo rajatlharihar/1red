@@ -42,7 +42,7 @@ export const ROLL_VH = 240;
 const GREY = '#9A9A9A';
 type Word = { t: string; tone?: 'red' | 'grey' };
 const WHO: Word[] = [
-  ...'1Red is a creative agency from India. Strategists, designers, animators, developers, and editors, all at one table.'.split(' ').map((t) => ({ t })),
+  ...'1Red is a creative agency. Strategists, designers, animators, developers, and editors, all at one table.'.split(' ').map((t) => ({ t })),
   ...'Most brands play it'.split(' ').map((t) => ({ t })),
   { t: 'grey:', tone: 'grey' },
   ...'safe, polite, and forgotten by Tuesday. We make yours'.split(' ').map((t) => ({ t })),

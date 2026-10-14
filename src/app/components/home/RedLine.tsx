@@ -46,7 +46,7 @@ const LANDING = 0.25;
 
 type Word = { t: string; tone?: 'red' | 'beige' };
 const COPY: Word[] = [
-  ...'1Red is a creative collective from India. Strategists, designers, animators, developers and editors at one table.'.split(' ').map((t) => ({ t })),
+  ...'1Red is a creative collective. Strategists, designers, animators, developers and editors at one table.'.split(' ').map((t) => ({ t })),
   ...'Most brands play it'.split(' ').map((t) => ({ t })),
   { t: 'beige:', tone: 'beige' },
   ...'safe, polite, forgotten by Tuesday. We make yours'.split(' ').map((t) => ({ t })),

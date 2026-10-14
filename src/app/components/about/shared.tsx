@@ -107,7 +107,7 @@ export function RedPanel({ seed, aspect, children, style }: { seed: number; aspe
 }
 
 /* ── The copy (kept from the first About, 2026-09-30) ───────────────────── */
-export const INTRO = '1Red is a creative collective from India. Strategists, designers, animators, developers and editors who take a brief on together, from the first napkin sketch to the last frame. We make brands the red one in a beige feed.';
+export const INTRO = '1Red is a creative collective. Strategists, designers, animators, developers and editors who take a brief on together, from the first napkin sketch to the last frame. We make brands the red one in a beige feed.';
 export const WHO = {
   eyebrow: 'Who we are',
   line: 'New kids. Old‑school obsessive.', // non-breaking hyphen: never splits
