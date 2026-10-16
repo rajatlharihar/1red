@@ -1,10 +1,11 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { useReducedMotion } from 'motion/react';
 import { CubeAssembly, CubeLighting, CAM_Z, FOV, HERO_DONE } from './CubeAssembly';
 import { MarkOccluder } from './MarkOccluder';
 import { SCROLL_VH as HERO_VH, HANDOFF_P, TAIL_VH, budgetDpr } from '../hero/StudioEntrance';
 import { glide, subscribeGlide } from '../scrollGlide';
+import { registerGlideStop } from '../SmoothScroll';
 
 /* ─── Section 2: down a tunnel, then many cubes become one ─────────────────
  * No hand-off screen. The section is pulled up over the end of the hero so
@@ -25,13 +26,15 @@ import { glide, subscribeGlide } from '../scrollGlide';
    The timeline below was tuned at 390vh, so the seam with the hero keeps
    that rate: `sectionP` starts at it and eases up to a faster, steady rate
    once the "e" blocks are gone, instead of scaling everything uniformly. */
-const SECTION_VH = 250; // 2026-10-07: Rajat, smoother, show every step (160 was too harsh; 210, 280 before)
+const SECTION_VH = 200; // 2026-10-17: Rajat, shorter tunnel (250 before; 160 was too harsh; 210, 280 earlier)
 /** Pinned tail after the poster: the box falls out of the frame's bottom,
  *  into the next section (home/RedLine.tsx catches it). */
 export const DROP_VH = 90;
 /** The finished poster holds, pinned, before the box drops: the page scrolls
  *  on but the frame stays put (Rajat, 2026-10-06: "come and hold"). */
 const HOLD_VH = 80;
+/** Where the glide from the mark lands: this far into the hold, box settled. */
+const BOX_LAND_VH = 20;
 /** The last frame holds while the red flags card slides up over it
  *  (RedFlags pulls itself up by 100vh). */
 const COVER_VH = 100;
@@ -42,7 +45,7 @@ export const ROLL_VH = 240;
 const GREY = '#9A9A9A';
 type Word = { t: string; tone?: 'red' | 'grey' };
 const WHO: Word[] = [
-  ...'1Red is a creative agency. Strategists, designers, animators, developers, and editors, all at one table.'.split(' ').map((t) => ({ t })),
+  ...'1red is a creative agency. Strategists, designers, animators, developers, and editors, all at one table.'.split(' ').map((t) => ({ t })),
   ...'Most brands play it'.split(' ').map((t) => ({ t })),
   { t: 'grey:', tone: 'grey' },
   ...'safe, polite, and forgotten by Tuesday. We make yours'.split(' ').map((t) => ({ t })),
@@ -112,6 +115,33 @@ const OVERLAP_VH = (1 - HANDOFF_P) * (HERO_VH - 100);
 /** Anchor pixel ratio like the hero: same pixel budget, so the two canvases
  *  drawn on top of each other at the hand-off stay inside the GPU. */
 const MAX_DPR = 1.75;
+/* This canvas sleeps (frameloop "never") until the section nears the screen,
+   so its shaders used to compile on the first frame it drew: an ~80-100 ms
+   hitch right at the hero hand-off, mid-glide (traced 2026-10-16). Compile
+   them while the page is idle instead, once the scene has had time to load. */
+function Prewarm() {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
+  useEffect(() => {
+    // Once, in the first idle moment after the scene has loaded, while the
+    // reader is still on the opening frame.
+    const id = window.setTimeout(() => {
+      const run = () => {
+        try {
+          gl.compile(scene, camera);
+        } catch {
+          /* best effort */
+        }
+      };
+      if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 1500 });
+      else run();
+    }, 2000);
+    return () => window.clearTimeout(id);
+  }, [gl, scene, camera]);
+  return null;
+}
+
 export function ProblemCube() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -146,6 +176,16 @@ export function ProblemCube() {
   const offsetRef = useRef(0);
   const pointerRef = useRef({ x: 0, y: 0 });
   const reduceMotion = useReducedMotion() ?? false;
+  // The settled box is the guided glide's second landing (after the mark).
+  useEffect(() => {
+    if (reduceMotion) return;
+    return registerGlideStop(() => {
+      const el = wrapRef.current;
+      if (!el) return null;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      return top + ((SECTION_VH - 100 + BOX_LAND_VH) / 100) * window.innerHeight;
+    });
+  }, [reduceMotion]);
   const [inView, setInView] = useState(false);
   const [dpr, setDpr] = useState(() => budgetDpr(MAX_DPR));
   useEffect(() => {
@@ -192,7 +232,9 @@ export function ProblemCube() {
         whoRef.current.style.opacity = a.toFixed(3);
         whoRef.current.style.transform = `translateY(${((1 - a) * 24).toFixed(1)}px)`;
       }
-      const read = smooth(0.02, 0.8, roll) * (CHARS + 2);
+      // Fully typed by 62% of the roll: the red flags card rises over the lower
+      // screen from there and must not catch the paragraph mid-line.
+      const read = smooth(0.02, 0.62, roll) * (CHARS + 2);
       if (dotsRef.current) dotsRef.current.style.opacity = smooth(0.2, 0.8, drop).toFixed(3);
       let at = 0;
       STRIKES.forEach((word, i) => {
@@ -342,15 +384,29 @@ export function ProblemCube() {
                     }}
                     style={{
                       display: 'block',
-                      fontSize: line.lead ? (wide ? 'clamp(24px, 2.4vw, 46px)' : 'clamp(22px, 6vw, 30px)') : wide ? 'clamp(54px, 6vw, 116px)' : 'clamp(48px, 15vw, 76px)',
+                      /* The lead line is typewriter on two lines (Rajat,
+                         2026-10-17), set ~13% bigger than the Outfit it replaced. */
+                      fontFamily: line.lead ? 'var(--font-hand)' : undefined,
+                      fontSize: line.lead ? (wide ? 'clamp(27px, 2.73vw, 52px)' : 'clamp(25px, 6.84vw, 34px)') : wide ? 'clamp(54px, 6vw, 116px)' : 'clamp(48px, 15vw, 76px)',
                       lineHeight: line.lead ? 1.1 : 0.92,
-                                            fontWeight: 500,
+                      fontWeight: line.lead ? 400 : 500,
                       color: line.lead ? GREY : INK,
-                      letterSpacing: '-0.04em',
+                      letterSpacing: line.lead ? 0 : '-0.04em',
                       transform: reduceMotion ? 'none' : 'translateY(110%)',
                     }}
                   >
-                    {line.t === 'red one.' ? <span style={{ color: '#EB3F43' }}>{line.t}</span> : line.t}
+                    {line.t === 'red one.' ? (
+                      <span style={{ color: '#EB3F43' }}>{line.t}</span>
+                    ) : line.lead ? (
+                      // Two lines: the question, then the answer under it (Rajat, 2026-10-17).
+                      <>
+                        Another grey brand?
+                        <br />
+                        No thanks.
+                      </>
+                    ) : (
+                      line.t
+                    )}
                   </span>
                 </div>
               ))}
@@ -394,6 +450,7 @@ export function ProblemCube() {
               camera={{ position: [0, 0, CAM_Z], fov: FOV }}
             >
               <CubeLighting />
+              <Prewarm />
               <CubeAssembly progressRef={progressRef} heroPRef={heroPRef} offsetRef={offsetRef} pointerRef={pointerRef} dropRef={dropRef} rollRef={rollRef} />
               {!reduceMotion && (
                 <Suspense fallback={null}>

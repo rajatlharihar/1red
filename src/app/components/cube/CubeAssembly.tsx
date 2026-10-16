@@ -130,7 +130,11 @@ const AV_TILT_TO = 0.34;
  *  is in its fade band when the run stops and the gather begins. The run is
  *  already moving at the hand-off (no hold): the "e" blocks are rushing
  *  outwards then, and the ring behind them has to be doing the same. */
-const AV_TRAVEL = 28;
+const AV_TRAVEL = 16; // 2026-10-17: Rajat, "too long": 28 before
+/** Rings shown during the run, per corner (Rajat, 2026-10-17: "cut out a few
+ *  cubes"; all seven before). The deeper ranks stay hidden until their
+ *  flight to the box begins, so the box still gets all 27. */
+const AV_SHOWN = 3;
 /** How the run eases: near-linear at the start, so the first ring keeps
  *  pace with the "e" blocks it continues, easing to a stop. */
 const AV_RUN_POW = 1.6;
@@ -616,7 +620,8 @@ export function CubeAssembly({
       /* A ring only fades in over the deepest part of the cycle, where it is
          far too small to see the fade, so a wrap never pops. A cube on its
          way to the box is always shown. */
-      const appear = Math.max(smoothstep(1, 0.9, phase / AV_CYCLE), smoothstep(0, 0.3, local));
+      const inRun = piece.rank < AV_SHOWN ? smoothstep(1, 0.9, phase / AV_CYCLE) : 0;
+      const appear = Math.max(inRun, smoothstep(0, 0.3, local));
 
       if (piece.tier === 0) {
         const f = easeInOutSine(local);
