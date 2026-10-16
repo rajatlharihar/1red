@@ -429,7 +429,7 @@ export function Footer() {
                 <motion.a
                   key={link}
                   {...motionProps}
-                  href={link === 'Careers' ? `mailto:${CONTACT_EMAIL}?subject=Careers%20at%201Red` : '#'}
+                  href={link === 'Careers' ? `mailto:${CONTACT_EMAIL}?subject=Careers%20at%201red` : '#'}
                   style={sharedStyle}
                 >
                   {link}
@@ -449,7 +449,7 @@ export function Footer() {
               opacity: 0.24,
             }}
           >
-            © 2026 1Red. All rights reserved.
+            © 2026 1red. All rights reserved.
           </motion.p>
         </div>
       </div>

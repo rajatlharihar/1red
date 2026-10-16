@@ -229,7 +229,7 @@ export function CareersBody() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start' }}>
       <p style={{ margin: 0, fontSize: 16, lineHeight: 1.5, opacity: 0.92 }}>Every skill, one box. If yours is missing, tell us.</p>
-      <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Careers at 1Red')}`} className={focusRing} style={{ ...label, color: SKY, textDecoration: 'none', display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+      <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Careers at 1red')}`} className={focusRing} style={{ ...label, color: SKY, textDecoration: 'none', display: 'inline-flex', gap: 6, alignItems: 'center' }}>
         Send your work <ArrowUpRight size={12} />
       </a>
     </div>

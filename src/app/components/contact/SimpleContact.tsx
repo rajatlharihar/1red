@@ -243,7 +243,7 @@ export function SimpleContact() {
             <p style={label}>Careers</p>
             <p style={{ margin: 0, fontSize: 17, lineHeight: 1.5 }}>
               Good at something we don't do yet?{' '}
-              <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Careers at 1Red')}`} className={focusRing} style={{ color: RED }}>
+              <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Careers at 1red')}`} className={focusRing} style={{ color: RED }}>
                 Send your work
               </a>
               .

@@ -31,7 +31,7 @@ export const WORKS: WorkPiece[] = [
   { id: 'terrabarn-socials', title: 'Social reels', client: 'Terrabarn', category: 'Campaigns', kind: 'video', mp4: '/videos/terrabarn-socials.mp4', still: 1, aspect: '1080 / 1350' },
   { id: 'yui-logo-grid', title: 'Logo in motion', client: 'Yui', category: 'Motion graphics', caseStudy: 'yui', kind: 'video', mp4: '/work/yui/v01.mp4', webm: '/work/yui/v01.webm', still: 1, aspect: '1920 / 1364' },
   { id: 'yui-patterns', title: 'Patterns, reimagined', client: 'Yui', category: 'Graphic design', caseStudy: 'yui', kind: 'image', src: '/work/yui/06.webp' },
-  { id: 'team-film', title: 'The team, drawn', client: '1Red', category: 'Animation', kind: 'video', mp4: '/videos/Fg-01_3.mp4', still: 5, aspect: '1920 / 1080' },
+  { id: 'team-film', title: 'The team, drawn', client: '1red', category: 'Animation', kind: 'video', mp4: '/videos/Fg-01_3.mp4', still: 5, aspect: '1920 / 1080' },
   { id: 'apptile-think-bigger', title: 'Think bigger', client: 'Apptile', category: 'Campaigns', caseStudy: 'apptile', kind: 'image', src: '/work/apptile/01.webp' },
   { id: 'ground-logo', title: 'Logo animation', client: 'Ground', category: 'Motion graphics', kind: 'video', mp4: '/videos/ground-logo.mp4', still: 3, aspect: '1080 / 1080' },
   { id: 'apptile-type', title: 'Type system', client: 'Apptile', category: 'Graphic design', caseStudy: 'apptile', kind: 'image', src: '/work/apptile/06.webp' },
@@ -46,6 +46,6 @@ export const WORKS: WorkPiece[] = [
   { id: 'illus-identity', title: 'Identity', client: 'Illusdoodle', category: 'Graphic design', caseStudy: 'illusdoodle', kind: 'image', src: '/work/illusdoodle/01.webp' },
   { id: 'apptile-fast', title: 'Quick cut', client: 'Apptile', category: 'Motion graphics', caseStudy: 'apptile', kind: 'video', mp4: '/work/apptile/v03.mp4', webm: '/work/apptile/v03.webm', still: 1, aspect: '1920 / 1080' },
   { id: 'illus-posters', title: 'Posters', client: 'Illusdoodle', category: 'Graphic design', caseStudy: 'illusdoodle', kind: 'image', src: '/work/illusdoodle/10.webp', focus: 'center top' },
-  { id: 'app-showcase', title: 'Product showcase', client: '1Red', category: 'Video editing', kind: 'video', mp4: '/videos/app-showcase.mp4', still: 4, aspect: '1920 / 1080' },
+  { id: 'app-showcase', title: 'Product showcase', client: '1red', category: 'Video editing', kind: 'video', mp4: '/videos/app-showcase.mp4', still: 4, aspect: '1920 / 1080' },
   { id: 'apptile-merch', title: 'Merch', client: 'Apptile', category: 'Campaigns', caseStudy: 'apptile', kind: 'image', src: '/work/apptile/11.webp' },
 ];

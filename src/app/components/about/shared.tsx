@@ -107,7 +107,7 @@ export function RedPanel({ seed, aspect, children, style }: { seed: number; aspe
 }
 
 /* ── The copy (kept from the first About, 2026-09-30) ───────────────────── */
-export const INTRO = '1Red is a creative collective. Strategists, designers, animators, developers and editors who take a brief on together, from the first napkin sketch to the last frame. We make brands the red one in a beige feed.';
+export const INTRO = '1red is a creative collective. Strategists, designers, animators, developers and editors who take a brief on together, from the first napkin sketch to the last frame. We make brands the red one in a beige feed.';
 export const WHO = {
   eyebrow: 'Who we are',
   line: 'New kids. Old‑school obsessive.', // non-breaking hyphen: never splits
@@ -149,7 +149,7 @@ export function AboutHero({ reduceMotion }: { reduceMotion: boolean }) {
           <motion.p initial={reduceMotion ? false : { y: '110%' }} animate={{ y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.1 }} style={{ ...label, margin: 0, textAlign: 'right', lineHeight: 1.6 }}>
             About
             <br />
-            1Red
+            1red
           </motion.p>
         </div>
       </div>
