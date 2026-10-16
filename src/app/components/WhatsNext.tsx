@@ -4,6 +4,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { FillLink } from './home/FillLink';
 import { Grain } from './home/Grain';
 import { CONTACT_EMAIL } from './Footer';
+import { registerSoftStop } from './SmoothScroll';
 
 /* ─── INVITE — "Let's create" ──────────────────────────────────────────────
  * A sheet of paper. Behind the words, a pencil grid that scrolls slower
@@ -199,7 +200,8 @@ function Sheet({
         </motion.svg>
         {!narrow && (
           <motion.svg viewBox={VIEW} preserveAspectRatio="xMidYMin slice" style={layer} {...gridDrift}>
-            <motion.path d={LINE} {...stroke} style={{ pathLength: drawn }} />
+            {/* The long jagged LINE is gone (Rajat, 2026-10-17: it read as a
+                stray scribble, and as a red thread it crossed the headline). */}
             {FIGURE_FILLED.map((d) => (
               <path key={d} d={d} {...stroke} fill={PAPER} />
             ))}
@@ -231,6 +233,17 @@ export function WhatsNext() {
   const contentRef = useRef<HTMLDivElement>(null);
   const inView = useInView(contentRef, { once: true, margin: '-80px' });
   const reduce = useReducedMotion() ?? false;
+  // Soft landing: the closing CTA, whole on screen.
+  useEffect(() => {
+    if (reduce) return;
+    return registerSoftStop(() => {
+      const el = sectionRef.current;
+      if (!el) return null;
+      let top = 0;
+      for (let n: HTMLElement | null = el; n; n = n.offsetParent as HTMLElement | null) top += n.offsetTop;
+      return top + el.offsetHeight / 2 - window.innerHeight / 2;
+    });
+  }, [reduce]);
   // The sheet is composed for a wide frame; on a phone its crop is a stray
   // line through the buttons, so only the paper and grid remain there.
   const [narrow, setNarrow] = useState(false);
@@ -262,7 +275,7 @@ export function WhatsNext() {
         justifyContent: 'center',
         position: 'relative',
         zIndex: 2,
-        paddingTop: 'clamp(6rem, 14vh, 10rem)',
+        paddingTop: 'clamp(4rem, 9vh, 7rem)',
         paddingBottom: 'clamp(6rem, 14vh, 10rem)',
         paddingLeft: 'clamp(1.5rem, 4vw, 5rem)',
         paddingRight: 'clamp(1.5rem, 4vw, 5rem)',
@@ -270,8 +283,12 @@ export function WhatsNext() {
         overflow: 'hidden',
       }}
     >
-      <Grain opacity={0.5} blend="soft-light" />
+      <Grain opacity={0.22} blend="soft-light" />
       <Sheet drawn={drawn} reduce={reduce} narrow={narrow} parallaxFar={farY} parallaxMid={midY} parallaxNear={nearY} />
+      {/* Merges into the deal above (Rajat, 2026-10-17: "it should merge
+          here"): the grain and the grid fade in from the deal's white over
+          the top 35vh, so there is no edge at the seam. */}
+      <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '35vh', background: 'linear-gradient(#FFFFFF, rgba(255,255,255,0))', pointerEvents: 'none' }} />
 
       {/* ── Content ── */}
       <div
@@ -284,42 +301,43 @@ export function WhatsNext() {
           alignItems: 'center',
           textAlign: 'center',
           maxWidth: 1100,
+          width: '100%',
         }}
       >
+        {/* Setup in grey typewriter, payoff as the hero (Rajat, 2026-10-17:
+            the site's grey-line pattern, like "Grey areas"). */}
         <div style={{ overflow: 'hidden' }}>
+          <motion.p
+            initial={{ y: '110%' }}
+            animate={inView ? { y: 0 } : {}}
+            transition={{ duration: 0.8, ease: EASE, delay: 0.04 }}
+            style={{
+              fontFamily: 'var(--font-hand)',
+              fontSize: 'clamp(26px, 3.2vw, 54px)',
+              lineHeight: 1.1,
+              margin: 0,
+              color: '#9A9A9A',
+            }}
+          >
+            Grey&rsquo;s had its chance&hellip;
+          </motion.p>
+        </div>
+        <div style={{ overflow: 'hidden', marginTop: 'clamp(10px, 1.6vh, 20px)' }}>
           <motion.h2
             initial={{ y: '110%' }}
             animate={inView ? { y: 0 } : {}}
-            transition={{ duration: 0.9, ease: EASE, delay: 0.04 }}
+            transition={{ duration: 0.9, ease: EASE, delay: 0.12 }}
             style={{
-              fontSize: 'clamp(64px, 12.5vw, 200px)',
-              fontWeight: 800,
+              fontSize: 'clamp(46px, 7vw, 132px)',
+              fontWeight: 700,
               letterSpacing: '-0.05em',
-              lineHeight: 0.92,
+              lineHeight: 0.95,
               margin: 0,
               color: INK,
             }}
           >
-            Grey&rsquo;s had its chance&hellip;
-          </motion.h2>
-        </div>
-        <div style={{ overflow: 'hidden' }}>
-          <motion.h3
-            initial={{ y: '110%' }}
-            animate={inView ? { y: 0 } : {}}
-            transition={{ duration: 0.84, ease: EASE, delay: 0.12 }}
-            style={{
-              fontSize: 'clamp(26px, 4vw, 60px)',
-              fontWeight: 400,
-              letterSpacing: '-0.03em',
-              lineHeight: 1.05,
-              margin: '10px 0 0',
-              color: INK,
-              opacity: 0.7,
-            }}
-          >
             <span style={{ color: '#EB3F43' }}>Red</span> does a better job.
-          </motion.h3>
+          </motion.h2>
         </div>
 
         <motion.p
@@ -329,9 +347,9 @@ export function WhatsNext() {
           style={{
             fontSize: 'clamp(14px, 1.2vw, 17px)',
             lineHeight: 1.72,
-            opacity: 0.5,
-            maxWidth: 460,
-            marginTop: 30,
+            opacity: 0.6,
+            maxWidth: '48ch',
+            marginTop: 'clamp(18px, 3vh, 28px)',
             marginBottom: 0,
             color: INK,
           }}
@@ -343,7 +361,7 @@ export function WhatsNext() {
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.68, ease: EASE, delay: 0.36 }}
-          style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginTop: 44 }}
+          style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginTop: 'clamp(22px, 3.4vh, 32px)' }}
         >
           <FillLink to="/contact" icon={<ArrowUpRight size={15} strokeWidth={2} />}>Start a project</FillLink>
           <FillLink to={`mailto:${CONTACT_EMAIL}?subject=Let%27s%20talk`} outline>Book a call</FillLink>

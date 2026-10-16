@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
-import { ArrowUpRight } from 'lucide-react';
-import { Digit, RED, INK, smooth } from '../about/shared';
+import { INK, smooth } from '../about/shared';
 import { glide, subscribeGlide } from '../scrollGlide';
-import { FillLink } from './FillLink';
-import { useTiltIn } from './useTiltIn';
+import { DealA, DealB } from './DealLayouts';
+import { registerSoftStop } from '../SmoothScroll';
 
 /* ─── THE DEAL — being new, said out loud ──────────────────────────────────
  * The big networks lead with heritage, office counts and award walls. We
@@ -36,9 +35,19 @@ export function TheDeal() {
   }, []);
   const reduceMotion = reduce || narrow;
   const wrapRef = useRef<HTMLElement>(null);
-  // The tilt plays on phones too; only the pin is wide-only.
-  useTiltIn(wrapRef, reduce);
+  // Arrives through the block transition (BlockTransitions), not a tilt-in.
   const digitRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [focus, setFocus] = useState(-1);
+  // Soft landing: the deal pinned, whole on screen.
+  useEffect(() => {
+    if (reduceMotion) return;
+    return registerSoftStop(() => {
+      let top = 0;
+      for (let n: HTMLElement | null = wrapRef.current; n; n = n.offsetParent as HTMLElement | null) top += n.offsetTop;
+      return wrapRef.current ? top : null;
+    });
+  }, [reduceMotion]);
+  const focusRef = useRef(-1);
 
   /* The card slides up over the red flags (which hold, see RedFlags),
      tilting in like Yui's menu cards (useTiltIn). `s` is the card's top in
@@ -51,6 +60,13 @@ export function TheDeal() {
       if (!el) return;
       const vh = window.innerHeight;
       const s = (glide.y - (el.getBoundingClientRect().top + glide.raw)) / vh;
+      // Which row is in focus (its photo field opens), stepping as the card
+      // settles and pins.
+      const f = s < -0.35 ? -1 : Math.min(DEALS.length - 1, Math.floor((s + 0.35) / 0.2));
+      if (f !== focusRef.current) {
+        focusRef.current = f;
+        setFocus(f);
+      }
       // Only the numerals move: the card arrives with its words already
       // on it, and each numeral rises out of its slot as the card settles.
       let k = 0;
@@ -65,8 +81,15 @@ export function TheDeal() {
     });
   }, [reduceMotion]);
 
-  const rise = (from: string): React.CSSProperties => ({ display: 'block', transform: reduceMotion ? 'none' : from, willChange: 'transform' });
-  let digitIndex = 0;
+  // Two takes for Rajat to pick (DealLayouts.tsx): ?deal=a (default) or ?deal=b.
+  const variant = new URLSearchParams(location.search).get('deal') === 'b' ? 'b' : 'a';
+  const digitRef = (k: number) => (el: HTMLDivElement | null) => {
+    digitRefs.current[k] = el;
+  };
+  // Without the pin (phones, reduced motion) the numerals simply stand.
+  useEffect(() => {
+    if (reduceMotion) digitRefs.current.forEach((el) => el && (el.style.transform = 'none'));
+  }, [reduceMotion, variant]);
 
   return (
     <section
@@ -78,11 +101,9 @@ export function TheDeal() {
         height: reduceMotion ? 'auto' : `${SECTION_VH}vh`,
         background: '#FFFFFF',
         color: INK,
-        // The next card in the stack: slides over the red flags.
-        borderRadius: '6px 6px 0 0',
-        boxShadow: '0 -30px 80px rgba(0,0,0,0.35)',
-        // The shadow falls on the card below only, never on the next section.
-        clipPath: 'inset(-160px -160px 0 -160px)',
+        // Flat and full-bleed, no card (Rajat, 2026-10-17): it arrives only
+        // through the block transition (BlockTransitions), which keeps it
+        // clipped out of sight until the blocks have covered the frame.
       }}
     >
       <div
@@ -102,38 +123,11 @@ export function TheDeal() {
           boxSizing: 'border-box',
         }}
       >
-        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: narrow ? '34px' : 'clamp(38px, min(6vw, 9.5vh), 104px)', fontWeight: 500, letterSpacing: '-0.045em', lineHeight: 0.95, margin: 0 }}>
-          <span style={{ display: 'block' }}>Putting the red</span>
-          <span style={{ display: 'block', color: 'rgba(10,10,10,0.35)' }}>in credible.</span>
-        </h2>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', columnGap: 'clamp(24px, 4vw, 72px)', rowGap: narrow ? 36 : 48 }}>
-          {DEALS.map((d, i) => (
-            <div key={i}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'clamp(8px, 1vw, 14px)', height: narrow ? 96 : 'clamp(130px, 24vh, 250px)' }}>
-                {d.n.map((n) => {
-                  const k = digitIndex++;
-                  return (
-                    <div key={k} style={{ overflow: 'hidden' }}>
-                      <div ref={(el) => { digitRefs.current[k] = el; }} style={rise('translateY(104%)')}>
-                        <Digit n={n} height={narrow ? '96px' : 'clamp(100px, 21vh, 250px)'} fill={RED} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div>
-                <p style={{ fontFamily: 'var(--font-hand)', fontSize: narrow ? 24 : 'clamp(26px, 2.2vw, 36px)', fontWeight: 700, color: RED, margin: narrow ? '12px 0 4px' : '18px 0 6px', transform: 'rotate(-2deg)', transformOrigin: 'left' }}>{d.unit}</p>
-                <p style={{ margin: 0, fontSize: narrow ? 16 : 'clamp(17px, 1.35vw, 22px)', lineHeight: 1.45, opacity: 0.72, maxWidth: 360 }}>{d.body}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <p style={{ margin: 0, fontFamily: 'var(--font-hand)', fontSize: narrow ? 26 : 'clamp(28px, 2.6vw, 44px)', fontWeight: 700, color: INK, transform: 'rotate(-1.5deg)', transformOrigin: 'left' }}>We&rsquo;re new. We&rsquo;re sharp. We&rsquo;re distinct.</p>
-          <FillLink to="/about" outline icon={<ArrowUpRight size={15} strokeWidth={2} />}>Meet the box</FillLink>
-        </div>
+        {variant === 'b' ? (
+          <DealB deals={DEALS} narrow={narrow} digitRef={digitRef} />
+        ) : (
+          <DealA deals={DEALS} narrow={narrow} digitRef={digitRef} focus={focus} />
+        )}
       </div>
     </section>
   );

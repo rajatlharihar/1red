@@ -240,6 +240,8 @@
 .fill-btn:hover .fill-btn__icon { transform: translate(2px, -2px); }
 .fill-btn--red { --fill-btn-fg: #fff; --fill-btn-bg: #EB3F43; --fill-btn-border: #EB3F43; --fill-btn-fill: #0A0A0A; --fill-btn-fill-fg: #fff; }
 .fill-btn--red-outline { --fill-btn-fg: #EB3F43; --fill-btn-bg: transparent; --fill-btn-border: #EB3F43; --fill-btn-fill: #EB3F43; --fill-btn-fill-fg: #fff; }
+/* On a red field (The Deal's card): white outline, fills ink. */
+.fill-btn--white-outline { --fill-btn-fg: #fff; --fill-btn-bg: transparent; --fill-btn-border: #fff; --fill-btn-fill: #0A0A0A; --fill-btn-fill-fg: #fff; }
 
 /* Film grain (home/Grain.tsx): the tile jumps between offsets in steps,
    which reads as live grain; transform only, so it stays on the compositor. */
@@ -275,3 +277,8 @@
 .logo-glass__shine {
   background: linear-gradient(170deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.06) 34%, rgba(255, 255, 255, 0) 60%);
 }
+
+/* Red flags deck: the new top card gives a little start (RedFlags, 2026-10-17). */
+.flag-top { animation: flag-top-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes flag-top-pop { 0% { translate: 0 6px; rotate: -1.2deg; } 60% { translate: 0 -3px; rotate: 0.6deg; } 100% { translate: 0 0; rotate: 0deg; } }
+@media (prefers-reduced-motion: reduce) { .flag-top { animation: none; } }

@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
 /** The site's fill button (theme.css .fill-btn), as a real link. */
-export function FillLink({ to, children, outline = false, icon }: { to: string; children: string; outline?: boolean; icon?: ReactNode }) {
-  const cls = `fill-btn btn-corners ${outline ? 'fill-btn--red-outline' : 'fill-btn--red'}`;
+export function FillLink({ to, children, outline = false, onRed = false, icon }: { to: string; children: string; outline?: boolean; onRed?: boolean; icon?: ReactNode }) {
+  const cls = `fill-btn btn-corners ${onRed ? 'fill-btn--white-outline' : outline ? 'fill-btn--red-outline' : 'fill-btn--red'}`;
   const inner = (
     <>
       <span className="fill-btn__fill" aria-hidden />

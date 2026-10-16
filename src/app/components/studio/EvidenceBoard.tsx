@@ -4,6 +4,7 @@ import { glide, subscribeGlide } from '../scrollGlide';
 import { Digit } from '../about/shared';
 import { grainTile } from '../home/Grain';
 import { process as STEPS } from '../../data/process';
+import { PinHead, sag, type Pin } from './boardString';
 
 /* ─── Our process, as an evidence board (Rajat, 2026-10-04) ────────────────
  * After his reference: a wall of black-and-white clippings, polaroids and
@@ -39,7 +40,6 @@ function rng(seed: number) {
 }
 
 type Stop = { x: number; y: number }; // card centre the camera frames
-type Pin = { x: number; y: number };
 
 /* Layout in board units. Exhibits alternate high and low so the thread zigzags. */
 const TITLE = { x: 780, y: 780, w: 760, h: 620, rot: -3 };
@@ -64,23 +64,6 @@ function boardLayout(swap: boolean) {
 
 function pinOf(c: { x: number; y: number; h: number }): Pin {
   return { x: c.x, y: c.y - c.h / 2 + 36 };
-}
-
-/** A soft sag between two pins, like string under its own weight. */
-function sag(a: Pin, b: Pin, k = 0.12) {
-  const mx = (a.x + b.x) / 2;
-  const my = (a.y + b.y) / 2 + Math.hypot(b.x - a.x, b.y - a.y) * k;
-  return `M${a.x} ${a.y} Q${mx} ${my} ${b.x} ${b.y}`;
-}
-
-function PinHead({ p, r = 13 }: { p: Pin; r?: number }) {
-  return (
-    <g>
-      <circle cx={p.x + 3} cy={p.y + 4} r={r} fill="rgba(0,0,0,0.35)" />
-      <circle cx={p.x} cy={p.y} r={r} fill="#1a1a1a" />
-      <circle cx={p.x - r * 0.35} cy={p.y - r * 0.35} r={r * 0.32} fill="rgba(255,255,255,0.55)" />
-    </g>
-  );
 }
 
 const grainStyle = (o = 0.22): React.CSSProperties => ({
