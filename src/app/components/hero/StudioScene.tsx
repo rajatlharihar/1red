@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { createHatchTexture } from './surfaceTextures';
 import { createWallStatement } from './wallStatement';
+import { GildedFrame, frameLayout } from './GildedFrame';
 import { StudioEnvironment, type RoomMaterials } from './StudioEnvironment';
 import { INK, FILL_OFFSET, createInkLineMaterial, inkEdges } from './inkLines';
 import { buildLogoGeometry } from './logoGeometry';
@@ -42,6 +43,10 @@ import {
  * the door in that doorway, and ground under the approach — because the
  * model's own floor stops at z = 6.59 and the camera starts well beyond it.
  * ────────────────────────────────────────────────────────────────────────── */
+
+/** The lettered "Done blending in?" on the wall. Off: the poster carries the
+ *  line now; when on, it letters beside (or above) the frame. */
+const SHOW_WALL_LETTERING = false;
 
 const RED = '#FF0000'; // full-intensity red; room and mark skip tone mapping
 
@@ -297,7 +302,19 @@ export function StudioScene({
      rebuilt when the viewport's shape changes. Drawn once with whatever font
      is loaded, then again when Outfit arrives. */
   const statement = useMemo(
-    () => createWallStatement(size.width / size.height, simplified ? 1536 : 2048),
+    () => {
+      if (!SHOW_WALL_LETTERING) return null;
+      const aspect = size.width / size.height;
+      const f = frameLayout(aspect);
+      // Beside the frame, or above it where the frame fills the width (phone).
+      const bounds = f
+        ? [
+            { minX: f.cx + f.w / 2 + 0.45, maxSize: 0.85 },
+            { yMin: f.cy + f.h / 2 + 0.25, yMax: 9, maxSize: 0.85 },
+          ]
+        : undefined;
+      return createWallStatement(aspect, simplified ? 1536 : 2048, bounds);
+    },
     [size.width, size.height, simplified]
   );
   useEffect(() => {
@@ -487,7 +504,12 @@ export function StudioScene({
       <group position={[0, 0, FACADE_Z]}>
         <mesh geometry={facadeGeo} material={[mats.facade, mats.reveal]} />
         <primitive object={facadeLines} />
-        {statement && statementMat && (
+        {/* The framed poster is the opening shot's subject (Rajat,
+            2026-10-16) and carries "Done blending in?". */}
+        <Suspense fallback={null}>
+          <GildedFrame aspect={size.width / size.height} wallLean={wallLean} />
+        </Suspense>
+        {SHOW_WALL_LETTERING && statement && statementMat && (
           <mesh
             position={[statement.cx, statement.cy, facadeFrontZ(statement.cy) + 0.012]}
             rotation={[wallLean, 0, 0]}

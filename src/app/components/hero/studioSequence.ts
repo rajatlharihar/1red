@@ -265,4 +265,6 @@ export function gapHalfFraction(p: number): number {
 
 /** Composed resting shot for prefers-reduced-motion: inside, lights on, the
  *  mark facing the camera. */
-export const RESTING_STATE: SequenceState = sampleSequence(0.82);
+/** Where the lit mark is presented, settled, before the zoom through the "e". */
+export const RESTING_P = 0.82;
+export const RESTING_STATE: SequenceState = sampleSequence(RESTING_P);

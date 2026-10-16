@@ -37,6 +37,7 @@ const FRAME_PAD = 0.25;
 const Y_MIN = 0.9;
 const Y_MIN_PORTRAIT = 1.9;
 const Y_MAX = 5.2;
+const FRAME_Y_MAX = 8;
 
 /** Candidate line breaks, longest-first lines are fine; the fitter picks the
  *  set that gives the biggest type for the patch of wall available. */
@@ -71,13 +72,24 @@ export interface WallStatementLayout {
  *  the frame covers at height `y`. Built by casting the frame's four corners
  *  onto the (leaning) facade face; the images of the frame's straight edges
  *  are straight on the plane, so the region is a convex quad. */
-function visibleWall(aspect: number) {
+function openingCamera(aspect: number) {
   const cam = new THREE.PerspectiveCamera(heroFov(aspect, 0), aspect, 0.05, 60);
   const s = sampleSequence(0);
   cam.position.set(s.camX, s.camY, s.camZ);
   cam.lookAt(s.lookX, s.lookY, s.lookZ);
   cam.rotateZ(s.camRoll);
   cam.updateMatrixWorld();
+  return cam;
+}
+
+/** Screen x (0 = left edge, 1 = right) of a point on the wall at p = 0. */
+export function wallToScreenX(aspect: number, x: number, y: number) {
+  const v = new THREE.Vector3(x, y, FACADE_Z + facadeFrontZ(y)).project(openingCamera(aspect));
+  return (v.x + 1) / 2;
+}
+
+export function visibleWall(aspect: number) {
+  const cam = openingCamera(aspect);
 
   const rc = new THREE.Raycaster();
   const hit = new THREE.Vector3();
@@ -122,7 +134,21 @@ function measure(ctx: CanvasRenderingContext2D, text: string, em: number) {
   return w - TRACKING * em;
 }
 
-export function layoutWallStatement(ctx: CanvasRenderingContext2D, aspect: number): WallStatementLayout | null {
+/** Where the lettering may go when something else hangs on the wall. */
+export interface StatementBounds {
+  /** Lines start at or right of this x (wall metres). */
+  minX?: number;
+  yMin?: number;
+  yMax?: number;
+  /** Cap on the type size in metres, so the line stays a caption. */
+  maxSize?: number;
+}
+
+export function layoutWallStatement(
+  ctx: CanvasRenderingContext2D,
+  aspect: number,
+  bounds: StatementBounds = {}
+): WallStatementLayout | null {
   const span = visibleWall(aspect);
   if (!span) return null;
 
@@ -135,7 +161,7 @@ export function layoutWallStatement(ctx: CanvasRenderingContext2D, aspect: numbe
      a line of lettering at an angle and the tighter of the two rows binds. */
   const leftAt = (y: number) => {
     const sp = span(y);
-    return sp ? Math.max(doorRimX(y) + RIM_MARGIN, sp[0] + FRAME_PAD) : null;
+    return sp ? Math.max(doorRimX(y) + RIM_MARGIN, sp[0] + FRAME_PAD, bounds.minX ?? -Infinity) : null;
   };
   const rightAt = (y: number) => {
     const sp = span(y);
@@ -173,7 +199,8 @@ export function layoutWallStatement(ctx: CanvasRenderingContext2D, aspect: numbe
      stays out of the lower third, clear of the door's edge and the cue. */
   const portrait = aspect < 1;
   const candidates = portrait ? [BREAKS[1]] : BREAKS;
-  const yMin = portrait ? Y_MIN_PORTRAIT : Y_MIN;
+  const yMin = bounds.yMin ?? (portrait ? Y_MIN_PORTRAIT : Y_MIN);
+  const yMax = bounds.yMax ?? Y_MAX;
   const EM = 100;
   const widths = candidates.map((lines) => lines.map((l) => measure(ctx, l, EM) / EM));
   let best: WallStatementLayout | null = null;
@@ -182,15 +209,15 @@ export function layoutWallStatement(ctx: CanvasRenderingContext2D, aspect: numbe
     const lines = candidates[bi];
     const n = lines.length;
     for (let i = 0; i <= STEPS; i++) {
-      const y0 = yMin + ((Y_MAX - yMin) * i) / STEPS;
+      const y0 = yMin + ((yMax - yMin) * i) / STEPS;
       if (!span(y0)) continue;
       for (let j = i + 1; j <= STEPS; j++) {
-        const y1 = yMin + ((Y_MAX - yMin) * j) / STEPS;
+        const y1 = yMin + ((yMax - yMin) * j) / STEPS;
         if (!span(y1)) continue;
         // Height sets the first guess; then every line must also fit
         // between the wall's edges at its own height. The edges move with
         // the baselines, so settle it in a couple of passes.
-        let size = (y1 - y0) / (n * LINE_HEIGHT);
+        let size = Math.min((y1 - y0) / (n * LINE_HEIGHT), bounds.maxSize ?? Infinity);
         let out: Line[] | null = null;
         for (let pass = 0; pass < 3; pass++) {
           out = place(lines, y1, size);
@@ -229,6 +256,60 @@ export function layoutWallStatement(ctx: CanvasRenderingContext2D, aspect: numbe
   return best;
 }
 
+/* ── The framed poster ───────────────────────────────────────────────────
+ * The same patch of wall now carries a framed poster instead of lettering.
+ * Fitted the same way, for the viewport's own shape: the biggest box of the
+ * frame's proportions that sits wholly inside the visible wall, with a small
+ * margin at the sides and bottom (the top may touch the screen's top), right of the door, centred in that space
+ * (Rajat, 2026-10-16: "make it bigger and fit that space"). */
+export interface WallFrameLayout {
+  /** Box centre and size in wall metres. */
+  cx: number;
+  cy: number;
+  w: number;
+  h: number;
+}
+
+/** Clear space kept round the frame, in wall metres. */
+const FRAME_MARGIN = 0.15;
+const FRAME_RIM_MARGIN = 0.35;
+
+export function layoutWallFrame(aspect: number, ratio: number): WallFrameLayout | null {
+  const span = visibleWall(aspect);
+  if (!span) return null;
+  const portrait = aspect < 1;
+  const yMin = portrait ? 1.2 : 1.0; // clear of the scroll cue
+  const m = FRAME_MARGIN;
+  /** Free interval at height y, or null outside the visible wall. */
+  const free = (y: number): [number, number] | null => {
+    const sp = span(y);
+    return sp ? [Math.max(doorRimX(y) + FRAME_RIM_MARGIN, sp[0] + m), sp[1] - m] : null;
+  };
+  const yMax = FRAME_Y_MAX;
+  let best: WallFrameLayout | null = null;
+  const STEPS = 80;
+  for (let i = 0; i <= STEPS; i++) {
+    const y0 = yMin + ((yMax - yMin) * i) / STEPS;
+    for (let j = i + 1; j <= STEPS; j++) {
+      const y1 = yMin + ((yMax - yMin) * j) / STEPS;
+      // The visible wall and the door rim are straight-edged, so the free
+      // space between two heights is bounded by its edges at those heights.
+      // Testing a band a margin lower keeps the bottom clear of the cue; the
+      // top may meet the top of the screen (Rajat drew it there).
+      const a = free(y0 - m);
+      const b = free(y1);
+      if (!a || !b) continue;
+      const h = y1 - y0;
+      const w = h * ratio;
+      const left = Math.max(a[0], b[0]);
+      const right = Math.min(a[1], b[1]);
+      if (right - left < w) continue;
+      if (!best || h > best.h) best = { cx: (left + right) / 2, cy: (y0 + y1) / 2, w, h };
+    }
+  }
+  return best;
+}
+
 /* ── Drawing ─────────────────────────────────────────────────────────── */
 
 export interface WallStatement {
@@ -243,10 +324,15 @@ export interface WallStatement {
 
 /** Builds the lettering as a transparent canvas over the block's bounding
  *  box, so the wall's hatching shows through around the letters. */
-export function createWallStatement(aspect: number, canvasPx: number): WallStatement | null {
+export function createWallStatement(aspect: number, canvasPx: number, bounds?: StatementBounds[]): WallStatement | null {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d')!;
-  const layout = layoutWallStatement(ctx, aspect);
+  // With several allowed regions, letter the one that gives the biggest type.
+  let layout: WallStatementLayout | null = null;
+  for (const b of bounds ?? [{}]) {
+    const l = layoutWallStatement(ctx, aspect, b);
+    if (l && (!layout || l.size > layout.size)) layout = l;
+  }
   if (!layout) return null;
 
   const w = layout.x1 - layout.x0;
@@ -266,7 +352,7 @@ export function createWallStatement(aspect: number, canvasPx: number): WallState
       let x = (line.x - layout.x0) * pxPerMetre;
       const y = (layout.y1 - line.y) * pxPerMetre;
       for (const chr of line.text) {
-        ctx.fillStyle = chr === '?' || chr === '.' ? RED : INK;
+        ctx.fillStyle = INK; // a plain question mark (Rajat, 2026-10-16)
         ctx.fillText(chr, x, y);
         x += ctx.measureText(chr).width + TRACKING * em;
       }

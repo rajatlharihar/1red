@@ -1,6 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Lilita+One&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@font-face {
+  font-family: 'Veteran Typewriter';
+  src: url('/fonts/veteran-typewriter.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+  /* typewriter sets much wider than the old script: keep the notes' footprint */
+  size-adjust: 78%;
+}
 
 :root {
   --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
-  --font-hand: 'Caveat', 'Bradley Hand', cursive;
+  --font-hand: 'Veteran Typewriter', 'Courier New', monospace;
 }

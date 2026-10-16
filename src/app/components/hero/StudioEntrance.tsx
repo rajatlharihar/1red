@@ -1,11 +1,12 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { motion, useMotionValue, useTransform, useReducedMotion } from 'motion/react';
-import { ChevronDown } from 'lucide-react';
 import { Logo } from '../Logo';
 import { StudioScene } from './StudioScene';
 import { glide, subscribeGlide } from '../scrollGlide';
-import { HERO_FOV } from './studioSequence';
+import { HERO_FOV, RESTING_P } from './studioSequence';
+import { extraGlideStops, getLenis, swallowWheel } from '../SmoothScroll';
+import { EASINGS, tune } from '../scrollTune';
 
 /* ─── ENTER 1RED — the studio's front door ─────────────────────────────────
  * Replaces the previous opening (a static logo with an idle bob and a
@@ -124,7 +125,7 @@ export function StudioEntrance() {
   // The model streams in behind the closed doors, so the wait is hidden —
   // but the invitation to scroll is held back until the room is actually
   // there to walk into.
-  const [ready, setReady] = useState(false);
+  const [, setReady] = useState(false);
   const handleReady = useCallback(() => setReady(true), []);
 
   // Mobile/low-power gets the same story with less to render, rather than
@@ -166,8 +167,95 @@ export function StudioEntrance() {
     });
   }, [mv, reduceMotion]);
 
-  const copyOpacity = useTransform(mv, [0.02, 0.16], [1, 0]);
-  const copyY = useTransform(mv, [0.02, 0.16], [0, 14]);
+  /* One gesture per leg, both ways (Rajat, 2026-10-16/17: "one smooth
+     scroll", "like a pushed disc"). The page has three landings: the top,
+     the 1red mark (RESTING_P, before the zoom through the "e") and the
+     settled box (registered by ProblemCube). Between the top and the box, a
+     downward wheel, key or swipe glides ONE tween to the next landing below,
+     an upward one to the previous. Gentle start and settle (scrollTune.ts),
+     input locked while it runs, the trackpad's momentum tail swallowed after
+     it lands so it never overshoots. Every scene reads Lenis's animated value
+     in Lenis's frame (scrollGlide), so the tween is the only motion. A hard
+     reverse push mid-glide eases the page to a stop. Past the box, scrolling
+     is ordinary. */
+  useEffect(() => {
+    if (reduceMotion) return;
+    let running: 1 | -1 | 0 = 0;
+    const markY = () => {
+      const el = wrapRef.current;
+      if (!el) return null;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      return top + RESTING_P * (SCROLL_VH / 100 - 1) * window.innerHeight;
+    };
+    const flick = (t: number) => 1 - Math.pow(1 - t, 3);
+    const go = (dir: 1 | -1, strength = 0) => {
+      const lenis = getLenis();
+      const mark = markY();
+      if (!lenis || mark == null) return false;
+      if (running) {
+        // A hard push the other way: ease to a stop where the page is heading.
+        if (dir !== running && strength > 40) {
+          running = 0;
+          const y = lenis.animatedScroll;
+          lenis.scrollTo(y + lenis.velocity * 10, { duration: 0.7, easing: flick, force: true });
+          swallowWheel(300);
+        }
+        return true;
+      }
+      const stops = [0, mark, ...extraGlideStops()].sort((a, b) => a - b);
+      const y = lenis.animatedScroll;
+      if (y > stops[stops.length - 1] + 8) return false; // past the box: ordinary scrolling
+      const target = dir > 0 ? stops.find((v) => v > y + 4) : [...stops].reverse().find((v) => v < y - 4);
+      if (target == null) return false;
+      running = dir;
+      lenis.scrollTo(target, {
+        // The top-to-mark leg takes glideS; other legs scale with distance.
+        duration: Math.min(tune.glideS, Math.max(1.2, tune.glideS * Math.sqrt(Math.abs(target - y) / mark))),
+        easing: EASINGS[tune.glideEasing],
+        lock: true,
+        force: true,
+        onComplete: () => {
+          running = 0;
+          swallowWheel(300);
+        },
+      });
+      return true;
+    };
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) > 1) go(e.deltaY > 0 ? 1 : -1, Math.abs(e.deltaY));
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const down = ['ArrowDown', 'PageDown', ' ', 'Spacebar'].includes(e.key);
+      const up = ['ArrowUp', 'PageUp', 'Home'].includes(e.key);
+      if ((down || up) && go(down ? 1 : -1)) e.preventDefault();
+    };
+    let touchY: number | null = null;
+    const onTouchStart = (e: TouchEvent) => {
+      touchY = e.touches[0]?.clientY ?? null;
+    };
+    // Touch scrolling is native (Lenis leaves it alone), so the swipe is taken
+    // over by hand and native scrolling is held off until the glide lands.
+    const onTouchMove = (e: TouchEvent) => {
+      if (running) {
+        e.preventDefault();
+        return;
+      }
+      const y = e.touches[0]?.clientY;
+      if (touchY == null || y == null || Math.abs(touchY - y) < 6) return;
+      if (go(touchY > y ? 1 : -1)) e.preventDefault();
+    };
+    window.addEventListener('wheel', onWheel, { passive: true });
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => {
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+    };
+  }, [reduceMotion]);
+
   // Light floods the frame as the threshold is crossed, carrying straight
   // into the page background so the hand-off has no visible seam.
   const veilOpacity = useTransform(mv, [0.965, 1], [0, 1]);
@@ -215,43 +303,7 @@ export function StudioEntrance() {
             the facade's own posters now say who this is — a caption on top
             of that was redundant chrome. Only the scroll affordance remains,
             and it retreats as soon as the journey begins. */}
-        {!reduceMotion && ready && (
-          <motion.div
-            style={{
-              position: 'absolute',
-              bottom: 'clamp(28px, 5vh, 54px)',
-              left: 0,
-              right: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 8,
-              opacity: copyOpacity,
-              y: copyY,
-              pointerEvents: 'none',
-            }}
-          >
-            <span
-              style={{
-                fontFamily: 'var(--font-sans)',
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: '0.24em',
-                textTransform: 'uppercase',
-                color: 'rgba(10,10,10,0.5)',
-              }}
-            >
-              Take a walk with us…
-            </span>
-            <motion.span
-              animate={{ y: [0, 7, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ display: 'flex', color: 'rgba(10,10,10,0.4)' }}
-            >
-              <ChevronDown size={18} strokeWidth={1.6} />
-            </motion.span>
-          </motion.div>
-        )}
+        {/* The scroll cue is page-wide now: components/ScrollCue.tsx. */}
 
         <motion.div
           aria-hidden
