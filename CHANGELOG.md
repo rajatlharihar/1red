@@ -6,6 +6,21 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-10-16/17: hero frame, one-gesture glide, red flags board, deal deck, perf pass (local, NOT pushed)
+
+- **1red, lowercase:** the name is written "1red" everywhere (title, meta, footer, nav, about, contact, works, who-we-are).
+- **Hero:** the wall lettering is replaced by a big framed poster on the facade (`hero/GildedFrame.tsx`). The frame is Poly Haven "Fancy Picture Frame 02" (CC0, `public/models/frame/`), drawn like the studio's lamps: an unlit ink body with white engraving lines at three weights (sight 1.2px, moulding 0.9px, carving 0.6px), baked offline by `scripts/bake-frame-lines.mjs`, plus a silhouette shell. Recessed 10% into the wall with a dark inset. Desktop size and place: the biggest that keeps the poster's headline and laptop on screen, a 10% screen gap from the door, lowered 5% of the frame height; phones fit fully. The poster is Rajat's generated painting with "Done blending in?" and the 1red tag (`public/images/hero/blending-poster-v2.jpg`, renamed to bust caches).
+- **Scroll:** Lenis lerp 0.065, wheel 0.7 (`components/scrollTune.ts` DEFAULTS; dev-only `?tune` panel). One gesture glides top ↔ 1red mark ↔ settled box (5.8s ease-in-out, input locked, trackpad tail swallowed). Soft landings (after ~120ms still, within 30% of a screen, 0.7s, never locked) on the red flags board, the deal and the CTA. Every scene reads Lenis's value in Lenis's frame (`scrollGlide.glideFromLenis`); hover effects are gated to scroll-idle (`pageScrolling()`).
+- **Scroll cue:** page-wide "scroll" + chevron in Veteran Typewriter, white with difference blend (`components/ScrollCue.tsx`); on the right wall only on the hero's opening screen; shows after ~0.9s idle, hidden at the footer and during glides.
+- **Cube:** the tunnel shows 3 cubes per corner (all 27 still build the box), travel 16 (was 28), pin 200vh (was 250). Cube and frame shaders are pre-compiled at idle (no hitch at the hand-off).
+- **Typewriter lines:** "Another grey brand? / No thanks." (two lines, ~13% bigger), "Grey areas", "Grey's had its chance…", the stamp, the deal card's closing line.
+- **Who we are → red flags:** the board rises as a card (sharp corners, tilt-in) starting when the paragraph is ~65% typed; the paragraph finishes typing by 62% of the roll.
+- **Red flags board (default):** flat #0A0A0A, no grain. 3x2 grid of pinned panels; a seeded conspiracy thread runs BEHIND the panels (brand red, 4.5px, visible only in gaps, verified no strand over copy); header with the pinned typed note and a level-bar stamp in red typewriter; closing line "Tell us what you need. / We'll handle the rest." Alternates kept for reference: `?flags=a` editorial header, `c` deck slide, `d` board pan, `collage`.
+- **Red flags → deal:** a random pixel-block transition (`home/BlockTransitions.tsx`, one canvas): white blocks pop in at seeded random spots across the screen, then clear in a fresh random order to reveal the flat, full-bleed deal (no card).
+- **The deal:** deck rows after the ALOHA brief deck (`home/DealLayouts.tsx`): huge "Putting / the red / in credible." over a grainy red card (closing line + Meet the box), rows HABITS / SEATING / MAKERS with plain 0 / 1 / 100, red caps titles and body, hairlines drawing in, photo fields that open on focus or hover, red row-wipe on hover. Photos: Nationaal Archief CC0 (`public/images/deal/`) plus the board's drawing-board photo. `?deal=b` = winding-path take.
+- **CTA:** grey typewriter setup line, "Red does a better job." as the hero, 48ch body, same buttons; the jagged line removed; fades in from the deal's white (no seam).
+- **Perf:** grain no longer uses blend modes (`grainAlphaTile`); blended grain over the board and cards caused up to 250ms frames at 2560x1340@2. After: whole-page runs median 16.7ms; a few one-off spikes remain, measured while a Blender render held the CPU.
+
 ## 2026-10-10
 
 - The Box, table chapter: the wild card no longer hides in the pile. Face down it shows UNO's back (black field, plain red tilted oval) with RED centred in white with RED from the real logo shapes in place of the UNO name, then flips to the face. (`public/wild-card-back.svg`, `studio/TeamTable.tsx`; unused `WILD_BACK_URL` removed from `studio/CardDeck.tsx`)
