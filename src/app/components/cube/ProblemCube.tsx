@@ -228,9 +228,17 @@ export function ProblemCube() {
       // the paragraph arrives as it lands, then inks in word by word.
       const out = smooth(0, 0.28, drop);
       if (whoRef.current) {
+        const w = whoRef.current;
         const a = smooth(0.45, 0.85, drop);
-        whoRef.current.style.opacity = a.toFixed(3);
-        whoRef.current.style.transform = `translateY(${((1 - a) * 24).toFixed(1)}px)`;
+        // 2026-10-17 (Rajat): the line being typed starts in the middle of
+        // the frame and the paragraph feeds up like a typewriter carriage
+        // until it reaches its place (after about three lines).
+        const lh = parseFloat(getComputedStyle(w.firstElementChild as HTMLElement).lineHeight) || 50;
+        const lines = w.offsetHeight / lh;
+        const typing = smooth(0.02, 0.62, roll) * lines;
+        const feed = Math.max(0, window.innerHeight / 2 - (w.offsetTop + (Math.min(typing, lines - 1) + 0.5) * lh));
+        w.style.opacity = a.toFixed(3);
+        w.style.transform = `translateY(${((1 - a) * 24 + feed).toFixed(1)}px)`;
       }
       // Fully typed by 62% of the roll: the red flags card rises over the lower
       // screen from there and must not catch the paragraph mid-line.
@@ -318,7 +326,7 @@ export function ProblemCube() {
                 position: 'absolute',
                 left: 0,
                 right: 0,
-                top: 'clamp(8rem, 25vh, 15rem)',
+                top: 'clamp(9rem, 31vh, 18rem)', // 2026-10-17: a little lower (Rajat)
                 padding: '0 clamp(1rem, 4vw, 5rem)',
                 display: 'flex',
                 justifyContent: 'center',

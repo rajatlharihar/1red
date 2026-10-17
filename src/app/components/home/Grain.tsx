@@ -65,7 +65,8 @@ export function Grain({ opacity = 0.09, moving = true, blend = 'overlay', style 
         className={moving ? 'grain-move' : undefined}
         style={{
           position: 'absolute',
-          inset: '-50%',
+          // One tile of overscan covers the steps (theme.css grain-move).
+          inset: -96,
           backgroundImage: `url(${grainAlphaTile(blend === 'multiply' ? 'dark' : 'both')})`,
           backgroundSize: '192px 192px',
           // No blend mode (see grainAlphaTile); the strength reads a little

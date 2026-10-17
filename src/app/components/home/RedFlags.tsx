@@ -117,8 +117,8 @@ function Panel({ i, flipped, onFlip, onHover, reduceMotion, tilt = TILT[i], drif
             <div>
               <span style={{ fontFamily: 'var(--font-hand)', fontSize: 'clamp(24px, 2.2vw, 34px)', fontWeight: 700, color: INK, display: 'inline-block', transform: 'rotate(-3deg)' }}>we say:</span>
               <p style={{ margin: '6px 0 12px', fontSize: 'clamp(17px, 1.5vw, 23px)', fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{f.us}</p>
-              {/* 2026-10-07 (Rajat): the service names read clearly now, no square. */}
-              <span style={{ ...label, fontSize: 'clamp(13px, 1.05vw, 16px)', fontWeight: 600 }}>{f.who}</span>
+              {/* 2026-10-07 (Rajat): the service names read clearly now, no square. 2026-10-17: black so they read apart from the white copy. */}
+              <span style={{ ...label, fontSize: 'clamp(13px, 1.05vw, 16px)', fontWeight: 600, color: INK }}>{f.who}</span>
             </div>
           </div>
         </div>
@@ -327,17 +327,17 @@ function Tally({ count, verdict, stamp, style }: { count: number; verdict: strin
         alignItems: 'center',
         gap: 12,
         ...(stamp
-          ? { fontFamily: 'var(--font-hand)', fontSize: 'clamp(15px, 1.15vw, 18px)', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' as const, whiteSpace: 'nowrap' as const }
+          ? { fontFamily: 'var(--font-hand)', fontSize: 'clamp(19px, 1.55vw, 25px)', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' as const, whiteSpace: 'nowrap' as const }
           : {}),
         ...style,
       }}
     >
-      <span aria-hidden style={{ display: 'inline-flex', alignItems: 'stretch', gap: 2, padding: 2, border: `1.5px solid ${on}`, height: 14, flex: 'none' }}>
+      <span aria-hidden style={{ display: 'inline-flex', alignItems: 'stretch', gap: 2, padding: 2, border: `1.5px solid ${on}`, height: stamp ? 20 : 14, flex: 'none' }}>
         {FLAGS.map((_, i) => (
           <span
             key={i}
             style={{
-              width: 9,
+              width: stamp ? 13 : 9,
               background: i < count ? RED : 'transparent',
               opacity: i < count ? 0.55 + (0.45 * (i + 1)) / FLAGS.length : 1,
               borderRight: i < FLAGS.length - 1 && i >= count ? `1px solid ${on}` : 'none',
@@ -378,7 +378,7 @@ function FlagsHeader({ wide, count, verdict }: { wide: boolean; count: number; v
   }
   const note = (
     // Right-aligned, out of the nav's centre lane (its 1red logo).
-    <div style={{ position: 'relative', alignSelf: 'flex-start', marginLeft: wide ? 'auto' : 0, width: 'min(100%, 360px)', marginTop: wide ? 'clamp(6px, 1.5vh, 18px)' : 0 }}>
+    <div style={{ position: 'relative', alignSelf: 'flex-start', marginLeft: wide ? 'auto' : 0, width: 'min(100%, 500px)', marginTop: wide ? 'clamp(6px, 1.5vh, 18px)' : 0 }}>
       <div
         style={{
           position: 'relative',
@@ -386,7 +386,7 @@ function FlagsHeader({ wide, count, verdict }: { wide: boolean; count: number; v
           color: INK,
           padding: 'clamp(26px, 2.4vw, 34px) clamp(20px, 2vw, 28px) clamp(20px, 2vw, 26px)',
           fontFamily: 'var(--font-hand)',
-          fontSize: 'clamp(15px, 1.2vw, 18px)',
+          fontSize: 'clamp(19px, 1.6vw, 25px)',
           lineHeight: 1.55,
           transform: 'rotate(1.6deg)',
           boxShadow: '0 14px 30px rgba(0,0,0,0.5)',
@@ -404,8 +404,8 @@ function FlagsHeader({ wide, count, verdict }: { wide: boolean; count: number; v
           display: 'inline-block',
           marginTop: 18,
           marginLeft: wide ? 24 : 4,
-          padding: '8px 12px',
-          border: `2px solid ${RED}`,
+          padding: '10px 16px',
+          border: `2.5px solid ${RED}`,
           borderRadius: 4,
           transform: 'rotate(-5deg)',
           opacity: 0.92,
@@ -861,6 +861,139 @@ function FlagsPan({ wide, open, set, count, verdict, reduceMotion }: { wide: boo
   );
 }
 
+
+/* ─── The table (Rajat, 2026-10-17, the default) ──────────────────────────
+ * The flags are cards dealt on a tiled table, seen from above, drawn like an
+ * ink sketch with a grey marker wash (CC0 Poly Haven props rendered as ink
+ * lines in Blender: see public/images/flags/CREDITS.md). Everything sits in
+ * one screen: the headline, note, tally and CTA in red in the left tiles,
+ * the six cards on the right 3x2 tiles. Hover lifts a card off the table
+ * and turns it over. The stage is the drawing's own 1440x900 frame, scaled
+ * to cover the screen, so the cards always sit on their tiles. */
+const STAGE_W = 1440;
+const STAGE_H = 900;
+const CREAM = '#EFE8DA';
+const TILE = { x0: 440, y0: 170, w: 320, h: 270 };
+const CARD = { w: 292, h: 242 };
+/** The drawing is 2400x1300 with the 1440x900 core in its middle. */
+const CANVAS = { w: 2400, h: 1300 };
+/** Scroll the table holds still before the hand-off to the deal. */
+const TABLE_HOLD_VH = 90;
+const TABLE_COPY = 'Everyone follows the rulebook. We read it, then go past it. Hover a card.';
+
+function TableCard({ i, flipped, onHover, onFlip, reduceMotion }: { i: number; flipped: boolean; onHover: (on: boolean) => void; onFlip: () => void; reduceMotion: boolean }) {
+  const f = FLAGS[i];
+  const tilt = TILT[i];
+  const x = TILE.x0 + (i % 3) * TILE.w + (TILE.w - CARD.w) / 2;
+  const y = TILE.y0 + Math.floor(i / 3) * TILE.h + (TILE.h - CARD.h) / 2;
+  const face: React.CSSProperties = { position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', border: `1.6px solid ${INK}`, boxSizing: 'border-box' };
+  const inner: React.CSSProperties = { position: 'absolute', inset: 0, padding: '18px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' };
+  return (
+    <motion.button
+      type="button"
+      onClick={onFlip}
+      onHoverStart={() => window.matchMedia('(hover: hover)').matches && !pageScrolling() && onHover(true)}
+      onHoverEnd={() => window.matchMedia('(hover: hover)').matches && onHover(false)}
+      aria-pressed={flipped}
+      aria-label={`${f.flag} ${flipped ? 'The rulebook says: ' + f.rule + ' We say: ' + f.us : 'Turn over for the fix'}`}
+      className={focusRing}
+      initial={false}
+      animate={{ rotate: flipped ? -1 : tilt, scale: flipped ? 1.07 : 1, y: flipped ? -12 : 0 }}
+      transition={reduceMotion ? { duration: 0 } : { type: 'spring', bounce: 0.2, duration: 0.5 }}
+      style={{ position: 'absolute', left: x, top: y, width: CARD.w, height: CARD.h, zIndex: flipped ? 3 : 1, perspective: 1200, background: 'none', border: 0, padding: 0, cursor: 'pointer', textAlign: 'left', fontFamily: 'var(--font-sans)' }}
+    >
+      <motion.div
+        animate={{ rotateY: flipped ? 180 : 0 }}
+        transition={reduceMotion ? { duration: 0 } : { type: 'spring', bounce: 0, duration: 0.7 }}
+        style={{ position: 'absolute', inset: 0, transformStyle: 'preserve-3d' }}
+      >
+        <div style={{ ...face, background: '#F8F4EC', boxShadow: flipped ? '10px 18px 0 rgba(10,10,10,0.16)' : '3px 4px 0 rgba(10,10,10,0.12)' }}>
+          <div style={{ ...inner, color: INK }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <Digit n={i + 1} height={38} fill={INK} />
+                <span style={{ ...label, fontSize: 11, opacity: 0.8, display: 'block', marginTop: 8 }}>Red flag</span>
+              </div>
+              <BoxFace mood={f.mood} variant="white" size="78px" delay={i} reduceMotion={reduceMotion} />
+            </div>
+            <div>
+              <div style={{ fontFamily: 'var(--font-hand)', fontSize: 25, fontWeight: 700, color: RED, transform: 'rotate(-3deg)', transformOrigin: 'left', marginBottom: 4 }}>{NOTES[i]}</div>
+              <p style={{ margin: 0, fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.1 }}>{f.flag}</p>
+            </div>
+          </div>
+        </div>
+        <div style={{ ...face, transform: 'rotateY(180deg)', background: RED, boxShadow: '10px 18px 0 rgba(10,10,10,0.16)' }}>
+          <div style={{ ...inner, color: '#FFFFFF' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+              <div>
+                <span style={{ ...label, fontSize: 11, opacity: 0.9 }}>The rulebook says</span>
+                <p style={{ margin: '4px 0 0', fontSize: 14, opacity: 0.9, textDecoration: 'line-through', textDecorationColor: INK, textDecorationThickness: 2 }}>{f.rule}</p>
+              </div>
+              <BoxFace mood="triumph" variant="white" size="64px" delay={i + 3} reduceMotion={reduceMotion} />
+            </div>
+            <div>
+              <span style={{ fontFamily: 'var(--font-hand)', fontSize: 24, fontWeight: 700, color: INK, display: 'inline-block', transform: 'rotate(-3deg)' }}>we say:</span>
+              <p style={{ margin: '4px 0 8px', fontSize: 16, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{f.us}</p>
+              <span style={{ ...label, fontSize: 13, fontWeight: 600, color: INK }}>{f.who}</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.button>
+  );
+}
+
+function FlagsTable({ open, set, count, verdict, reduceMotion }: { open: boolean[]; set: (i: number, v: boolean) => void; count: number; verdict: string; reduceMotion: boolean }) {
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    // Contain the 1440x900 core; the drawing runs on past it to fill any screen.
+    const fit = () => setScale(Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H));
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, []);
+  const red: React.CSSProperties = { position: 'absolute', color: RED, margin: 0 };
+  return (
+    // Pinned while the section scrolls TABLE_HOLD_VH past it, so the table
+    // rests before the blocks to the deal begin (Rajat, 2026-10-17).
+    <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', background: CREAM }}>
+      <div style={{ position: 'absolute', left: '50%', top: '50%', width: CANVAS.w, height: CANVAS.h, transform: `translate(-50%, -50%) scale(${scale})`, backgroundImage: 'url(/images/flags/table.jpg)', backgroundSize: '100% 100%' }}>
+      <div style={{ position: 'absolute', left: (CANVAS.w - STAGE_W) / 2, top: (CANVAS.h - STAGE_H) / 2, width: STAGE_W, height: STAGE_H }}>
+        <h2 style={{ ...red, left: 140, top: 186, width: 290 }}>
+          <span style={{ display: 'block', fontFamily: 'var(--font-hand)', fontSize: 64, fontWeight: 400, lineHeight: 1 }}>Grey areas</span>
+          <span style={{ display: 'block', fontFamily: 'var(--font-sans)', fontSize: 58, fontWeight: 500, letterSpacing: '-0.045em', lineHeight: 0.92 }}>we love to fix.</span>
+        </h2>
+        {/* The note, the tally and the CTA share one tile (Rajat, 2026-10-17). */}
+        <div style={{ position: 'absolute', left: 140, top: 458, width: 284, height: 236, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: RED }}>
+          <p style={{ margin: 0, fontFamily: 'var(--font-hand)', fontSize: 18, lineHeight: 1.35 }}>{TABLE_COPY}</p>
+          <div style={{ alignSelf: 'flex-start', padding: '6px 10px', border: `2.5px solid ${RED}`, borderRadius: 4, transform: 'rotate(-4deg)', transformOrigin: 'left' }}>
+            <Tally count={count} verdict={verdict} stamp style={{ fontSize: 11, gap: 8 }} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, whiteSpace: 'nowrap' }}>
+            <p style={{ margin: 0, fontSize: 21, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1.05 }}>
+              Tell us what
+              <br />
+              you need.
+            </p>
+            <FillLink to="/contact" icon={<ArrowUpRight size={15} strokeWidth={2} />}>Let&rsquo;s talk</FillLink>
+          </div>
+        </div>
+        {FLAGS.map((_, i) => (
+          <TableCard
+            key={i}
+            i={i}
+            flipped={open[i]}
+            reduceMotion={reduceMotion}
+            onHover={(on) => set(i, on)}
+            onFlip={() => !window.matchMedia('(hover: hover)').matches && set(i, !open[i])}
+          />
+        ))}
+      </div>
+      </div>
+    </div>
+  );
+}
+
 export function RedFlags() {
   const reduceMotion = !!useReducedMotion();
   // `open`: which panels show their fix now. `seen`: which ever have; the tally counts those.
@@ -874,7 +1007,9 @@ export function RedFlags() {
     const v = new URLSearchParams(location.search).get('flags');
     // Default: the pinned 3x2 board (Rajat, 2026-10-17: "get it to what it
     // initially was, with all those pins"). c, d and collage stay for reference.
-    return v === 'a' || v === 'c' || v === 'd' || v === 'collage' ? v : 'b';
+    // 2026-10-17 later (Rajat): the drawn table is the default; b = the old
+    // pinned black board.
+    return v === 'a' || v === 'b' || v === 'c' || v === 'd' || v === 'collage' ? v : 'table';
   })();
   const [wide, setWide] = useState(() => window.matchMedia('(min-width: 900px)').matches);
   useEffect(() => {
@@ -933,6 +1068,9 @@ export function RedFlags() {
           ? `${count} spotted. Okay, we should talk.`
           : 'All six. We definitely need to talk.';
 
+  // The table needs a landscape screen; phones and tall screens get the board.
+  const table = flagsVariant === 'table' && wide && window.innerWidth / window.innerHeight > 1.3;
+
   return (
     <section
       ref={sectionRef}
@@ -946,7 +1084,7 @@ export function RedFlags() {
         // about 65% typed, so the screen is never half empty dots, and is still
         // below the paragraph when the typing finishes.
         marginTop: reduceMotion ? 0 : '-205vh',
-        background: '#0A0A0A',
+        background: table ? '#EFE8DA' : '#0A0A0A',
         color: '#FFFFFF',
         borderRadius: 0, // 2026-10-17: Rajat, sharp corners
         boxShadow: '0 -30px 80px rgba(0,0,0,0.28)',
@@ -954,10 +1092,14 @@ export function RedFlags() {
         // deck's and pan's sticky frames would never pin.
         overflow: 'clip',
         // Top clear of the fixed nav and its centred logo.
-        padding: `${flagsVariant === 'c' || flagsVariant === 'd' ? '0' : 'clamp(7rem, 18vh, 12rem)'} clamp(1rem, 4vw, 5rem) clamp(5rem, 14vh, 10rem)`,
+        height: table ? `calc(100vh + ${TABLE_HOLD_VH}vh)` : undefined,
+        padding: table ? 0 : `${flagsVariant === 'c' || flagsVariant === 'd' ? '0' : 'clamp(7rem, 18vh, 12rem)'} clamp(1rem, 4vw, 5rem) clamp(5rem, 14vh, 10rem)`,
       }}
     >
-      {/* Flat black field, no grain (Rajat, 2026-10-17). */}
+      {table ? (
+        <FlagsTable open={open} set={set} count={count} verdict={verdict} reduceMotion={reduceMotion} />
+      ) : (
+      /* Flat black field, no grain (Rajat, 2026-10-17). */
       <div style={{ maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
         {flagsVariant === 'c' ? (
           <FlagsDeck wide={wide} reduceMotion={reduceMotion} />
@@ -1009,6 +1151,7 @@ export function RedFlags() {
           </div>
         </motion.div>
       </div>
+      )}
     </section>
   );
 }

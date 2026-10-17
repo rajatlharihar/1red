@@ -75,6 +75,40 @@ if (typeof window !== 'undefined')
   });
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
+
+/** The table's tile joint, in red, edge to edge (Rajat, 2026-10-17): two
+ *  wobbly ink strokes with a dotted pen texture, like the drawn table. */
+function inkPath(seed: number, y: number) {
+  let r = seed;
+  const rnd = () => ((r = (r * 9301 + 49297) % 233280) / 233280);
+  let d = `M0 ${y.toFixed(2)}`;
+  for (let x = 25; x <= 1000; x += 25) d += ` L${x} ${(y + (rnd() - 0.5) * 1.1).toFixed(2)}`;
+  return d;
+}
+function InkRule({ seed, delay }: { seed: number; delay: number }) {
+  const a = inkPath(seed, 3.2);
+  const b = inkPath(seed + 7, 7.4);
+  return (
+    <motion.svg
+      aria-hidden
+      viewBox="0 0 1000 10"
+      preserveAspectRatio="none"
+      initial={{ scaleX: 0 }}
+      whileInView={{ scaleX: 1 }}
+      viewport={{ once: true, amount: 0.6 }}
+      transition={{ duration: 0.9, ease: EASE_OUT, delay }}
+      style={{ position: 'absolute', left: 'calc(50% - 50vw)', width: '100vw', top: -4, height: 10, transformOrigin: 'left', overflow: 'visible', pointerEvents: 'none' }}
+    >
+      <g fill="none" stroke={RED} strokeLinecap="round" vectorEffect="non-scaling-stroke">
+        <path d={a} strokeWidth={1.8} vectorEffect="non-scaling-stroke" />
+        <path d={b} strokeWidth={1.4} vectorEffect="non-scaling-stroke" />
+        <path d={a} strokeWidth={2.6} strokeDasharray="1 5" opacity={0.6} vectorEffect="non-scaling-stroke" />
+        <path d={b} strokeWidth={2.2} strokeDasharray="1 7" opacity={0.5} vectorEffect="non-scaling-stroke" />
+      </g>
+    </motion.svg>
+  );
+}
+
 function DealRow({ d, i, base, narrow, digitRef, focus }: { d: DealItem; i: number; base: number; narrow: boolean; digitRef: DigitRef; focus: boolean }) {
   const [hover, setHover] = useState(false);
   const on = hover; // red fill + white type
@@ -93,17 +127,14 @@ function DealRow({ d, i, base, narrow, digitRef, focus }: { d: DealItem; i: numb
         columnGap: narrow ? 14 : 'clamp(16px, 2vw, 32px)',
         rowGap: 8,
         padding: narrow ? '22px 0 18px' : 'clamp(8px, 1.3vh, 16px) clamp(8px, 1vw, 16px)',
-        overflow: 'hidden',
+        // Visible sideways so the ink rule runs edge to edge; clipped top and
+        // bottom like before.
+        overflow: 'visible',
+        clipPath: 'inset(-6px -100vw 0 -100vw)',
       }}
     >
-      {/* Hairline, drawn left to right as the row enters. */}
-      <motion.div
-        initial={{ scaleX: 0 }}
-        whileInView={{ scaleX: 1 }}
-        viewport={{ once: true, amount: 0.6 }}
-        transition={{ duration: 0.9, ease: EASE_OUT, delay: i * 0.12 }}
-        style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1, background: RED, transformOrigin: 'left' }}
-      />
+      {/* Ink rule, drawn left to right as the row enters. */}
+      <InkRule seed={i * 31 + 5} delay={i * 0.12} />
       {/* Hover: a red fill wipes across the row. */}
       <div
         aria-hidden
@@ -254,13 +285,9 @@ export function DealA({ deals, narrow, digitRef, focus = -1 }: { deals: DealItem
           k += d.n.length;
           return <DealRow key={i} d={d} i={i} base={base} narrow={narrow} digitRef={digitRef} focus={focus === i} />;
         })}
-        <motion.div
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9, ease: EASE_OUT, delay: 0.4 }}
-          style={{ height: 1, background: RED, transformOrigin: 'left' }}
-        />
+        <div style={{ position: 'relative', height: 1 }}>
+          <InkRule seed={113} delay={0.4} />
+        </div>
       </div>
 
       {narrow && (

@@ -162,7 +162,9 @@ function Sheet({
      svg carrying the drift (also a CSS transform, on the svg element itself,
      never on a group inside it): both stay on the compositor, so the
      drawing is rasterised once and only moved. */
-  const layer = { position: 'absolute' as const, inset: 0, width: '100%', height: '100%', willChange: 'transform' };
+  // overflow visible: the props run past the svg's own box, and the parallax
+  // used to show that cut edge as a hard line mid-section (2026-10-17).
+  const layer = { position: 'absolute' as const, inset: 0, width: '100%', height: '100%', willChange: 'transform', overflow: 'visible' as const };
   const drift = (dur: number, dx: number, dy: number) =>
     reduce ? {} : { animate: { x: [0, dx, 0, -dx * 0.6, 0], y: [0, dy, -dy * 0.5, dy * 0.3, 0] }, transition: { duration: dur, repeat: Infinity, ease: 'easeInOut' as const } };
   const gridDrift = drift(17, -10, 8);
@@ -182,11 +184,11 @@ function Sheet({
         maskImage: 'linear-gradient(180deg, transparent 0%, #000 30%)',
       }}
     >
-      {/* far: a loose triangle */}
+      {/* far: red sticky notes */}
       {!narrow && (
         <motion.div style={{ ...layer, y: parallaxFar }}>
           <motion.svg viewBox={VIEW} preserveAspectRatio="xMidYMin slice" style={layer} {...drift(13, 8, -12)}>
-            <motion.path d={SHAPE_LEFT} {...stroke} style={{ pathLength: drawn }} />
+            <motion.image href="/images/cta/notes.png" x={170} y={190} width={200} height={142} style={{ opacity: drawn }} />
           </motion.svg>
         </motion.div>
       )}
@@ -200,23 +202,19 @@ function Sheet({
         </motion.svg>
         {!narrow && (
           <motion.svg viewBox={VIEW} preserveAspectRatio="xMidYMin slice" style={layer} {...gridDrift}>
-            {/* The long jagged LINE is gone (Rajat, 2026-10-17: it read as a
-                stray scribble, and as a red thread it crossed the headline). */}
-            {FIGURE_FILLED.map((d) => (
-              <path key={d} d={d} {...stroke} fill={PAPER} />
-            ))}
-            {FIGURE_LINES.map((d) => (
-              <path key={d} d={d} {...stroke} />
-            ))}
+            {/* 2026-10-17 (Rajat): the stick figure became a megaphone drawn
+                like the red flags table (ink lines, grey wash; CC0 Poly
+                Haven model, see public/images/cta/CREDITS.md). */}
+            <motion.image href="/images/cta/megaphone.png" x={1150} y={540} width={260} height={227} style={{ opacity: drawn }} />
           </motion.svg>
         )}
       </motion.div>
 
-      {/* near: a diamond */}
+      {/* near: the box */}
       {!narrow && (
         <motion.div style={{ ...layer, y: parallaxNear }}>
           <motion.svg viewBox={VIEW} preserveAspectRatio="xMidYMin slice" style={layer} {...drift(9, 10, 8)}>
-            <motion.path d={SHAPE_RIGHT} {...stroke} style={{ pathLength: drawn }} />
+            <motion.image href="/images/cta/box.png" x={100} y={560} width={310} height={235} style={{ opacity: drawn }} />
           </motion.svg>
         </motion.div>
       )}
@@ -336,7 +334,7 @@ export function WhatsNext() {
               color: INK,
             }}
           >
-            <span style={{ color: '#EB3F43' }}>Red</span> does a better job.
+            <span style={{ color: '#EB3F43' }}>Red</span> does a <span style={{ whiteSpace: 'nowrap' }}>better job.</span>
           </motion.h2>
         </div>
 

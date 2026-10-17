@@ -245,20 +245,23 @@
 
 /* Film grain (home/Grain.tsx): the tile jumps between offsets in steps,
    which reads as live grain; transform only, so it stays on the compositor. */
+/* Whole-pixel steps within one 192px tile (2026-10-17): percentage steps of
+   a 200%-size layer landed on fractional pixels and showed GPU tile seams as
+   lines while scrolling. */
 @keyframes grain-move {
-  0% { transform: translate(0, 0); }
-  10% { transform: translate(-5%, -10%); }
-  20% { transform: translate(-15%, 5%); }
-  30% { transform: translate(7%, -25%); }
-  40% { transform: translate(-5%, 25%); }
-  50% { transform: translate(-15%, 10%); }
-  60% { transform: translate(15%, 0%); }
-  70% { transform: translate(0%, 15%); }
-  80% { transform: translate(3%, 35%); }
-  90% { transform: translate(-10%, 10%); }
-  100% { transform: translate(0, 0); }
+  0% { transform: translate3d(0, 0, 0); }
+  10% { transform: translate3d(-10px, -19px, 0); }
+  20% { transform: translate3d(-29px, 10px, 0); }
+  30% { transform: translate3d(13px, -48px, 0); }
+  40% { transform: translate3d(-10px, 48px, 0); }
+  50% { transform: translate3d(-29px, 19px, 0); }
+  60% { transform: translate3d(29px, 0, 0); }
+  70% { transform: translate3d(0, 29px, 0); }
+  80% { transform: translate3d(6px, 67px, 0); }
+  90% { transform: translate3d(-19px, 19px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
 }
-.grain-move { animation: grain-move 1s steps(10) infinite; will-change: transform; }
+.grain-move { animation: grain-move 1s steps(1, end) infinite; will-change: transform; }  /* hold each step: steps(10) split every segment into fractional moves */
 @media (prefers-reduced-motion: reduce) { .grain-move { animation: none; } }
 
 /* The nav mark as frosted glass (2026-10-04): the nav islands' blur and
