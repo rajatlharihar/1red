@@ -6,6 +6,20 @@ All notable changes to the OneRed Studio website, in reverse-chronological order
 
 ---
 
+## 2026-10-17: paper pages, drawn red flags table, scroll trim, perf pass, Start a project (PUSHED `e4747a4`, live on 1red.vercel.app + 1red.in)
+
+- **Red flags:** a drawn top-down table (Blender Freestyle + grey marker wash, `public/images/flags/table.jpg`); cards sit on tiles and pop/flip on hover; note, tally and CTA in one tile; the section holds before the block transition.
+- **Paper language** on /work, /case-studies, case pages, /about (`components/paper/Paper.tsx`): cream tiles, black ink rules, ink cards, stamps, hand notes, drawn props. /about headline leading 0.86 so the y of "Every" runs into the b of "box.".
+- **Deal rows:** bigger, red ink double rules edge to edge, edge-to-edge red hover, labels removed; photo opens on hover only (desktop).
+- **Scroll:** fewer screens (home 15.2 to 12.4, /the-box 12.7 to 8.9), wheel 1.0, lerp 0.08, glide 4.2s.
+- **Perf:** off-screen grain stops stepping (home long frames 136 to 6); board/card grain without blend modes (/the-box worst hitch 4.4s to 0.2s on a 4x-slowed CPU); studio edge lines computed in a worker (`hero/edgesWorker.ts`); lighter nav hit test; who-we-are metrics cached.
+- **/the-box:** team film words + subtle glitch sounds; poster = the film's first frame and the thread fades, so board to film is seamless; wild card paper texture, aligned RED, portrait on phones (`public/wild-card-back-tall.svg`).
+- **Nav:** the mark steps aside over content, photos/videos and while the team film shows its own 1red (`components/navMark.ts`); no red focus ring on links.
+- **Images:** red duotone instead of black and white.
+- **Footer word** AGENCY in Rajat's block letters (`AgencyWord.tsx`).
+- **Start a project** on the paper (`contact/PaperContact.tsx`): name, email, one line, optional service taps; one-tap WhatsApp and email (first on phones). Email is hello@1red.in everywhere.
+- **Brand:** 1red always lowercase in rendered text (case file label, privacy watermark).
+
 ## 2026-10-16/17: hero frame, one-gesture glide, red flags board, deal deck, perf pass (local, NOT pushed)
 
 - **1red, lowercase:** the name is written "1red" everywhere (title, meta, footer, nav, about, contact, works, who-we-are).
