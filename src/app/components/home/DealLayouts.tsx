@@ -112,7 +112,9 @@ function InkRule({ seed, delay }: { seed: number; delay: number }) {
 function DealRow({ d, i, base, narrow, digitRef, focus }: { d: DealItem; i: number; base: number; narrow: boolean; digitRef: DigitRef; focus: boolean }) {
   const [hover, setHover] = useState(false);
   const on = hover; // red fill + white type
-  const open = hover || focus; // the visual field
+  // The visual field opens on hover only (Rajat 2026-10-17: the scroll-focused
+  // row kept its photo up); phones have no hover, so they keep the focus.
+  const open = hover || (narrow && focus);
   const fg = on ? '#FFFFFF' : RED;
   const tr = 'color 0.35s ease, fill 0.35s ease';
   return (
