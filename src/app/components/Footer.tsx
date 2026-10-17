@@ -3,7 +3,7 @@ import { motion, useInView } from 'motion/react';
 import { Link, useNavigate } from 'react-router';
 import { ArrowUpRight } from 'lucide-react';
 import { Logo } from './Logo';
-import { StudioWord } from './StudioWord';
+import { AgencyWord } from './AgencyWord';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -236,7 +236,7 @@ export function Footer() {
           userSelect: 'none',
         }}
       >
-        <StudioWord fill="rgba(255,255,255,0.03)" style={{ width: '100%', height: 'auto', display: 'block' }} />
+        <AgencyWord fill="rgba(255,255,255,0.03)" style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
 
       {/* ── Top row: Logo + Headline ── */}

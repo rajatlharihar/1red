@@ -28,7 +28,8 @@ export function AboutPaper({ reduceMotion }: { reduceMotion: boolean }) {
             initial={reduceMotion ? false : { y: '110%' }}
             animate={{ y: 0 }}
             transition={{ duration: 0.8, ease: EASE }}
-            style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(56px, 9vw, 168px)', fontWeight: 500, letterSpacing: '-0.045em', lineHeight: 0.92, margin: 0 }}
+            style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(56px, 9vw, 168px)', fontWeight: 500, letterSpacing: '-0.045em', lineHeight: 0.86, margin: 0 }}
+            // 0.86: the y of "Every" runs into the b of "box." (Rajat 2026-10-17: merge them)
           >
             Every skill.
             <br />
