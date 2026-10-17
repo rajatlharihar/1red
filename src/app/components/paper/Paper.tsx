@@ -20,12 +20,14 @@ export const TILTS = [-1.4, 1.1, -0.7, 1.5, -1.1, 0.8, -1.6, 0.6, 1.3];
 
 /** The table's tiles: double ink joints, faint, as a repeating background. */
 const TILE_SVG = encodeURIComponent(
-  `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="270" viewBox="0 0 320 270"><g fill="none" stroke="#0A0A0A" stroke-linecap="round" opacity="0.1"><path d="M0 1.2 Q80 0.4 160 1.4 T320 1" stroke-width="1.4"/><path d="M0 5.4 Q90 6.2 170 5 T320 5.6" stroke-width="1.1"/><path d="M1.2 0 Q0.4 70 1.4 135 T1 270" stroke-width="1.4"/><path d="M5.4 0 Q6.2 80 5 140 T5.6 270" stroke-width="1.1"/></g></svg>`
+  `<svg xmlns="http://www.w3.org/2000/svg" width="560" height="470" viewBox="0 0 560 470"><g fill="none" stroke="#0A0A0A" stroke-linecap="round" opacity="0.1"><path d="M0 1.2 Q140 0.4 280 1.4 T560 1" stroke-width="1.4"/><path d="M0 5.4 Q150 6.2 290 5 T560 5.6" stroke-width="1.1"/><path d="M1.2 0 Q0.4 120 1.4 235 T1 470" stroke-width="1.4"/><path d="M5.4 0 Q6.2 130 5 240 T5.6 470" stroke-width="1.1"/></g></svg>`
 );
+/** Put on a paper page's <main>: bigger buttons there (theme.css). */
+export const PAPER_CLASS = 'paper-page';
 export const paperTiles: CSSProperties = {
   background: CREAM,
   backgroundImage: `url("data:image/svg+xml,${TILE_SVG}")`,
-  backgroundSize: '320px 270px',
+  backgroundSize: '560px 470px',
 };
 
 function inkPath(seed: number, y: number) {
@@ -36,10 +38,10 @@ function inkPath(seed: number, y: number) {
   return d;
 }
 
-/** The tile joint in red: two wobbly strokes with a dotted pen texture.
+/** The tile joint (black since 2026-10-17, was red): two wobbly strokes with a dotted pen texture.
  *  `bleed` runs it edge to edge of the screen (its parent must not clip
  *  sideways); otherwise it spans its parent. Drawn left to right on entry. */
-export function InkRule({ seed = 7, delay = 0, bleed = false, color = RED, style }: { seed?: number; delay?: number; bleed?: boolean; color?: string; style?: CSSProperties }) {
+export function InkRule({ seed = 7, delay = 0, bleed = false, color = INK, style }: { seed?: number; delay?: number; bleed?: boolean; color?: string; style?: CSSProperties }) {
   const a = inkPath(seed, 3.2);
   const b = inkPath(seed + 7, 7.4);
   return (
@@ -91,7 +93,7 @@ export function Stamp({ children, on = false, style }: { children: ReactNode; on
       style={{
         display: 'inline-block',
         fontFamily: 'var(--font-hand)',
-        fontSize: 15,
+        fontSize: 19,
         fontWeight: 700,
         letterSpacing: '0.04em',
         textTransform: 'uppercase',
@@ -99,7 +101,7 @@ export function Stamp({ children, on = false, style }: { children: ReactNode; on
         background: on ? RED : 'transparent',
         border: `2px solid ${RED}`,
         borderRadius: 3,
-        padding: '5px 10px 4px',
+        padding: '8px 14px 6px',
         whiteSpace: 'nowrap',
         ...style,
       }}

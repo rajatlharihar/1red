@@ -285,3 +285,7 @@
 .flag-top { animation: flag-top-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
 @keyframes flag-top-pop { 0% { translate: 0 6px; rotate: -1.2deg; } 60% { translate: 0 -3px; rotate: 0.6deg; } 100% { translate: 0 0; rotate: 0deg; } }
 @media (prefers-reduced-motion: reduce) { .flag-top { animation: none; } }
+
+/* Paper pages (/work, /case-studies, case pages, /about; 2026-10-17): bigger CTAs. */
+.paper-page .fill-btn { padding: 24px 46px; font-size: 15px; gap: 12px; }
+.paper-page .fill-btn__icon svg { width: 18px; height: 18px; }

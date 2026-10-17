@@ -97,7 +97,7 @@ function Row({ p, i, reduceMotion }: { p: Project; i: number; reduceMotion: bool
 export function CaseStudiesPage() {
   const reduceMotion = useReducedMotion() ?? false;
   return (
-    <main style={{ ...paperTiles, position: 'relative', overflowX: 'clip', minHeight: '100vh', color: INK, padding: 'clamp(7rem, 15vh, 10rem) clamp(1rem, 4vw, 5rem) clamp(5rem, 10vh, 8rem)' }}>
+    <main className="paper-page" style={{ ...paperTiles, position: 'relative', overflowX: 'clip', minHeight: '100vh', color: INK, padding: 'clamp(7rem, 15vh, 10rem) clamp(1rem, 4vw, 5rem) clamp(5rem, 10vh, 8rem)' }}>
       <Prop src="/images/paper/magnifier.png" style={{ right: 'clamp(-40px, 1vw, 40px)', top: 'clamp(80px, 10vh, 120px)', width: 'clamp(200px, 22vw, 340px)', transform: 'rotate(-12deg)' }} />
       <div style={{ maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, marginBottom: 'clamp(28px, 5vh, 56px)' }}>

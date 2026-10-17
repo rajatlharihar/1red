@@ -51,7 +51,7 @@ export function WorkDetailPage() {
   });
 
   return (
-    <main style={{ ...paperTiles, position: 'relative', overflowX: 'clip', minHeight: '100vh', paddingBottom: 'clamp(5rem, 10vh, 8rem)', color: INK }}>
+    <main className="paper-page" style={{ ...paperTiles, position: 'relative', overflowX: 'clip', minHeight: '100vh', paddingBottom: 'clamp(5rem, 10vh, 8rem)', color: INK }}>
       <style>{`
         @media (max-width: 640px) { .case-row { flex-direction: column; } .case-tile { flex: none !important; width: 100%; } }
         .case-chapters { display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(16px, 2vw, 32px); }

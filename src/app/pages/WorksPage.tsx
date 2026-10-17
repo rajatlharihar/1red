@@ -284,10 +284,10 @@ export function WorksPage() {
   const shownKey = hoverChip ?? activeKey;
 
   return (
-    <main style={{ ...paperTiles, position: 'relative', overflowX: 'clip', minHeight: '100vh', color: INK, padding: 'clamp(7rem, 15vh, 10rem) clamp(1rem, 4vw, 5rem) clamp(5rem, 10vh, 8rem)' }}>
+    <main className="paper-page" style={{ ...paperTiles, position: 'relative', overflowX: 'clip', minHeight: '100vh', color: INK, padding: 'clamp(7rem, 15vh, 10rem) clamp(1rem, 4vw, 5rem) clamp(5rem, 10vh, 8rem)' }}>
       {/* Drawn props on the table, opening screen only. */}
-      <Prop src="/images/paper/camera.png" style={{ right: 'clamp(-60px, -2vw, 0px)', top: 'clamp(150px, 17vh, 200px)', width: 'clamp(170px, 17vw, 280px)', transform: 'rotate(8deg)' }} />
-      <Prop src="/images/cta/notes.png" style={{ right: 'clamp(220px, 26vw, 420px)', top: 'clamp(150px, 16vh, 190px)', width: 'clamp(90px, 8vw, 130px)', transform: 'rotate(-10deg)' }} />
+      <Prop src="/images/paper/camera.png" style={{ right: 'clamp(24px, 4vw, 80px)', top: 'clamp(210px, 25vh, 260px)', width: 'clamp(200px, 19vw, 300px)', transform: 'rotate(6deg)' }} />
+      <Prop src="/images/paper/notes2.png" style={{ right: 'clamp(300px, 30vw, 500px)', top: 'clamp(120px, 14vh, 170px)', width: 'clamp(130px, 11vw, 180px)', transform: 'rotate(-6deg)' }} />
       <div style={{ maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
         {/* The Swiss row: headline flush-left, label right, one rule. */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
@@ -305,7 +305,7 @@ export function WorksPage() {
           </div>
           <HandNote size={22} style={{ flexShrink: 0, marginTop: '0.8em' }}>{WORKS.length} pieces</HandNote>
         </div>
-        <InkRule bleed seed={11} style={{ margin: 'clamp(20px, 3vh, 32px) 0' }} />
+        <div style={{ height: 'clamp(28px, 4vh, 44px)' }} />
 
         {/* Filters: one magnetic indicator slides between them, as in the nav. */}
         <div role="toolbar" aria-label="Filter work" onMouseLeave={() => setHoverChip(null)} style={{ display: 'flex', gap: 4, overflowX: 'auto', margin: '0 calc(-1 * clamp(1rem, 4vw, 5rem))', padding: '4px clamp(1rem, 4vw, 5rem)', scrollbarWidth: 'none' }}>
