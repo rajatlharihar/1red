@@ -29,9 +29,21 @@ const START_DEPTH = P / START_SCALE - P;
 const ARRIVE_P = 0.45;
 const EXIT_P = 0.62;
 const EXIT_DEPTH = -0.4 * P;
-/** The words rise on this window of progress. */
-const TEXT_FROM = 0.36;
-const TEXT_TO = 0.52;
+/** The words rise as the film cuts to the red silhouette frame (2.4 s of
+ *  8.94 s, scaled by FILM_END) and drop before the black logo (4.2 s)
+ *  (Rajat, 2026-10-17: "this is the frame our team has to pop up"). */
+const TEXT_FROM = 0.228;
+const TEXT_TO = 0.26;
+const TEXT_OUT = 0.385;
+/** Subtle glitch sounds, cut from the film's own soundtrack, fired as the
+ *  scroll carries the film forward past each moment (film seconds). */
+const SOUNDS = [
+  { at: 0.75, src: '/audio/team-glitch-burst.mp3' },
+  { at: 2.35, src: '/audio/team-glitch-red.mp3' },
+  { at: 4.2, src: '/audio/team-glitch-zap.mp3' },
+];
+const SOUND_VOLUME = 0.35;
+const FILM_SECONDS = 8.94;
 /** 2026-10-07 (Rajat): the film plays with the scroll, not on its own
  *  clock, so it can be timed. It runs start to end over 0..FILM_END. */
 const FILM_END = 0.85;
@@ -51,6 +63,16 @@ export function TeamZoom() {
   const sectionRef = useRef<HTMLElement>(null);
   const wasLive = useRef(false);
   const reduceMotion = useReducedMotion() ?? false;
+  const lastFilmT = useRef(0);
+  const audioRefs = useRef<HTMLAudioElement[]>([]);
+  useEffect(() => {
+    audioRefs.current = SOUNDS.map((snd) => {
+      const a = new Audio(snd.src);
+      a.preload = 'auto';
+      a.volume = SOUND_VOLUME;
+      return a;
+    });
+  }, []);
 
   // The poster is fetched ahead, so the tile never shows blank while the
   // clip's first frame loads.
@@ -117,13 +139,31 @@ export function TeamZoom() {
           : EXIT_DEPTH * easeInOutSine(clamp01((p - EXIT_P) / (1 - EXIT_P)));
       if (tileRef.current) {
         tileRef.current.style.transform = `translate3d(0, 0, ${(-depth).toFixed(1)}px)`;
-        tileRef.current.style.opacity = (1 - smooth(0.9, 1, p)).toFixed(3);
+        // Gone to white as the card table's pile flies in over it (from about
+        // p 0.74), so the gaps between cards never show the film's logo
+        // (2026-10-17, was 0.9..1).
+        tileRef.current.style.opacity = (1 - smooth(0.7, 0.78, p)).toFixed(3);
         // The hairline frame belongs to the tile; it goes as the tile
         // becomes the frame itself.
         tileRef.current.style.borderColor = `rgba(10,10,10,${(1 - smooth(0.85, 1, p / ARRIVE_P)).toFixed(3)})`;
       }
+      // Glitch sounds: forward crossings only, never on the way back up.
+      const ft = clamp01(p / FILM_END) * FILM_SECONDS;
+      const prev = lastFilmT.current;
+      if (live && ft > prev && ft - prev < 1.5) {
+        SOUNDS.forEach((snd, i) => {
+          if (prev < snd.at && ft >= snd.at) {
+            const a = audioRefs.current[i];
+            if (a) {
+              a.currentTime = 0;
+              a.play().catch(() => {});
+            }
+          }
+        });
+      }
+      lastFilmT.current = ft;
       if (wordsRef.current) {
-        const t = smooth(TEXT_FROM, TEXT_TO, p) * (1 - smooth(EXIT_P, EXIT_P + 0.1, p));
+        const t = smooth(TEXT_FROM, TEXT_TO, p) * (1 - smooth(TEXT_OUT, TEXT_OUT + 0.02, p));
         wordsRef.current.style.transform = `translateY(${((1 - t) * 110).toFixed(2)}%)`;
       }
     });
@@ -153,7 +193,8 @@ export function TeamZoom() {
           fontWeight: 700,
           letterSpacing: '-0.05em',
           lineHeight: 1,
-          color: INK,
+          // White: it sits on the film's red silhouette frame.
+          color: '#FFFFFF',
           paddingRight: '0.1em',
           transform: reduceMotion ? 'none' : 'translateY(110%)',
         }}

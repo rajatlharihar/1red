@@ -6,6 +6,7 @@ import projectsData from '../data/projects.json';
 import { CASE_STORIES } from '../data/caseStories';
 import { EditRow } from '../components/case/EditGrid';
 import { LiveLaptop } from '../components/case/LiveLaptop';
+import { InkRule, Stamp, HandNote, Prop, paperTiles } from '../components/paper/Paper';
 
 /* ─── A case study (rebuilt 2026-10-04) ────────────────────────────────────
  * Told as the brand's story, not a plate dump: the Swiss row up top (title,
@@ -50,7 +51,7 @@ export function WorkDetailPage() {
   });
 
   return (
-    <main style={{ minHeight: '100vh', background: '#FFFFFF', paddingBottom: 'clamp(5rem, 10vh, 8rem)', color: INK }}>
+    <main style={{ ...paperTiles, position: 'relative', overflowX: 'clip', minHeight: '100vh', paddingBottom: 'clamp(5rem, 10vh, 8rem)', color: INK }}>
       <style>{`
         @media (max-width: 640px) { .case-row { flex-direction: column; } .case-tile { flex: none !important; width: 100%; } }
         .case-chapters { display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(16px, 2vw, 32px); }
@@ -58,42 +59,36 @@ export function WorkDetailPage() {
         @media (max-width: 900px) { .case-chapter { grid-column: span 12; } }
       `}</style>
 
+      <Prop src="/images/paper/clipboard.png" style={{ right: 'clamp(-50px, -1vw, 10px)', top: 'clamp(110px, 13vh, 150px)', width: 'clamp(150px, 15vw, 240px)', transform: 'rotate(10deg)' }} />
       {/* ── The Swiss row ── */}
-      <div style={{ ...wrap, paddingTop: 'clamp(7rem, 14vh, 10rem)' }}>
+      <div style={{ ...wrap, paddingTop: 'clamp(7rem, 14vh, 10rem)', position: 'relative' }}>
         <Link to="/case-studies" className={focus} style={{ ...label, display: 'inline-flex', alignItems: 'center', gap: 8, letterSpacing: '0.14em', textDecoration: 'none', color: INK, opacity: 0.5, marginBottom: 'clamp(1.5rem, 4vh, 3rem)' }}>
           <ArrowLeft size={13} strokeWidth={2} /> Case studies
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, flexWrap: 'wrap' }}>
           <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(44px, 7.4vw, 128px)', fontWeight: 500, letterSpacing: '-0.045em', lineHeight: 0.94, margin: 0 }}>
             <span style={{ display: 'block', overflow: 'hidden' }}>
-              <motion.span style={{ display: 'block' }} {...rise()}>
+              <motion.span style={{ display: 'block', color: RED }} {...rise()}>
                 {project.title}.
               </motion.span>
             </span>
             {story && (
               <span style={{ display: 'block', overflow: 'hidden', paddingBottom: '0.08em' }}>
-                <motion.span style={{ display: 'block', opacity: 0.4, maxWidth: '14em' }} {...rise(0.08)}>
+                <motion.span style={{ display: 'block', opacity: 0.85, maxWidth: '14em' }} {...rise(0.08)}>
                   {story.tagline}
                 </motion.span>
               </span>
             )}
           </h1>
-          <span style={{ ...label, paddingTop: '0.8em', fontVariantNumeric: 'tabular-nums' }}>
+          <HandNote size={24} style={{ paddingTop: '0.8em' }}>
             {project.number} / {project.year}
-          </span>
+          </HandNote>
         </div>
-        <motion.div
-          initial={reduce ? false : { scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ duration: 0.9, ease: EASE, delay: 0.2 }}
-          style={{ height: 1, background: INK, transformOrigin: 'left center', margin: 'clamp(1.25rem, 3vh, 2rem) 0 0' }}
-        />
+        <InkRule bleed seed={13} style={{ margin: 'clamp(1.25rem, 3vh, 2rem) 0 0' }} />
         {story && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 28px', marginTop: 16 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>
             {story.scope.map((s) => (
-              <span key={s} style={{ ...label, fontSize: 10, opacity: 0.6 }}>
-                {s}
-              </span>
+              <Stamp key={s} style={{ fontSize: 12 }}>{s}</Stamp>
             ))}
           </div>
         )}
@@ -113,13 +108,14 @@ export function WorkDetailPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-8% 0px' }}
                   transition={{ duration: 0.8, ease: EASE, delay: i * 0.08 }}
-                  style={{ borderTop: '1px solid rgba(10,10,10,0.14)', paddingTop: 18 }}
+                  style={{ paddingTop: 0 }}
                 >
+                  <InkRule seed={41 + i * 5} delay={i * 0.1} style={{ marginBottom: 14 }} />
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 14 }}>
-                    <span style={{ ...label, color: RED, fontVariantNumeric: 'tabular-nums' }}>0{i + 1}</span>
+                    <HandNote size={22}>0{i + 1}</HandNote>
                     <h2 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 'clamp(22px, 2vw, 30px)', fontWeight: 500, letterSpacing: '-0.03em' }}>{c.title}</h2>
                   </div>
-                  <p style={{ margin: 0, fontSize: 'clamp(15px, 1.15vw, 18px)', lineHeight: 1.6, opacity: 0.72 }}>{c.body}</p>
+                  <p style={{ margin: 0, fontSize: 'clamp(15px, 1.15vw, 18px)', lineHeight: 1.6, opacity: 0.85 }}>{c.body}</p>
                 </motion.div>
               ))}
             </div>
@@ -140,7 +136,7 @@ export function WorkDetailPage() {
           </div>
 
           <div style={{ ...wrap, marginTop: 'clamp(3rem, 8vh, 5rem)' }}>
-            <p style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 'clamp(26px, 3.2vw, 52px)', fontWeight: 500, letterSpacing: '-0.035em', lineHeight: 1.05, maxWidth: '18em' }}>
+            <p style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 'clamp(26px, 3.2vw, 52px)', fontWeight: 500, letterSpacing: '-0.035em', lineHeight: 1.05, maxWidth: '18em', color: RED }}>
               {story.closer}
             </p>
           </div>
@@ -153,7 +149,8 @@ export function WorkDetailPage() {
 
       {/* ── Out to Behance, and on to the next ── */}
       <div style={{ ...wrap, marginTop: 'clamp(3rem, 7vh, 5rem)' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 24, borderTop: '1px solid rgba(10,10,10,0.12)', paddingTop: 'clamp(2rem, 4vh, 3rem)' }}>
+        <InkRule bleed seed={77} />
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 24, paddingTop: 'clamp(2rem, 4vh, 3rem)' }}>
           {behance ? (
             <a href={behance} target="_blank" rel="noreferrer" className={`fill-btn btn-corners fill-btn--red-outline ${focus}`} style={{ textDecoration: 'none' }}>
               <span className="fill-btn__fill" aria-hidden />

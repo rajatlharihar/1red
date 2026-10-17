@@ -231,7 +231,9 @@ export function driveDeck(flights: Flight[], felt: HTMLDivElement | null, q: num
     // Landed rows reach up to 1 - (d - 0.65) / 0.55 (worst-case jitter);
     // the felt's edge stays 0.22 of the deck below them, then closes up
     // once every card is down.
-    let top = 1 - (d - (STAGGER + 0.1)) / STAGGER + 0.22;
+    // 2026-10-17: 0.06 behind (was 0.22) with a feathered top, so the film
+    // never shows through the gaps between landed cards.
+    let top = 1 - (d - (STAGGER + 0.1)) / STAGGER + 0.06;
     if (q > 0.85) top = Math.min(top, 0.4 * (1 - (q - 0.85) / 0.15));
     top = Math.max(0, Math.min(1.3, top));
     felt.style.transform = `translate3d(0, ${(top * 100).toFixed(2)}%, 0)`;
@@ -330,7 +332,7 @@ export function CardDeck({
         ref={(el) => {
           if (feltRef) feltRef.current = el;
         }}
-        style={{ position: 'absolute', inset: 0, background: FELT, transform: settled ? 'none' : 'translate3d(0, 130%, 0)', willChange: 'transform' }}
+        style={{ position: 'absolute', inset: '-18% 0 0 0', background: `linear-gradient(180deg, rgba(255,255,255,0) 0%, ${FELT} 15%)`, transform: settled ? 'none' : 'translate3d(0, 130%, 0)', willChange: 'transform' }}
       />
       {LAYERS.map((cards, i) => (
         <div
@@ -371,7 +373,10 @@ export function CardDeck({
           </div>
         </div>
       ))}
-      <Grain opacity={0.07} />
+      {/* Feathered top (2026-10-17): this frame rises over the team film
+          before the deck arrives, and the grain's hard top edge read as a
+          line across the film. */}
+      <Grain opacity={0.07} style={{ WebkitMaskImage: 'linear-gradient(180deg, transparent 0, #000 40vh)', maskImage: 'linear-gradient(180deg, transparent 0, #000 40vh)' }} />
     </>
   );
 }

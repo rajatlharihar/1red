@@ -1,5 +1,5 @@
 import { useReducedMotion } from 'motion/react';
-import { AboutHero, AboutCTA } from '../components/about/shared';
+import { AboutPaper } from '../components/about/AboutPaper';
 
 /* ─── /about ───────────────────────────────────────────────────────────────
  * 2026-10-04 (Rajat): "the first text and the last is enough". The red
@@ -9,9 +9,8 @@ import { AboutHero, AboutCTA } from '../components/about/shared';
 export function AboutPage() {
   const reduceMotion = useReducedMotion() ?? false;
   return (
-    <main style={{ background: '#fff' }}>
-      <AboutHero reduceMotion={reduceMotion} />
-      <AboutCTA />
-    </main>
+    // 2026-10-17: the paper language (AboutHero + AboutCTA, the white
+    // version, are still exported from components/about/shared).
+    <AboutPaper reduceMotion={reduceMotion} />
   );
 }

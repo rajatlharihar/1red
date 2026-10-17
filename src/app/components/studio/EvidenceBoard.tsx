@@ -129,7 +129,7 @@ function Decor({ photoOk, swap }: { photoOk: Record<string, boolean>; swap: bool
           return (
             <div key={i} style={{ ...base, background: PAPER, padding: 14, paddingBottom: 38, boxSizing: 'border-box' }}>
               <div style={{ width: '100%', height: '100%', background: INK, overflow: 'hidden', position: 'relative' }}>
-                {ok && <img src={`/images/board/${it.photo}.webp`} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'grayscale(1) contrast(1.15)' }} />}
+                {ok && <img src={`/images/board/red/${it.photo}.jpg`} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
                 {!ok && <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}><path d={`M10 ${60 + r() * 20} C 25 ${20 + r() * 20}, 45 ${30 + r() * 30}, 55 ${50 + r() * 20} S 85 ${30 + r() * 30}, 92 ${70 + r() * 20} L92 100 L10 100 Z`} fill={PAPER} /></svg>}
               </div>
               <div style={grainStyle(0.25)} />
@@ -184,7 +184,7 @@ export function EvidenceBoard() {
       const img = new Image();
       img.onload = () => setPhotoOk((o) => ({ ...o, [n]: true }));
       img.onerror = () => setPhotoOk((o) => ({ ...o, [n]: false }));
-      img.src = `/images/board/${n}.webp`;
+      img.src = `/images/board/red/${n}.jpg`;
     });
   }, []);
 

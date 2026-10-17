@@ -126,7 +126,7 @@ function DealRow({ d, i, base, narrow, digitRef, focus }: { d: DealItem; i: numb
         alignItems: 'center',
         columnGap: narrow ? 14 : 'clamp(16px, 2vw, 32px)',
         rowGap: 8,
-        padding: narrow ? '22px 0 18px' : 'clamp(8px, 1.3vh, 16px) clamp(8px, 1vw, 16px)',
+        padding: narrow ? '26px 0 20px' : 'clamp(14px, 2.2vh, 28px) clamp(8px, 1vw, 16px)',
         // Visible sideways so the ink rule runs edge to edge; clipped top and
         // bottom like before.
         overflow: 'visible',
@@ -140,7 +140,11 @@ function DealRow({ d, i, base, narrow, digitRef, focus }: { d: DealItem; i: numb
         aria-hidden
         style={{
           position: 'absolute',
-          inset: '1px 0 0 0',
+          // Edge to edge across the screen (Rajat, 2026-10-17).
+          top: 1,
+          bottom: 0,
+          left: 'calc(50% - 50vw)',
+          width: '100vw',
           background: RED,
           transform: `scaleX(${on ? 1 : 0})`,
           transformOrigin: on ? 'left' : 'right',
@@ -150,10 +154,10 @@ function DealRow({ d, i, base, narrow, digitRef, focus }: { d: DealItem; i: numb
       >
         <Grain opacity={0.18} blend="multiply" />
       </div>
-      <span style={{ ...CAPS, position: 'absolute', left: narrow ? 0 : 'clamp(8px, 1vw, 16px)', top: 6, fontSize: 10, color: fg, transition: tr, zIndex: 1 }}>{ROW_LABELS[i]}</span>
+      {/* Row labels (Habits:, Seating:, Makers:) removed: the numeral says it (Rajat, 2026-10-17). */}
 
-      <div style={{ position: 'relative', zIndex: 1, paddingTop: 14 }}>
-        <Numeral d={d} h={narrow ? '40px' : 'clamp(40px, 6.2vh, 72px)'} digitRef={digitRef} base={base} fill={fg} />
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <Numeral d={d} h={narrow ? '48px' : 'clamp(56px, 9vh, 104px)'} digitRef={digitRef} base={base} fill={fg} />
       </div>
       {/* Title slides up out of its mask line. */}
       <motion.div
@@ -165,7 +169,7 @@ function DealRow({ d, i, base, narrow, digitRef, focus }: { d: DealItem; i: numb
         <motion.span
           variants={{ hid: { y: '105%' }, shown: { y: 0 } }}
           transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.15 + i * 0.12 }}
-          style={{ ...CAPS, display: 'block', fontSize: narrow ? 22 : 'clamp(24px, 2.3vw, 44px)', letterSpacing: '-0.02em', lineHeight: 0.95, color: fg, transition: tr }}
+          style={{ ...CAPS, display: 'block', fontSize: narrow ? 26 : 'clamp(30px, 3.2vw, 60px)', letterSpacing: '-0.02em', lineHeight: 0.95, color: fg, transition: tr }}
         >
           {d.unit}
         </motion.span>
@@ -173,7 +177,7 @@ function DealRow({ d, i, base, narrow, digitRef, focus }: { d: DealItem; i: numb
       {!narrow && (
         /* The split-panel moment: a photo field that opens when the row is
            in focus or hovered, a thin red grain strip otherwise. */
-        <div style={{ position: 'relative', zIndex: 1, height: 'clamp(60px, 9vh, 104px)', overflow: 'hidden' }}>
+        <div style={{ position: 'relative', zIndex: 1, height: 'clamp(80px, 12vh, 140px)', overflow: 'hidden' }}>
           <div
             style={{
               position: 'absolute',
@@ -200,13 +204,13 @@ function DealRow({ d, i, base, narrow, digitRef, focus }: { d: DealItem; i: numb
           zIndex: 1,
           gridColumn: narrow ? '1 / -1' : 'auto',
           margin: 0,
-          fontSize: narrow ? 11 : 'clamp(10px, 0.78vw, 12px)',
+          fontSize: narrow ? 13 : 'clamp(13px, 1vw, 17px)',
           lineHeight: 1.5,
           color: fg,
           transition: tr,
           textAlign: narrow ? 'left' : 'right',
           justifySelf: narrow ? 'start' : 'end',
-          maxWidth: 300,
+          maxWidth: 400,
         }}
       >
         {d.body}

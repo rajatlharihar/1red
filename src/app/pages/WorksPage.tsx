@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowLeft, ArrowRight, ArrowUpRight, X } from 'lucide-react';
 import { lockScroll } from '../components/SmoothScroll';
 import { WORKS, WORK_FILTERS, type WorkFilter, type WorkPiece } from '../data/works';
+import { InkCard, InkRule, Stamp, HandNote, Prop, TILTS, paperTiles, CREAM } from '../components/paper/Paper';
 
 /* ─── /work — everything we make, filterable ───────────────────────────────
  * The showcase, as the agencies we studied run theirs (Pentagram,
@@ -21,7 +22,7 @@ import { WORKS, WORK_FILTERS, type WorkFilter, type WorkPiece } from '../data/wo
 
 const RED = '#EB3F43';
 const INK = 'rgb(10,10,10)';
-const PAPER = '#FFFFFF';
+const PAPER = CREAM;
 const EASE = [0.22, 1, 0.36, 1] as const;
 const GLIDE = { type: 'spring', bounce: 0, duration: 0.6 } as const;
 
@@ -92,14 +93,7 @@ function Media({ piece, fit, eager = false, active }: { piece: WorkPiece; fit: '
 }
 
 function CaseTag() {
-  return (
-    <span
-      className="btn-corners"
-      style={{ ...label, fontSize: 9, letterSpacing: '0.18em', padding: '5px 9px', background: 'rgba(255,255,255,0.86)', color: RED, border: '1px solid rgba(235,63,67,0.22)', whiteSpace: 'nowrap' }}
-    >
-      Case study
-    </span>
-  );
+  return <Stamp on style={{ fontSize: 12, padding: '3px 8px 2px', transform: 'rotate(-4deg)' }}>Case study</Stamp>;
 }
 
 function Tile({ piece, index, onOpen, reduceMotion }: { piece: WorkPiece; index: number; onOpen: () => void; reduceMotion: boolean }) {
@@ -121,22 +115,24 @@ function Tile({ piece, index, onOpen, reduceMotion }: { piece: WorkPiece; index:
         aria-label={`Open ${piece.client}, ${piece.title}`}
         style={{ display: 'block', width: '100%', padding: 0, border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', color: INK }}
       >
-        <div style={{ position: 'relative', aspectRatio: '4 / 3', overflow: 'hidden', background: PAPER }}>
-          <motion.div animate={{ scale: hover && !reduceMotion ? 1.035 : 1 }} transition={{ duration: 0.7, ease: EASE }} style={{ position: 'absolute', inset: 0 }}>
+        {/* A card on the table (2026-10-17): ink border, a little turned,
+            lifts off on hover like the red flag cards. */}
+        <InkCard tilt={TILTS[index % TILTS.length]} lift={hover && !reduceMotion}>
+          <div style={{ position: 'relative', aspectRatio: '4 / 3', overflow: 'hidden', background: PAPER, border: `1.2px solid ${INK}` }}>
             <Media piece={piece} fit="cover" eager={index < 6} active={hover} />
-          </motion.div>
-          {piece.caseStudy && (
-            <span style={{ position: 'absolute', top: 12, left: 12 }}>
-              <CaseTag />
+            {piece.caseStudy && (
+              <span style={{ position: 'absolute', top: 10, left: 10 }}>
+                <CaseTag />
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, padding: '12px 4px 2px' }}>
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(16px, 1.3vw, 20px)', fontWeight: 600, letterSpacing: '-0.02em' }}>
+              {piece.client} <span style={{ fontWeight: 400, opacity: 0.6 }}>{piece.title}</span>
             </span>
-          )}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, padding: '14px 0 0', borderTop: `1px solid ${hover ? RED : 'transparent'}`, transition: 'border-color 300ms ease-out', marginTop: 0 }}>
-          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(16px, 1.3vw, 20px)', fontWeight: 600, letterSpacing: '-0.02em' }}>
-            {piece.client} <span style={{ fontWeight: 400, opacity: 0.5 }}>{piece.title}</span>
-          </span>
-          <span style={{ ...label, fontSize: 9, opacity: 0.45, whiteSpace: 'nowrap' }}>{piece.category}</span>
-        </div>
+            <HandNote size={15} style={{ whiteSpace: 'nowrap' }}>{piece.category}</HandNote>
+          </div>
+        </InkCard>
       </button>
     </motion.li>
   );
@@ -169,7 +165,7 @@ function Lightbox({ list, index, onClose, onStep }: { list: WorkPiece[]; index: 
     alignItems: 'center',
     justifyContent: 'center',
     background: 'rgba(255,255,255,0.9)',
-    border: '1px solid rgba(235,63,67,0.16)',
+    border: `1.6px solid ${INK}`,
     cursor: 'pointer',
     color: INK,
   };
@@ -189,7 +185,7 @@ function Lightbox({ list, index, onClose, onStep }: { list: WorkPiece[]; index: 
         position: 'fixed',
         inset: 0,
         zIndex: 90,
-        background: 'rgba(255,255,255,0.94)',
+        background: 'rgba(239,232,218,0.96)',
         backdropFilter: 'blur(14px)',
         WebkitBackdropFilter: 'blur(14px)',
         display: 'flex',
@@ -288,8 +284,11 @@ export function WorksPage() {
   const shownKey = hoverChip ?? activeKey;
 
   return (
-    <main style={{ minHeight: '100vh', background: '#fff', color: INK, padding: 'clamp(7rem, 15vh, 10rem) clamp(1rem, 4vw, 5rem) clamp(5rem, 10vh, 8rem)' }}>
-      <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+    <main style={{ ...paperTiles, position: 'relative', overflowX: 'clip', minHeight: '100vh', color: INK, padding: 'clamp(7rem, 15vh, 10rem) clamp(1rem, 4vw, 5rem) clamp(5rem, 10vh, 8rem)' }}>
+      {/* Drawn props on the table, opening screen only. */}
+      <Prop src="/images/paper/camera.png" style={{ right: 'clamp(-60px, -2vw, 0px)', top: 'clamp(150px, 17vh, 200px)', width: 'clamp(170px, 17vw, 280px)', transform: 'rotate(8deg)' }} />
+      <Prop src="/images/cta/notes.png" style={{ right: 'clamp(220px, 26vw, 420px)', top: 'clamp(150px, 16vh, 190px)', width: 'clamp(90px, 8vw, 130px)', transform: 'rotate(-10deg)' }} />
+      <div style={{ maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
         {/* The Swiss row: headline flush-left, label right, one rule. */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
           <div className="overflow-hidden">
@@ -301,23 +300,12 @@ export function WorksPage() {
             >
               Everything,
               <br />
-              all at once.
+              <span style={{ color: RED }}>all at once.</span>
             </motion.h1>
           </div>
-          <div className="overflow-hidden" style={{ flexShrink: 0, paddingTop: '0.6em' }}>
-            <motion.p initial={reduceMotion ? false : { y: '110%' }} animate={{ y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.1 }} style={{ ...label, margin: 0, textAlign: 'right', lineHeight: 1.6 }}>
-              Work
-              <br />
-              {WORKS.length} pieces
-            </motion.p>
-          </div>
+          <HandNote size={22} style={{ flexShrink: 0, marginTop: '0.8em' }}>{WORKS.length} pieces</HandNote>
         </div>
-        <motion.div
-          initial={reduceMotion ? false : { scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ duration: 0.9, delay: 0.2, ease: EASE }}
-          style={{ height: 1, background: INK, transformOrigin: 'left center', margin: 'clamp(20px, 3vh, 32px) 0' }}
-        />
+        <InkRule bleed seed={11} style={{ margin: 'clamp(20px, 3vh, 32px) 0' }} />
 
         {/* Filters: one magnetic indicator slides between them, as in the nav. */}
         <div role="toolbar" aria-label="Filter work" onMouseLeave={() => setHoverChip(null)} style={{ display: 'flex', gap: 4, overflowX: 'auto', margin: '0 calc(-1 * clamp(1rem, 4vw, 5rem))', padding: '4px clamp(1rem, 4vw, 5rem)', scrollbarWidth: 'none' }}>
@@ -330,19 +318,11 @@ export function WorksPage() {
                 onMouseEnter={() => setHoverChip(c.key)}
                 aria-pressed={on}
                 className={focusRing}
-                style={{ position: 'relative', flexShrink: 0, border: 'none', background: 'none', padding: '11px 16px', cursor: 'pointer', color: INK }}
+                style={{ flexShrink: 0, border: 'none', background: 'none', padding: '6px 4px', cursor: 'pointer' }}
               >
-                {shownKey === c.key && (
-                  <motion.span
-                    layoutId="work-filter"
-                    className="btn-corners"
-                    transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-                    style={{ position: 'absolute', inset: 0, background: on ? 'rgba(235,63,67,0.08)' : 'rgba(0,0,0,0.045)', border: on ? '1px solid rgba(235,63,67,0.2)' : '1px solid transparent' }}
-                  />
-                )}
-                <span style={{ position: 'relative', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap', opacity: on ? 1 : 0.6, transition: 'opacity 200ms ease-out' }}>
-                  {c.label} <sup style={{ fontSize: 9, color: on ? RED : 'inherit', opacity: on ? 1 : 0.6 }}>{c.n}</sup>
-                </span>
+                <Stamp on={on} style={{ transform: `rotate(${shownKey === c.key ? -2 : 0}deg)`, transition: 'transform 0.25s ease, background 0.25s ease, color 0.25s ease' }}>
+                  {c.label} <sup style={{ fontSize: 10 }}>{c.n}</sup>
+                </Stamp>
               </button>
             );
           })}
@@ -350,7 +330,7 @@ export function WorksPage() {
 
         <motion.ul
           layout={!reduceMotion}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', gap: 'clamp(28px, 3.4vw, 48px) clamp(16px, 2vw, 28px)', padding: 0, margin: 'clamp(24px, 4vh, 44px) 0 0' }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', gap: 'clamp(32px, 3.8vw, 56px) clamp(20px, 2.4vw, 36px)', padding: 0, margin: 'clamp(24px, 4vh, 44px) 0 0' }}
         >
           <AnimatePresence mode="popLayout" initial={true}>
             {list.map((piece, i) => (
@@ -360,8 +340,9 @@ export function WorksPage() {
         </motion.ul>
 
         {/* On to the deeper stories. */}
-        <div style={{ marginTop: 'clamp(4rem, 10vh, 7rem)', borderTop: '1px solid rgba(10,10,10,0.12)', paddingTop: 'clamp(2rem, 4vh, 3rem)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 24, flexWrap: 'wrap' }}>
-          <p style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 'clamp(22px, 2.4vw, 36px)', fontWeight: 500, letterSpacing: '-0.03em' }}>Want the whole story behind a piece?</p>
+        <InkRule bleed seed={23} style={{ marginTop: 'clamp(4rem, 10vh, 7rem)' }} />
+        <div style={{ paddingTop: 'clamp(2rem, 4vh, 3rem)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 24, flexWrap: 'wrap' }}>
+          <p style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 'clamp(22px, 2.4vw, 36px)', fontWeight: 500, letterSpacing: '-0.03em', color: RED }}>Want the whole story behind a piece?</p>
           <Link to="/case-studies" className={focusRing} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 12, textDecoration: 'none', color: INK }}>
             <span style={{ ...label, opacity: 0.5 }}>Read</span>
             <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(22px, 2.4vw, 34px)', fontWeight: 800, letterSpacing: '-0.03em' }}>Case studies</span>

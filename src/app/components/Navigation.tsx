@@ -235,10 +235,51 @@ export function Navigation() {
     setOpen(false);
   }, [location.pathname]);
 
+  /* ── The mark steps aside whenever page content passes under it (Rajat,
+     2026-10-17: "wherever the logo overlaps something it disappears").
+     A few times a second, hit-test five points over the mark: anything
+     smaller than a near full-screen layer (text, a card, a photo) counts
+     as content; big backgrounds (sections, the 3D canvas, full-bleed
+     films) do not. ── */
+  const overlapRaw = useMotionValue(0);
+  const overlapT = useSpring(overlapRaw, { stiffness: 260, damping: 30, mass: 0.5 });
+  const logoRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const nav = logoRef.current?.closest('nav');
+    const id = window.setInterval(() => {
+      const el = logoRef.current;
+      if (!el || document.hidden) return;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0) return;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const pts: Array<[number, number]> = [
+        [r.left + r.width * 0.5, r.top + r.height * 0.5],
+        [r.left + r.width * 0.15, r.top + r.height * 0.25],
+        [r.right - r.width * 0.15, r.top + r.height * 0.25],
+        [r.left + r.width * 0.15, r.bottom - r.height * 0.2],
+        [r.right - r.width * 0.15, r.bottom - r.height * 0.2],
+      ];
+      let hit = false;
+      for (const [x, y] of pts) {
+        const under = document.elementsFromPoint(x, y).find((n) => !nav || !nav.contains(n));
+        if (!under || under === document.body || under === document.documentElement) continue;
+        const b = under.getBoundingClientRect();
+        const background = b.width >= vw * 0.9 && b.height >= vh * 0.5;
+        if (!background) {
+          hit = true;
+          break;
+        }
+      }
+      overlapRaw.set(hit ? 1 : 0);
+    }, 120);
+    return () => window.clearInterval(id);
+  }, [overlapRaw, location.pathname]);
+
   const islandOpacity = useTransform([entranceT, compactT], (v) => (v as number[])[0] * (1 - (v as number[])[1] * 0.1));
   const islandY = useTransform(compactT, (v: number) => -v * 5);
   const islandScale = useTransform(compactT, (v: number) => 1 - v * 0.055);
-  const logoOpacity = useTransform([islandOpacity, footerT], (v) => (v as number[])[0] * (1 - (v as number[])[1]));
+  const logoOpacity = useTransform([islandOpacity, footerT, overlapT], (v) => (v as number[])[0] * (1 - (v as number[])[1]) * (1 - (v as number[])[2]));
   const logoScale = useTransform([islandScale, footerT], (v) => (v as number[])[0] * (1 - (v as number[])[1] * 0.12));
   const logoPointer = useTransform([entranceT, footerT], (v) => ((v as number[])[0] > 0.15 && (v as number[])[1] < 0.5 ? 'auto' : 'none')) as unknown as 'auto' | 'none';
   const pointerEvents = useTransform(entranceT, (v: number) => (v > 0.15 ? 'auto' : 'none')) as unknown as 'auto' | 'none';
@@ -258,6 +299,7 @@ export function Navigation() {
           card and no halo; the blocks of the mark are themselves frosted glass
           (theme.css .logo-glass). Steps aside for the footer. ══════════ */}
       <motion.div
+        ref={logoRef}
         style={{
           position: 'fixed',
           top: 'clamp(6px, 1.4vw, 14px)',
