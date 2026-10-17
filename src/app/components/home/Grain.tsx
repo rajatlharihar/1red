@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 
 /* ─── Grain: the 1Red loop's film grain, for the web ───────────────────────
  * One 192px tile of random grey noise, drawn once to a canvas and reused as
@@ -59,10 +59,22 @@ export function grainAlphaTile(kind: 'dark' | 'both' = 'both'): string {
 }
 
 export function Grain({ opacity = 0.09, moving = true, blend = 'overlay', style }: { opacity?: number; moving?: boolean; blend?: CSSProperties['mixBlendMode']; style?: CSSProperties }) {
+  // The steps only run while the grain is on screen (perf pass 2026-10-17:
+  // off-screen grain kept stepping and cost frames all down the home page).
+  const boxRef = useRef<HTMLDivElement>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = boxRef.current;
+    const layer = layerRef.current;
+    if (!moving || !box || !layer) return;
+    const io = new IntersectionObserver(([e]) => layer.classList.toggle('grain-move', e.isIntersecting));
+    io.observe(box);
+    return () => io.disconnect();
+  }, [moving]);
   return (
-    <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', ...style }}>
+    <div ref={boxRef} aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', ...style }}>
       <div
-        className={moving ? 'grain-move' : undefined}
+        ref={layerRef}
         style={{
           position: 'absolute',
           // One tile of overscan covers the steps (theme.css grain-move).

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { glide, subscribeGlide } from '../scrollGlide';
+import { claimNavMark } from '../navMark';
 
 /* ─── Into the team ────────────────────────────────────────────────────────
  * The forward move continues: the studio's line-art team film starts as a
@@ -121,7 +122,7 @@ export function TeamZoom() {
 
   useEffect(() => {
     if (reduceMotion) return;
-    return subscribeGlide(() => {
+    const off = subscribeGlide(() => {
       const el = wrapRef.current;
       if (!el) return;
       const top = el.getBoundingClientRect().top + glide.raw;
@@ -162,11 +163,18 @@ export function TeamZoom() {
         });
       }
       lastFilmT.current = ft;
+      // The film is full-bleed people, then its own 1red (from 4.2 s): the
+      // nav's mark gives way until the film has gone to white.
+      claimNavMark('team-film', live && p < 0.76);
       if (wordsRef.current) {
         const t = smooth(TEXT_FROM, TEXT_TO, p) * (1 - smooth(TEXT_OUT, TEXT_OUT + 0.02, p));
         wordsRef.current.style.transform = `translateY(${((1 - t) * 110).toFixed(2)}%)`;
       }
     });
+    return () => {
+      off();
+      claimNavMark('team-film', false);
+    };
   }, [reduceMotion]);
 
   const words = (

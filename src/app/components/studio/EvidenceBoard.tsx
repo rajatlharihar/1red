@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { glide, subscribeGlide } from '../scrollGlide';
 import { Digit } from '../about/shared';
-import { grainTile } from '../home/Grain';
+import { grainAlphaTile } from '../home/Grain';
 import { process as STEPS } from '../../data/process';
 import { PinHead, sag, type Pin } from './boardString';
 
@@ -69,9 +69,11 @@ function pinOf(c: { x: number; y: number; h: number }): Pin {
 const grainStyle = (o = 0.22): React.CSSProperties => ({
   position: 'absolute',
   inset: 0,
-  backgroundImage: `url(${grainTile()})`,
+  // Dark alpha grain, no blend mode: the same as multiplying grey noise
+  // (c * (1 - o(1 - v)) either way) without repainting the moving board
+  // every frame (2026-10-17 perf pass).
+  backgroundImage: `url(${grainAlphaTile('dark')})`,
   backgroundSize: '192px 192px',
-  mixBlendMode: 'multiply',
   opacity: o,
   pointerEvents: 'none',
 });
@@ -165,6 +167,7 @@ export function EvidenceBoard() {
   const reduceMotion = !!useReducedMotion();
   const wrapRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
+  const threadRef = useRef<SVGSVGElement>(null);
   const segRefs = useRef<Array<SVGPathElement | null>>([]);
   const [vp, setVp] = useState({ w: 1440, h: 900 });
   const [photoOk, setPhotoOk] = useState<Record<string, boolean>>({});
@@ -250,6 +253,12 @@ export function EvidenceBoard() {
       const s = scale * z;
       board.style.transform = `translate3d(${(vw / 2 - cx * s).toFixed(2)}px, ${(vh / 2 - cy * s).toFixed(2)}px, 0) rotate(${rot.toFixed(3)}deg) scale(${s.toFixed(4)})`;
 
+      // The thread and pins fade over the end of the dive, so nothing pops
+      // off when the team film takes over this frame (Rajat 2026-10-17).
+      if (threadRef.current) {
+        const fade = Math.max(0, Math.min(1, (d - 0.7) / 0.25));
+        threadRef.current.style.opacity = (1 - fade * fade * (3 - 2 * fade)).toFixed(3);
+      }
       // The thread runs a little ahead of the camera.
       const ahead = Math.min(1, p / TRAVEL_END) * legs + 0.45;
       segRefs.current.forEach((path, i) => {
@@ -344,7 +353,7 @@ export function EvidenceBoard() {
                   <p style={{ ...cardText, fontSize: 25, lineHeight: 1.35, margin: '12px 0 0', fontWeight: 500 }}>{s.description}</p>
                   <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 14 }}>
                     <div style={{ height: 18, width: 170, background: INK }} />
-                    <div style={{ fontFamily: 'var(--font-hand)', fontSize: 40, fontWeight: 700, color: RED, transform: 'rotate(-3deg)' }}>{NOTES[i]}</div>
+                    <div style={{ fontFamily: 'var(--font-hand)', fontSize: 40, fontWeight: 700, lineHeight: 1.05, color: RED, transform: 'rotate(-3deg)' }}>{NOTES[i]}</div>
                   </div>
                   <div style={grainStyle(0.2)} />
                 </div>
@@ -365,7 +374,7 @@ export function EvidenceBoard() {
                 compositing layer: the thread draws every frame, and sharing a
                 layer with the board repainted every clipping and grain with it
                 (measured 2026-10-07: 30fps desktop, ~12fps phone; 60 alone). */}
-            <svg width={L.W} height={L.H} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none', willChange: 'transform', transform: 'translateZ(0)' }}>
+            <svg ref={threadRef} width={L.W} height={L.H} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none', willChange: 'transform', transform: 'translateZ(0)' }}>
               {pins.slice(0, -1).map((a, i) => (
                 <path
                   key={i}

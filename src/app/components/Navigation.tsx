@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
-import { useScroll, useMotionValue, useSpring, useTransform, motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { type MotionValue, useScroll, useMotionValue, useSpring, useTransform, motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { WorkIcon, CasesIcon, BoxIcon, AboutIcon } from './NavIcons';
 import { SCROLL_VH as HERO_VH } from './hero/heroLength';
+import { navMarkClaimed } from './navMark';
 
 /* 2026-10-04 (Rajat, after ogilvy.com): links on the left, the logo in the
  * centre, the call to action alone in the right corner. Three glass islands
@@ -60,7 +61,8 @@ const CTA = { label: 'Start a project', path: '/contact' };
 /** The nav item a path belongs to: a case study page lights Case studies. */
 const sectionOf = (pathname: string) => NAV_ITEMS.find((i) => pathname === i.path || pathname.startsWith(i.path + '/'))?.path ?? pathname;
 
-const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EB3F43] focus-visible:rounded-[10px]';
+// No red ring round a clicked link (Rajat, 2026-10-17); the active pill already says where you are.
+const focusRing = 'outline-none';
 
 /* Fluid stagger for the mobile menu items */
 const listVariants = {
@@ -249,34 +251,50 @@ export function Navigation() {
     const id = window.setInterval(() => {
       const el = logoRef.current;
       if (!el || document.hidden) return;
+      // Nothing to test while the mark is not showing anyway.
+      if (islandOpacityRef.current && islandOpacityRef.current.get() < 0.02) return;
       const r = el.getBoundingClientRect();
       if (r.width === 0) return;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
+      // Three points across the mark (was five, every 120 ms: each hit test
+      // forces a layout, so fewer and less often; perf pass 2026-10-17).
       const pts: Array<[number, number]> = [
         [r.left + r.width * 0.5, r.top + r.height * 0.5],
-        [r.left + r.width * 0.15, r.top + r.height * 0.25],
-        [r.right - r.width * 0.15, r.top + r.height * 0.25],
-        [r.left + r.width * 0.15, r.bottom - r.height * 0.2],
-        [r.right - r.width * 0.15, r.bottom - r.height * 0.2],
+        [r.left + r.width * 0.15, r.top + r.height * 0.4],
+        [r.right - r.width * 0.15, r.top + r.height * 0.6],
       ];
-      let hit = false;
-      for (const [x, y] of pts) {
+      // Another 1red on screen (a film's own mark, a [data-brand-mark]) wins.
+      let hit = navMarkClaimed();
+      if (!hit) {
+        for (const m of document.querySelectorAll('[data-brand-mark]')) {
+          const b = m.getBoundingClientRect();
+          if (b.bottom > 0 && b.top < vh && b.right > 0 && b.left < vw && b.width > 0) {
+            hit = true;
+            break;
+          }
+        }
+      }
+      if (!hit) for (const [x, y] of pts) {
         const under = document.elementsFromPoint(x, y).find((n) => !nav || !nav.contains(n));
         if (!under || under === document.body || under === document.documentElement) continue;
         const b = under.getBoundingClientRect();
-        const background = b.width >= vw * 0.9 && b.height >= vh * 0.5;
+        // A full-bleed photo or film behind the mark is busy, not a backdrop.
+        const busy = under.tagName === 'VIDEO' || under.tagName === 'IMG';
+        const background = !busy && b.width >= vw * 0.9 && b.height >= vh * 0.5;
         if (!background) {
           hit = true;
           break;
         }
       }
       overlapRaw.set(hit ? 1 : 0);
-    }, 120);
+    }, 200);
     return () => window.clearInterval(id);
   }, [overlapRaw, location.pathname]);
 
+  const islandOpacityRef = useRef<MotionValue<number> | null>(null);
   const islandOpacity = useTransform([entranceT, compactT], (v) => (v as number[])[0] * (1 - (v as number[])[1] * 0.1));
+  islandOpacityRef.current = islandOpacity;
   const islandY = useTransform(compactT, (v: number) => -v * 5);
   const islandScale = useTransform(compactT, (v: number) => 1 - v * 0.055);
   const logoOpacity = useTransform([islandOpacity, footerT, overlapT], (v) => (v as number[])[0] * (1 - (v as number[])[1]) * (1 - (v as number[])[2]));

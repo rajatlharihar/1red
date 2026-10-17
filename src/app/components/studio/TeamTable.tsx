@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
+import { grainAlphaTile } from '../home/Grain';
 import { glide, subscribeGlide } from '../scrollGlide';
-import { CardDeck, FELT, grainTile, driveDeck, type Flight, type Flipper, PLAYS, playFaceUrl, pickFlippers, turnCard, pileCardHeight } from './CardDeck';
+import { CardDeck, FELT, driveDeck, type Flight, type Flipper, PLAYS, playFaceUrl, pickFlippers, turnCard, pileCardHeight } from './CardDeck';
 
 /* ─── The table ────────────────────────────────────────────────────────────
  * The last chapter. Out of the team film one card arrives from depth and
@@ -58,6 +59,13 @@ const PICK_FROM = 0.13;
 const PICK_TO = 0.28;
 /** How the wild card lies in the pile: turned near-portrait like the rest. */
 const PILE_ANGLE = 83;
+/** Phones (portrait screens): the card is dealt portrait and stays portrait
+ *  once it is in hand, with RED standing upright on its back (Rajat,
+ *  2026-10-17: "on phone it should be vertical after it flips"). */
+const TALL_QUERY = '(max-aspect-ratio: 4/5)';
+const TALL_PILE_ANGLE = PILE_ANGLE - 90;
+const cardWidth = (tall: boolean) => (tall ? 'min(84vw, 54vh)' : 'min(84vw, 1300px, 108vh)');
+const cardHeight = (tall: boolean) => (tall ? 'calc(min(84vw, 54vh) * 1.45)' : 'calc(min(84vw, 1300px, 108vh) / 1.45)');
 /** How high it is lifted mid-pick, in frame heights (toward the viewer). */
 const PICK_LIFT = 0.28;
 /** The section starts this far before the team film's section ends, so
@@ -405,16 +413,17 @@ function Index({ flip, rankRef }: { flip?: boolean; rankRef: (el: HTMLSpanElemen
 /** The UNO face: red field over the whole window except a tilted oval, a
  *  white ring round the oval, a soft grain on the red. viewBox matches the
  *  field's aspect (about 1.45 : 1) so the oval keeps its shape. */
-function UnoField({ blackRef }: { blackRef: React.RefObject<SVGPathElement | null> }) {
-  const W = 145;
-  const H = 100;
+function UnoField({ blackRef, tall = false }: { blackRef: React.RefObject<SVGPathElement | null>; tall?: boolean }) {
+  const W = tall ? 100 : 145;
+  const H = tall ? 145 : 100;
   // Oval: centred a touch high, tilted like the UNO oval (top to the right).
   const cx = W / 2;
   const cy = H * 0.46;
-  const rx = W * 0.47;
-  const ry = H * 0.36;
-  const tilt = -11;
-  const grain = grainTile();
+  const rx = tall ? W * 0.36 : W * 0.47;
+  const ry = tall ? H * 0.4 : H * 0.36;
+  const tilt = tall ? -14 : -11;
+  // Dark alpha grain stands in for multiply (no blend mode on the moving card).
+  const grain = grainAlphaTile('dark');
   const t = (tilt * Math.PI) / 180;
   // The oval as a path (rotated ellipse, two arcs) for the even-odd cut.
   const ax = Math.cos(t) * rx, ay = Math.sin(t) * rx;
@@ -444,7 +453,7 @@ function UnoField({ blackRef }: { blackRef: React.RefObject<SVGPathElement | nul
             black while one of them is in play, then back to red. */}
         <path ref={blackRef} d={`M0 0H${W}V${H}H0Z ${oval}`} fill="url(#uno-black)" fillRule="evenodd" style={{ opacity: 1, transition: 'opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1)' }} />
         {/* Grain on the red only, never on the oval's white. */}
-        {grain && <path d={`M0 0H${W}V${H}H0Z ${oval}`} fill="url(#uno-grain)" fillRule="evenodd" opacity={0.16} style={{ mixBlendMode: 'multiply' }} />}
+        {grain && <path d={`M0 0H${W}V${H}H0Z ${oval}`} fill="url(#uno-grain)" fillRule="evenodd" opacity={0.16} />}
         <path d={oval} fill="none" stroke="#FFFFFF" strokeWidth={1.6} vectorEffect="non-scaling-stroke" style={{ strokeWidth: 'clamp(4px, 0.55vw, 9px)' } as React.CSSProperties} />
       </svg>
     </>
@@ -468,6 +477,15 @@ export function TeamTable() {
   /** The dealt cards, in play order. */
   const dealtRef = useRef<Flipper[]>([]);
   const reduceMotion = useReducedMotion() ?? false;
+  const [tall, setTall] = useState(() => typeof window !== 'undefined' && window.matchMedia(TALL_QUERY).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(TALL_QUERY);
+    const on = () => setTall(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  const tallRef = useRef(tall);
+  tallRef.current = tall;
 
   /* Deal: pick the front-layer cards a viewer can see round the wild card
      at this frame size and give each its face, in play order. Re-dealt on
@@ -514,7 +532,9 @@ export function TeamTable() {
       const p = clamp01((glide.y - top) / scrollable);
       if (cardRef.current) {
         const vw = window.innerWidth, vh = window.innerHeight;
-        const uw = Math.min(0.84 * vw, 1300, 1.08 * vh);
+        const isTall = tallRef.current;
+        const uw = isTall ? Math.min(0.84 * vw, 0.54 * vh) * 1.45 : Math.min(0.84 * vw, 1300, 1.08 * vh);
+        const angle = isTall ? TALL_PILE_ANGLE : PILE_ANGLE;
         // In the pile: the card's long side matches a pile card's height.
         const s0 = pileCardHeight(vw, vh) / uw;
         const q = clamp01(p / DECK_P);
@@ -525,7 +545,7 @@ export function TeamTable() {
         const turn = easeInOutSine(clamp01((k - 0.1) / 0.7));
         cardRef.current.style.transform =
           `translate(-50%, -50%) translate3d(0, ${y.toFixed(1)}px, ${(Math.sin(Math.PI * k) * PICK_LIFT * vh).toFixed(1)}px) ` +
-          `rotateZ(${(PILE_ANGLE * (1 - k)).toFixed(2)}deg) rotateY(${(180 * (1 - turn)).toFixed(2)}deg) scale(${(s0 + (1 - s0) * k).toFixed(4)})`;
+          `rotateZ(${(angle * (1 - k)).toFixed(2)}deg) rotateY(${(180 * (1 - turn)).toFixed(2)}deg) scale(${(s0 + (1 - s0) * k).toFixed(4)})`;
         driveDeck(flightsRef.current, feltRef.current, q, vh);
         layerRefs.current.forEach((el, i) => {
           if (el) el.style.transform = `translate3d(0, ${((0.5 - p) * DECK_DRIFT[i] * vh).toFixed(1)}px, 0)`;
@@ -574,11 +594,11 @@ export function TeamTable() {
         position: 'absolute',
         left: '50%',
         top: '50%',
-        width: 'min(84vw, 1300px, 108vh)',
-        aspectRatio: '1.45 / 1',
+        width: cardWidth(tall),
+        aspectRatio: tall ? '1 / 1.45' : '1.45 / 1',
         transform: reduceMotion
           ? 'translate(-50%, -50%)'
-          : `translate(-50%, -50%) translate3d(0, 100vh, 0) rotateZ(${PILE_ANGLE}deg) rotateY(180deg) scale(0.2)`,
+          : `translate(-50%, -50%) translate3d(0, 100vh, 0) rotateZ(${tall ? TALL_PILE_ANGLE : PILE_ANGLE}deg) rotateY(180deg) scale(0.2)`,
         transformOrigin: '50% 50%',
         transformStyle: 'preserve-3d',
         willChange: 'transform',
@@ -587,7 +607,7 @@ export function TeamTable() {
       {/* The back: UNO's back, black with a red oval and RED from the logo, the one
           card in the black pile that is not like the others. */}
       <img
-        src="/wild-card-back.svg"
+        src={tall ? '/wild-card-back-tall.svg' : '/wild-card-back.svg'}
         alt=""
         draggable={false}
         style={{
@@ -595,7 +615,7 @@ export function TeamTable() {
           inset: 0,
           width: '100%',
           height: '100%',
-          borderRadius: '4.2% / 6.1%',
+          borderRadius: tall ? '6.1% / 4.2%' : '4.2% / 6.1%',
           boxShadow: '0 6px 16px rgba(0,0,0,0.14)',
           transform: 'rotateY(180deg)',
           backfaceVisibility: 'hidden',
@@ -607,7 +627,7 @@ export function TeamTable() {
           position: 'absolute',
           inset: 0,
           background: '#FFFFFF',
-          borderRadius: '4.2% / 6.1%',
+          borderRadius: tall ? '6.1% / 4.2%' : '4.2% / 6.1%',
           boxShadow: '0 34px 70px rgba(0,0,0,0.20), 0 8px 22px rgba(0,0,0,0.10), 0 0 0 1px rgba(10,10,10,0.08)',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
@@ -617,13 +637,13 @@ export function TeamTable() {
       {/* The red field inside the white border: the window onto the table
           (the picture is wider than the card and pans behind it), then the
           field painted over it with the UNO oval cut out. */}
-      <div style={{ position: 'absolute', left: '3.4%', right: '3.4%', top: '4.9%', bottom: '4.9%', borderRadius: '2.4% / 3.6%', overflow: 'hidden', background: CARD }}>
-        <div ref={windowRef} style={{ position: 'absolute', left: '6%', right: '6%', top: '2%', bottom: '10%', overflow: 'hidden' }}>
-          <div ref={picRef} style={{ height: '100%', width: `${(PIC_W / VIEW_W) * 100}%`, willChange: 'transform' }}>
+      <div style={{ position: 'absolute', ...(tall ? { left: '4.9%', right: '4.9%', top: '3.4%', bottom: '3.4%', borderRadius: '3.6% / 2.4%' } : { left: '3.4%', right: '3.4%', top: '4.9%', bottom: '4.9%', borderRadius: '2.4% / 3.6%' }), overflow: 'hidden', background: CARD }}>
+        <div ref={windowRef} style={{ position: 'absolute', ...(tall ? { left: '2%', right: '2%', top: '30%', bottom: '36%' } : { left: '6%', right: '6%', top: '2%', bottom: '10%' }), overflow: 'hidden' }}>
+          <div ref={picRef} style={{ height: '100%', ...(tall ? { width: 'auto', aspectRatio: `${PIC_W} / ${VIEW_H}` } : { width: `${(PIC_W / VIEW_W) * 100}%` }), willChange: 'transform' }}>
             <Picture />
           </div>
         </div>
-        <UnoField blackRef={blackRef} />
+        <UnoField blackRef={blackRef} tall={tall} />
       </div>
       <Index rankRef={(el) => (rankRefs.current[0] = el)} />
       <Index flip rankRef={(el) => (rankRefs.current[1] = el)} />
@@ -643,7 +663,7 @@ export function TeamTable() {
       style={{
         position: 'absolute',
         left: '50%',
-        bottom: 'max(14px, calc((100vh - min(84vw, 1300px, 108vh) / 1.45) / 4 - 20px))',
+        bottom: `max(14px, calc((100vh - ${cardHeight(tall)}) / 4 - 20px))`,
         zIndex: 4,
         maxWidth: 'min(92vw, 980px)',
         width: 'max-content',

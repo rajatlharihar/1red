@@ -8,6 +8,7 @@ import type { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import studioUrl from '../../../../Studio.glb?url';
 import { MODEL_ROT_Y, MODEL_FLOOR_LIFT, MODEL_SCALE } from './studioSequence';
+import { edgePositions } from './edgesOffThread';
 import { LAMP_BEAMS, BEAM_STRENGTH, createBeam, createBeamMaterial } from './lampBeams'; // beams
 
 /* ─── Studio.glb — the 1Red studio interior ────────────────────────────────
@@ -166,20 +167,32 @@ export function StudioEnvironment({
       if (p) kit.push(m);
     });
     for (const m of kit) {
-      // Only strong creases: the silhouette shell below draws every outline, and
-      // a low threshold on this ~300k-triangle kit produced so many line
-      // segments that loading froze for ~11 s and scrolling stalled.
-      const edges = new THREE.EdgesGeometry(m.geometry, 60);
-      const lines = new LineSegments2(new LineSegmentsGeometry().fromEdgesGeometry(edges), mats.sketch);
-      edges.dispose();
-      m.add(lines);
+      // The crease lines come from a worker (see the effect below).
       if (!m.geometry.attributes.normal) m.geometry.computeVertexNormals();
       const shell = new THREE.Mesh(m.geometry, hull);
       shell.userData.shell = true;
       m.add(shell);
     }
+    s.userData.kit = kit;
     return s;
   }, [gltf, mats, hull]);
+  /* Sketch lines for the kit, built off the main thread (edgesWorker.ts):
+     only strong creases (60°), the silhouette shell draws every outline; a
+     low threshold on this ~300k-triangle kit once froze loading for ~11 s.
+     They land within a beat, while the room is still dark. */
+  useEffect(() => {
+    let live = true;
+    const kit = scene.userData.kit as THREE.Mesh[];
+    for (const m of kit) {
+      edgePositions(m.geometry, 60).then((pos) => {
+        if (!live) return;
+        m.add(new LineSegments2(new LineSegmentsGeometry().setPositions(pos), mats.sketch));
+      });
+    }
+    return () => {
+      live = false;
+    };
+  }, [scene, mats]);
   // The lines built for this copy are this copy's own; free them on unmount.
   useEffect(
     () => () =>
