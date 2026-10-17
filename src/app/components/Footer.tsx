@@ -9,7 +9,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 // The one source of 1Red's contact details, exported so the /contact page
 // and the rest of the site reuse the exact same values.
-export const CONTACT_EMAIL = '1red.agency@gmail.com';
+export const CONTACT_EMAIL = 'hello@1red.in';
 export const CONTACT_PHONE = '+91 98862 56661';
 export const CONTACT_WHATSAPP = 'https://wa.me/919886256661';
 export const socialLinks = [
