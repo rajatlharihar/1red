@@ -878,7 +878,7 @@ const CARD = { w: 292, h: 242 };
 /** The drawing is 2400x1300 with the 1440x900 core in its middle. */
 const CANVAS = { w: 2400, h: 1300 };
 /** Scroll the table holds still before the hand-off to the deal. */
-const TABLE_HOLD_VH = 90;
+const TABLE_HOLD_VH = 55; // 2026-10-17: was 90
 const TABLE_COPY = 'Everyone follows the rulebook. We read it, then go past it. Hover a card.';
 
 function TableCard({ i, flipped, onHover, onFlip, reduceMotion }: { i: number; flipped: boolean; onHover: (on: boolean) => void; onFlip: () => void; reduceMotion: boolean }) {

@@ -48,7 +48,7 @@ const RED = '#EB3F43';
 const CARD = '#FFFFFF';
 const BG = '#FFFFFF';
 
-const SECTION_VH = 400;
+const SECTION_VH = 300; // 2026-10-17: was 400
 const P = 1200;
 /** The deck lands over [0, DECK_P] of the section; the wild card lies in
  *  it face down, then is picked up over [PICK_FROM, PICK_TO]: lifted, turned
@@ -64,7 +64,7 @@ const PICK_LIFT = 0.28;
  *  the card comes up through the film as the camera passes into it, with
  *  no dead scroll between the two (Rajat). Its frame is transparent and
  *  sits above the film's. */
-const OVERLAP_VH = 160;
+const OVERLAP_VH = 136; // 2026-10-17: keeps the card rising at the film's p 0.7 now TeamZoom is 220vh (was 160 at 300)
 /** Per-layer parallax over the section (far, mid, near), in frame heights. */
 const DECK_DRIFT = [0.03, 0.06, 0.1];
 /** The pan runs over this window; the rest is the end hold. */

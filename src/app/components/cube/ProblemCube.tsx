@@ -32,7 +32,7 @@ const SECTION_VH = 200; // 2026-10-17: Rajat, shorter tunnel (250 before; 160 wa
 export const DROP_VH = 90;
 /** The finished poster holds, pinned, before the box drops: the page scrolls
  *  on but the frame stays put (Rajat, 2026-10-06: "come and hold"). */
-const HOLD_VH = 80;
+const HOLD_VH = 40; // 2026-10-17: was 80
 /** Where the glide from the mark lands: this far into the hold, box settled. */
 const BOX_LAND_VH = 20;
 /** The last frame holds while the red flags card slides up over it
@@ -41,7 +41,7 @@ const COVER_VH = 100;
 /** Then the reading stretch: "who we are" inks in while the same box rolls
  *  off the frame's right edge (this was home/RedLine.tsx, merged in so the
  *  box never leaves its own renderer). */
-export const ROLL_VH = 240;
+export const ROLL_VH = 170; // 2026-10-17: was 240
 const GREY = '#9A9A9A';
 type Word = { t: string; tone?: 'red' | 'grey' };
 const WHO: Word[] = [
@@ -161,6 +161,7 @@ export function ProblemCube() {
   const dropRef = useRef(0);
   const rollRef = useRef(0);
   const whoRef = useRef<HTMLDivElement>(null);
+  const whoMetrics = useRef<{ vw: number; vh: number; lh: number; lines: number; top: number } | null>(null);
   const charRefs = useRef<Array<Array<HTMLSpanElement | null>>>([]);
   const dotsRef = useRef<HTMLDivElement>(null);
   /** The hero's own progress at this scroll position, unclamped, so the
@@ -233,10 +234,15 @@ export function ProblemCube() {
         // 2026-10-17 (Rajat): the line being typed starts in the middle of
         // the frame and the paragraph feeds up like a typewriter carriage
         // until it reaches its place (after about three lines).
-        const lh = parseFloat(getComputedStyle(w.firstElementChild as HTMLElement).lineHeight) || 50;
-        const lines = w.offsetHeight / lh;
-        const typing = smooth(0.02, 0.62, roll) * lines;
-        const feed = Math.max(0, window.innerHeight / 2 - (w.offsetTop + (Math.min(typing, lines - 1) + 0.5) * lh));
+        // Measured once per size (reading layout every frame while the
+        // characters ink in forced a reflow per frame: the jank at the roll).
+        let m = whoMetrics.current;
+        if (!m || m.vw !== window.innerWidth || m.vh !== window.innerHeight) {
+          const lh = parseFloat(getComputedStyle(w.firstElementChild as HTMLElement).lineHeight) || 50;
+          m = whoMetrics.current = { vw: window.innerWidth, vh: window.innerHeight, lh, lines: w.offsetHeight / lh, top: w.offsetTop };
+        }
+        const typing = smooth(0.02, 0.62, roll) * m.lines;
+        const feed = Math.max(0, m.vh / 2 - (m.top + (Math.min(typing, m.lines - 1) + 0.5) * m.lh));
         w.style.opacity = a.toFixed(3);
         w.style.transform = `translateY(${((1 - a) * 24 + feed).toFixed(1)}px)`;
       }

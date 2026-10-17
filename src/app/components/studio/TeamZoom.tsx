@@ -16,7 +16,7 @@ const BG = '#FFFFFF';
 const CLIP = '/videos/team-scrub.mp4';
 const POSTER = '/images/team-poster.jpg';
 
-const SECTION_VH = 300;
+const SECTION_VH = 220; // 2026-10-17: was 300
 /** The lens, as in ProcessSpace. */
 const P = 1200;
 /** Tile size at the start, as a share of the frame; full-bleed is 1. */

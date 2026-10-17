@@ -20,7 +20,7 @@ import { PinHead, sag, type Pin } from './boardString';
  * viewport), drawn once; only its transform changes per frame.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const SECTION_VH = 720;
+const SECTION_VH = 500; // 2026-10-17: fewer scrolls, was 720
 const RED = '#C8161D';
 const INK = '#0E0E0E';
 const PAPER = '#FBFBFB';

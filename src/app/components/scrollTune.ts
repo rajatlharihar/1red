@@ -15,7 +15,9 @@ export interface ScrollTune {
   wheelMultiplier: number;
 }
 
-export const DEFAULTS: ScrollTune = { glideS: 5.8, glideEasing: 'inOutCubic', lerp: 0.065, wheelMultiplier: 0.7 };
+// 2026-10-17: each wheel/trackpad flick covers more (0.7 -> 1), catch-up a
+// touch quicker so it follows the hand, glide shorter.
+export const DEFAULTS: ScrollTune = { glideS: 4.2, glideEasing: 'inOutCubic', lerp: 0.08, wheelMultiplier: 1 };
 
 const KEY = '1red-scroll-tune';
 const DEV = import.meta.env.DEV;
