@@ -317,7 +317,7 @@ export function Privacy() {
           }}
         >
           <span style={{ fontSize: 'clamp(80px, 18vw, 260px)', fontWeight: 900, letterSpacing: '-0.06em', color: 'rgba(255,255,255,0.03)', userSelect: 'none', whiteSpace: 'nowrap' }}>
-            1RED.
+            1red.
           </span>
         </div>
 

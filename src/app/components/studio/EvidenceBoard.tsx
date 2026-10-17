@@ -324,7 +324,7 @@ export function EvidenceBoard() {
 
             {/* Title card */}
             <div style={{ position: 'absolute', left: L.TITLE.x - L.TITLE.w / 2, top: L.TITLE.y - L.TITLE.h / 2, width: TITLE.w, height: TITLE.h, background: PAPER, transform: `rotate(${TITLE.rot}deg)`, boxShadow: '0 18px 40px rgba(0,0,0,0.5)', padding: 56, boxSizing: 'border-box' }}>
-              <div style={{ ...cardText, fontSize: 18, fontWeight: 600, letterSpacing: '0.28em', textTransform: 'uppercase' }}>Case file 1RED/26</div>
+              <div style={{ ...cardText, fontSize: 18, fontWeight: 600, letterSpacing: '0.28em', textTransform: 'uppercase' }}>Case file <span style={{ textTransform: 'none' }}>1red</span>/26</div>
               <div style={{ ...cardText, fontSize: 150, fontWeight: 600, letterSpacing: '-0.05em', lineHeight: 0.9, marginTop: 40 }}>
                 Our
                 <br />
