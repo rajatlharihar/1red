@@ -10,9 +10,11 @@ import { INK, FILL_OFFSET, createInkLineMaterial, inkEdges } from './inkLines';
 import { buildLogoGeometry } from './logoGeometry';
 import {
   heroFov,
+  HERO_FOV,
   sampleSequence,
   lerp,
   RESTING_STATE,
+  RESTING_P,
   DOOR_APEX_Y,
   DOOR_BASE_W,
   DOOR_HEADER_Y,
@@ -431,7 +433,7 @@ export function StudioScene({
     camera.lookAt(s.lookX, s.lookY, s.lookZ);
     // Portrait frames widen the view for the gate (see heroFov).
     const cam = camera as THREE.PerspectiveCamera;
-    const fov = heroFov(size.width / size.height, reduceMotion ? 1 : progressRef.current);
+    const fov = heroFov(size.width / size.height, reduceMotion ? RESTING_P : progressRef.current);
     if (Math.abs(cam.fov - fov) > 0.01) {
       cam.fov = fov;
       cam.updateProjectionMatrix();
@@ -464,7 +466,11 @@ export function StudioScene({
       const k = lerp(PANEL_SCALE0, PANEL_SCALE, g);
       panelRef.current.scale.set(k, k, 1);
       panelRef.current.rotation.z = lerp(PANEL_TILT0, PANEL_TILT, g);
-      mats.panelLine.opacity = Math.min(1, g * 4);
+      /* A phone holds a wider view on the mark (see heroFov), which brings
+         the panel's outline into frame as a stray diagonal. Fade the outline
+         while the view is wider than HERO_FOV; landscape never is here. */
+      const wide = Math.min(1, Math.max(0, (cam.fov - HERO_FOV) / 2));
+      mats.panelLine.opacity = Math.min(1, g * 4) * (1 - wide);
     }
 
     /* One turn, then scale through the counter of the "r". The zoom group's

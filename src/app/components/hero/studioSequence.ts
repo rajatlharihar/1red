@@ -117,11 +117,25 @@ export const HERO_FOV = 45;
 const GATE_HALF_TAN = 0.6;
 const WIDE_UNTIL = 0.496;
 const WIDE_BACK = 0.704;
+/* In the room a portrait frame still kept too little width: at HERO_FOV the
+   lit mark ran edge to edge on a phone (Rajat, 2026-11-26). So the view only
+   eases back as far as a horizontal half-tangent of MARK_HALF_TAN (mark at
+   roughly two thirds of the width), holds there, and finishes the trip to
+   HERO_FOV inside the zoom's rush, before PANEL_TO, where the hand-off is
+   measured. Landscape frames are already at HERO_FOV, so desktop is as was. */
+const MARK_HALF_TAN = 0.3;
+const MARK_UNTIL = 0.89;
+const MARK_BACK = 0.935;
+const easeSpan = (p: number, a: number, b: number) =>
+  p <= a ? 0 : p >= b ? 1 : (1 - Math.cos((Math.PI * (p - a)) / (b - a))) / 2;
 export function heroFov(aspect: number, p: number) {
   const baseTan = Math.tan(((HERO_FOV / 2) * Math.PI) / 180);
-  const wantTan = Math.min(Math.tan((50 * Math.PI) / 180), Math.max(baseTan, GATE_HALF_TAN / aspect));
-  const back = p <= WIDE_UNTIL ? 0 : p >= WIDE_BACK ? 1 : (1 - Math.cos((Math.PI * (p - WIDE_UNTIL)) / (WIDE_BACK - WIDE_UNTIL))) / 2;
-  return (2 * Math.atan(wantTan + (baseTan - wantTan) * back) * 180) / Math.PI;
+  const wideTan = Math.min(Math.tan((50 * Math.PI) / 180), Math.max(baseTan, GATE_HALF_TAN / aspect));
+  const markTan = Math.min(wideTan, Math.max(baseTan, MARK_HALF_TAN / aspect));
+  const toMark = easeSpan(p, WIDE_UNTIL, WIDE_BACK);
+  const toBase = easeSpan(p, MARK_UNTIL, MARK_BACK);
+  const tan = wideTan + (markTan - wideTan) * toMark + (baseTan - markTan) * toBase;
+  return (2 * Math.atan(tan) * 180) / Math.PI;
 }
 const GLOW_FROM = 0.56;
 const GLOW_LEVEL = 0.38;

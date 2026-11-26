@@ -14,7 +14,7 @@ export const CONTACT_PHONE = '+91 98862 56661';
 export const CONTACT_WHATSAPP = 'https://wa.me/919886256661';
 export const socialLinks = [
   { label: 'Instagram', href: 'https://www.instagram.com/1red.studio/' },
-  { label: 'LinkedIn',  href: 'https://www.linkedin.com/in/1redstudio' },
+  { label: 'LinkedIn',  href: 'https://www.linkedin.com/company/1-red/' },
 ];
 
 const secondaryLinks = ['Work', 'Case studies', 'The Box', 'About', 'Careers', 'Contact', 'Privacy Policy'];
